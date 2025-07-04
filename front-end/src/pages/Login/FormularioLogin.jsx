@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, User, Lock, Monitor } from 'lucide-react';
-import './FormularioLogin.css';
+import React, { useState } from "react";
+import { Eye, EyeOff, User, Lock, Monitor } from "lucide-react";
+import "./FormularioLogin.css";
 
-const FormularioLogin = ({ 
-  onNavigateToCadastro 
-}) => {
+const FormularioLogin = ({ onNavigateToCadastro, onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('alinef@hotmail.com');
-  const [password, setPassword] = useState('****************');
+  const [email, setEmail] = useState("alinef@hotmail.com");
+  const [password, setPassword] = useState("****************");
 
   const handleNavigateToCadastro = () => {
-      onNavigateToCadastro();
+    onNavigateToCadastro();
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (onLoginSuccess) onLoginSuccess();
   };
 
   return (
@@ -75,14 +78,14 @@ const FormularioLogin = ({
           </a>
         </div>
 
-        <button className="login-button">
+        <button className="login-button" onClick={handleLogin}>
           Entrar
         </button>
 
         <div className="signup-section">
           <span className="signup-text">AINDA NÃO TEM CONTA? </span>
-          <a 
-            href="#" 
+          <a
+            href="#"
             className="signup-link"
             onClick={(e) => {
               e.preventDefault();
