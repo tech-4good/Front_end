@@ -1,0 +1,15 @@
+.botao-personalizado {
+	background-color: #D9D9D9;
+	color: #000;
+	border: none;
+	border-radius: 20px;
+	padding: 24px 44px;
+	font-size: 48px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.botao-personalizado:hover {
+	background-color: #bfbfbf;
+}

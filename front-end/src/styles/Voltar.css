@@ -1,0 +1,40 @@
+
+.voltar-btn {
+	display: flex;
+	align-items: center;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0;
+	padding: 0;
+	gap: 12px;
+}
+
+.voltar-icone {
+	width: 64px;
+	height: 64px;
+	color: #222;
+	flex-shrink: 0;
+}
+
+.voltar-texto {
+	font-size: 64px;
+	font-weight: 500;
+	color: #111;
+	position: relative;
+	display: inline-block;
+}
+
+.voltar-texto::after {
+	content: "";
+	display: block;
+	width: 100%;
+	height: 4px;
+	background: #111;
+	margin-top: 4px;
+	border-radius: 2px;
+}
+
+.voltar-btn:active .voltar-texto {
+	color: #444;
+}

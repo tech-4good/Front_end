@@ -1,0 +1,39 @@
+
+.select-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+	margin-bottom: 24px;
+}
+
+.select-label {
+	font-size: 22px;
+	font-weight: 600;
+	color: #222;
+	margin-bottom: 4px;
+}
+
+.select-personalizado {
+	width: 100%;
+	max-width: 720px;
+	background: #fff;
+	border: 2px solid #222;
+	border-radius: 24px;
+	padding: 18px 28px;
+	font-size: 28px;
+	color: #222;
+	outline: none;
+	box-sizing: border-box;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	margin: 0 auto;
+	display: block;
+}
+
+.select-personalizado option {
+	font-size: 24px;
+	color: #222;
+	padding: 12px 20px;
+}

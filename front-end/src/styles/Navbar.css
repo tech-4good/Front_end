@@ -1,0 +1,83 @@
+
+.navbar {
+	width: 100%;
+	height: 60px;
+	background: #fff;
+	border-bottom: 2px solid #222;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 32px;
+	box-sizing: border-box;
+	position: relative;
+	z-index: 10;
+}
+
+.navbar-esquerda {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+}
+
+.navbar-logo {
+	width: 44px;
+	height: 44px;
+	border-radius: 12px;
+	object-fit: contain;
+}
+
+.navbar-titulo {
+	font-size: 22px;
+	font-weight: 700;
+	color: #111;
+	margin-right: 18px;
+}
+
+.navbar-usuario {
+	display: flex;
+	align-items: center;
+	font-size: 18px;
+	font-weight: 500;
+	color: #222;
+	gap: 6px;
+}
+
+.navbar-icone-usuario {
+	width: 22px;
+	height: 22px;
+	object-fit: contain;
+	margin-right: 4px;
+}
+
+.navbar-direita {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+}
+
+.navbar-botao {
+	background: none !important;
+	color: #111 !important;
+	font-size: 24px !important;
+	font-weight: 500;
+	box-shadow: none !important;
+	padding: 0 18px !important;
+	min-width: 0 !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	border: none !important;
+	border-radius: 0 !important;
+	transition: color 0.2s;
+}
+
+.navbar-botao:hover {
+	color: #007baf !important;
+}
+
+.navbar-icone {
+	width: 28px;
+	height: 28px;
+	object-fit: contain;
+	margin-right: 4px;
+}

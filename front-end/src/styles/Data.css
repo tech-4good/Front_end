@@ -1,0 +1,51 @@
+
+.data-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+	margin-bottom: 24px;
+}
+
+.data-label {
+	font-size: 22px;
+	font-weight: 600;
+	color: #222;
+	margin-bottom: 4px;
+}
+
+.data-input-container {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.data-input {
+	width: 100%;
+	max-width: 620px;
+	background: #fff;
+	border: none;
+	border-radius: 20px;
+	padding: 18px 28px;
+	font-size: 28px;
+	color: #222;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+	outline: none;
+	margin: 0 auto;
+	display: block;
+	box-sizing: border-box;
+}
+
+.data-input::placeholder {
+	color: #b0b0b0;
+	font-size: 28px;
+	opacity: 1;
+}
+
+.data-icon {
+	position: absolute;
+	right: 18px;
+	display: flex;
+	align-items: center;
+	pointer-events: none;
+}

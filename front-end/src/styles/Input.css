@@ -1,0 +1,82 @@
+.input-personalizado {
+  width: 100%;
+  max-width: 620px;
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 18px 28px;
+  font-size: 28px;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  outline: none;
+  margin: 0 auto;
+  display: block;
+  box-sizing: border-box;
+}
+
+.input-personalizado::placeholder {
+  color: #b0b0b0;
+  font-size: 28px;
+  opacity: 1;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.input-label {
+  font-size: 22px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  pointer-events: none;
+}
+
+.input-icon .icon {
+  width: 28px;
+  height: 28px;
+  color: #b0b0b0;
+}
+
+.input-personalizado {
+  padding-left: 56px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.password-toggle .icon {
+  width: 28px;
+  height: 28px;
+  color: #b0b0b0;
+}
+
+.password-field {
+  letter-spacing: 0.1em;
+}
