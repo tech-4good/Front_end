@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "../styles/Input.css";
-import { Eye, EyeOff } from "lucide-react";
+
+import olhoAberto from "../assets/icone-olho-aberto.png";
+import olhoFechado from "../assets/icone-olho-fechado.png";
 
 const Input = ({
   label,
@@ -42,11 +44,11 @@ const Input = ({
             className="password-toggle"
             tabIndex={-1}
           >
-            {showPassword ? (
-              <EyeOff className="icon" />
-            ) : (
-              <Eye className="icon" />
-            )}
+            <img
+              src={showPassword ? olhoFechado : olhoAberto}
+              alt={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              style={{ width: 28, height: 28 }}
+            />
           </button>
         )}
       </div>

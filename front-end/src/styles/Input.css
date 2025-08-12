@@ -1,11 +1,11 @@
 .input-personalizado {
   width: 100%;
-  max-width: 620px;
-  background: #fff;
+  max-width: 800px;
+  background: #cfcfcf;
   border: none;
   border-radius: 20px;
   padding: 18px 28px;
-  font-size: 28px;
+  font-size: 20px;
   color: #222;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   outline: none;
@@ -14,9 +14,13 @@
   box-sizing: border-box;
 }
 
+.input-personalizado:focus {
+  background: #c3c1c1;
+}
+
 .input-personalizado::placeholder {
   color: #b0b0b0;
-  font-size: 28px;
+  font-size: 20px;
   opacity: 1;
 }
 
@@ -29,7 +33,7 @@
 }
 
 .input-label {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: #222;
   margin-bottom: 4px;
