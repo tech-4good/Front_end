@@ -5,17 +5,18 @@ import Botao from "./Botao";
 
 import logo from "../assets/icone-logo-tech.png";
 import iconeUsuario from "../assets/icone-usuario.png";
+import iconeTextoTech from "../assets/icone-texto-tech.png";
 
 const Navbar = ({ nomeUsuario = "Usuário", botoes = [], onUsuarioClick }) => {
 	return (
 		<nav className="navbar">
 			<div className="navbar-esquerda">
-				<img src={logo} alt="Logo" className="navbar-logo" />
+				<img src={iconeTextoTech} alt="Ícone de texto tech4good" className="navbar-logo" />
 				<span className="navbar-titulo">Tech For Good</span>
 				<Botao
 					className="navbar-usuario-botao"
 					style={{
-						background: "none",
+						background: "",
 						color: "#222",
 						fontSize: 18,
 						fontWeight: 500,
