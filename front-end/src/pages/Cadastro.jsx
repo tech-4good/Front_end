@@ -256,7 +256,7 @@ const Cadastro = () => {
 
         <div className="login-section">
           <span className="login-text">JÁ TEM CONTA? </span>
-          <a className="btn-link" href="/login">
+          <a className="btn-link" href="/">
             CLIQUE AQUI!
           </a>
         </div>

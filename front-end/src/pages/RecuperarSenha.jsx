@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ArrowLeft, User } from "lucide-react";
-import { Botao } from "../../components/Botao";
-import "./RecuperarSenha.css";
+import Botao from "../components/Botao";
+import "../styles/RecuperarSenha.css";
 
 const RecuperarSenha = ({ onNavigateToLogin, onNavigateToFeedback }) => {
   const [email, setEmail] = useState("");

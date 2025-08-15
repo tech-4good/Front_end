@@ -10,7 +10,8 @@ const Input = ({
   value,
   onChange,
   placeholder,
-  icon: Icon,
+  icon,
+  iconImg,
   isPassword = false,
   ...props
 }) => {
@@ -22,9 +23,14 @@ const Input = ({
     <div className="input-group">
       {label && <label className="input-label">{label}</label>}
       <div className="input-container">
-        {Icon && (
+        {iconImg && (
           <div className="input-icon">
-            <Icon className="icon" />
+            <img src={iconImg} alt="ícone" className="icon" style={{ width: 28, height: 28 }} />
+          </div>
+        )}
+        {!iconImg && icon && (
+          <div className="input-icon">
+            <icon className="icon" />
           </div>
         )}
         <input

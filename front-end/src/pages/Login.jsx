@@ -1,103 +1,70 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, User, Lock, Monitor } from "lucide-react";
-import "./FormularioLogin.css";
+import { useNavigate } from "react-router-dom";
+import "../styles/Login.css";
 
-const FormularioLogin = ({ onNavigateToCadastro, onLoginSuccess }) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("alinef@hotmail.com");
-  const [password, setPassword] = useState("****************");
+import logoTech from "../assets/icone-logo-tech.png";
+import Input from "../components/Input";
+import Botao from "../components/Botao";
+import iconeUsuario from "../assets/icone-usuario.png";
+import iconeCadeado from "../assets/icone-cadeado.png";
 
-  const handleNavigateToCadastro = () => {
-    onNavigateToCadastro();
-  };
+const Login = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  // Não precisa de showPassword aqui, pois o Input já gerencia isso
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (onLoginSuccess) onLoginSuccess();
+    // Aqui você pode adicionar a lógica de autenticação
+    // Se sucesso:
+    navigate("/perfil");
   };
 
   return (
-    <div className="login-container">
+    <div className="login-bg">
       <div className="login-card">
-        <div className="logo-section">
-          <div className="logo-icon">
-            <Monitor className="monitor-icon" />
-          </div>
-          <h1 className="logo-title">TECH 4 GOOD</h1>
-          <p className="logo-subtitle">QUALIDADE & CONFIANÇA</p>
+        <div className="login-logo-row">
+          <img src={logoTech} alt="Tech4Good" className="login-logo" />
         </div>
-
-        <h2 className="login-title">LOGIN</h2>
-
-        <div className="input-group">
-          <label className="input-label">E-mail:</label>
-          <div className="input-container">
-            <div className="input-icon">
-              <User className="icon" />
-            </div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              placeholder="alinef@hotmail.com"
-            />
-          </div>
-        </div>
-
-        <div className="input-group">
-          <label className="input-label">Senha:</label>
-          <div className="input-container">
-            <div className="input-icon">
-              <Lock className="icon" />
-            </div>
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field password-field"
-              placeholder="****************"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="password-toggle"
-            >
-              {showPassword ? (
-                <EyeOff className="icon" />
-              ) : (
-                <Eye className="icon" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="forgot-password">
-          <a href="#" className="forgot-link">
-            ESQUECI MINHA SENHA
-          </a>
-        </div>
-
-        <button className="login-button" onClick={handleLogin}>
-          Entrar
-        </button>
-
-        <div className="signup-section">
-          <span className="signup-text">AINDA NÃO TEM CONTA? </span>
-          <a
-            href="#"
-            className="signup-link"
-            onClick={(e) => {
-              e.preventDefault();
-              handleNavigateToCadastro();
-            }}
+        <h2 className="login-header">LOGIN</h2>
+        <form onSubmit={handleLogin} className="login-form">
+          <Input
+            label="E-mail:"
+            type="text"
+            placeholder="alinea@hotmail.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            iconImg={iconeUsuario}
+            required
+          />
+          <Input
+            label="Senha:"
+            type="password"
+            placeholder="****************"
+            value={senha}
+            onChange={e => setSenha(e.target.value)}
+            iconImg={iconeCadeado}
+            isPassword
+            required
+          />
+          <button
+            type="button"
+            className="login-forgot login-link-btn"
+            style={{ margin: 0, padding: 0, background: 'none', border: 'none' }}
+            onClick={() => navigate("/recuperar-senha")}
           >
-            CLIQUE AQUI!
-          </a>
+            ESQUECI MINHA SENHA
+          </button>
+          <Botao texto="Entrar" type="submit" />
+        </form>
+        <div className="login-link-row">
+          <span>AINDA NÃO TEM CONTA? </span>
+          <button className="login-link-btn" onClick={() => navigate("/cadastro")}>CLIQUE AQUI!</button>
         </div>
       </div>
     </div>
   );
 };
 
-export default FormularioLogin;
+export default Login;
