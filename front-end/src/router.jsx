@@ -3,7 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
-
+// import Home from "./pages/Home";
 import Perfil from "./pages/Perfil";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import ErrorPage from "./components/ErrorPage";
@@ -29,4 +29,9 @@ export const router = createBrowserRouter([
     element: <RecuperarSenha />,
     errorElement: <ErrorPage />,
   },
+  // {
+  //   path: "/home",
+  //   element: <Home />,
+  //   errorElement: <ErrorPage />,
+  // }
 ]);

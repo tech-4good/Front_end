@@ -1,9 +1,9 @@
 import React from "react";
-import NavBar from "../../components/NavBar/NavBar";
-import Card from "../../components/Card/Card";
-import "./Home.css";
+import Navbar from "../components/Navbar";
+import Card from "../components/Card";
+import "../styles/Home.css";
 
-import iconEndereco from "../../assets/casa.png";
+import iconEndereco from "../assets/icone-casa.png";
 import iconBeneficiados from "../../assets/users.png";
 import iconEntregar from "../../assets/entrega.png";
 import iconConsultar from "../../assets/lupa.png";
