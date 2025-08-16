@@ -1,50 +1,70 @@
 import React, { useState } from "react";
-import { ArrowLeft, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import Input from "../components/Input";
 import Botao from "../components/Botao";
 import "../styles/RecuperarSenha.css";
 
-const RecuperarSenha = ({ onNavigateToLogin, onNavigateToFeedback }) => {
+const RecuperarSenha = () => {
+  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState("inserir-email");
   const [email, setEmail] = useState("");
 
-  const handleSubmit = () => {
+  const handleVoltarLogin = () => {
+    navigate("/");
+  };
+
+  const handleRetornarLogin = () => {
+    navigate("/");
+  };
+
+  const handleEnviarEmail = () => {
     if (email.trim()) {
-      onNavigateToFeedback();
+      setCurrentPage("feedback"); // colocar a logica para a validação e envio do email depois
     }
   };
 
-  return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="header-section">
-          <button onClick={onNavigateToLogin} className="back-button">
-            <ArrowLeft className="back-icon" />
-            <span>Voltar</span>
-          </button>
-        </div>
-
-        <div className="content-section">
-          <h2 className="page-title">INSIRA O SEU E-MAIL</h2>
-          
-          <div>
-            <div className="input-group">
-              <label className="input-label">E-mail:</label>
-              <div className="input-container">
-                <div className="input-icon">
-                  <User className="icon" />
-                </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-field"
-                  placeholder="email@dominio.com"
-                />
-              </div>
+  if (currentPage === "feedback") {
+    return (
+      <div className="recuperar-container">
+        <div className="recuperar-card-feedback">
+          <div className="feedback-content">
+            <div className="feedback-message">
+              <p>Você irá receber um e-mail com instruções para redefinir a sua senha!</p>
             </div>
+            <div className="botao-container">
+              <Botao texto="Retornar para tela de login" onClick={handleRetornarLogin} />  {/* colocar fora depois */}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            <Botao onClick={handleSubmit}>
-              Enviar
-            </Botao>
+  return (
+    <div className="recuperar-container">
+      <div className="voltar-section">
+        <button onClick={handleVoltarLogin} className="voltar-button">
+          <ArrowLeft className="voltar-icon" />
+          <span>Voltar</span>
+        </button>
+      </div>
+
+      <div className="recuperar-card">
+        <div className="recuperar-content">
+          <h2 className="recuperar-title">INSIRA O<br />SEU E-MAIL</h2>
+          
+          <div className="form-section">
+            <Input
+              label="E-mail:"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)} // arrumar futuramente
+              placeholder="email@dominio.com"
+            />
+            <div className="botao-container">
+              <Botao texto="Enviar" onClick={handleEnviarEmail} />
+            </div>
           </div>
         </div>
       </div>

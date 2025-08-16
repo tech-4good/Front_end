@@ -1,0 +1,187 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+
+.recuperar-container {
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  background-color: #6dbdc9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+.voltar-section {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  z-index: 10;
+}
+
+.voltar-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #111;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: "Roboto", sans-serif;
+}
+
+.voltar-button:hover {
+  color: #007baf;
+}
+
+.voltar-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.recuperar-card {
+  background-color: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 500px;
+  padding: 36px 32px 24px 32px;
+  border: 4px solid #111;
+  display: flex;
+  flex-direction: column;
+}
+
+.recuperar-card-feedback {
+  background-color: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 450px;
+  padding: 0;
+  border: 4px solid #111;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.recuperar-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.feedback-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.recuperar-title {
+  font-size: 40px;
+  font-weight: 300;
+  color: #111;
+  text-align: center;
+  margin: 0 0 32px 0;
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+
+.form-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.botao-container {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.feedback-message {
+  background-color: #fff;
+  padding: 40px 32px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.feedback-message p {
+  font-size: 20px;
+  color: #111;
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.recuperar-card-feedback .botao-container {
+  padding: 0 32px 32px 32px;
+  margin-top: 0;
+}
+
+.recuperar-card .input-group {
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.recuperar-card .input-label {
+  font-size: 20px;
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .recuperar-container {
+    padding: 12px;
+  }
+  
+  .voltar-section {
+    top: 20px;
+    left: 20px;
+  }
+  
+  .voltar-button {
+    font-size: 16px;
+  }
+  
+  .voltar-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .recuperar-card {
+    max-width: 98vw;
+    padding: 18px 6vw 18px 6vw;
+  }
+  
+  .recuperar-card-feedback {
+    max-width: 98vw;
+  }
+  
+  .recuperar-title {
+    font-size: 32px;
+  }
+  
+  .feedback-message {
+    padding: 32px 24px;
+  }
+  
+  .feedback-message p {
+    font-size: 18px;
+  }
+  
+  .recuperar-card-feedback .botao-container {
+    padding: 0 24px 24px 24px;
+  }
+}
