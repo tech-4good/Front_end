@@ -79,6 +79,7 @@ body {
 	border: none !important;
 	border-radius: 0 !important;
 	transition: color 0.2s;
+	cursor: pointer !important;
 }
 
 .navbar-botao:hover {

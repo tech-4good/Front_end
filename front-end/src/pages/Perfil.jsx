@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/Perfil.css";
 import Voltar from "../components/Voltar";
 import Navbar from "../components/Navbar";
@@ -7,6 +8,7 @@ import iconeOlhoAberto from "../assets/icone-olho-aberto.png";
 import iconeOlhoFechado from "../assets/icone-olho-fechado.png";
 
 export default function Perfil() {
+	const navigate = useNavigate();
 	const [showPassword, setShowPassword] = useState(false);
 	const [form, setForm] = useState({
 		nome: "Aline Farias",
@@ -29,13 +31,15 @@ export default function Perfil() {
 		alert("Informações alteradas!");
 	};
 
-	return (
-		<div>
-			<Navbar />
-			<div className="perfil-container">
-				<Voltar />
-				<h1 className="perfil-title">Perfil</h1>
-				<form className="perfil-form" onSubmit={handleSubmit}>
+	       
+	       const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
+	       return (
+		       <div>
+			       <Navbar nomeUsuario={nomeUsuario} />
+			       <div className="perfil-container">
+				       <Voltar onClick={() => navigate("/home")} />
+				       <h1 className="perfil-title">Perfil</h1>
+				       <form className="perfil-form" onSubmit={handleSubmit}>
 					<div className="perfil-row">
 						<div className="perfil-field">
 							<label>Nome Completo:</label>

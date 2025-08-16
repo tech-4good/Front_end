@@ -1,109 +1,123 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Card from "../components/Card";
 import "../styles/Home.css";
 
-import iconEndereco from "../assets/icone-casa.png";
-import iconBeneficiados from "../../assets/users.png";
-import iconEntregar from "../../assets/entrega.png";
-import iconConsultar from "../../assets/lupa.png";
-import iconRelatorio from "../../assets/painel.png";
-import iconHistorico from "../../assets/historico.png";
-import iconCestas from "../../assets/caixa-aberta.png";
-import iconVoluntarios from "../../assets/user.png";
+import iconeCasa from "../assets/icone-casa.png";
+import iconeUsuarios from "../assets/icone-usuarios.png";
+import iconeCaixaEnviando from "../assets/icone-caixa-enviando.png";
+import iconeLupa from "../assets/icone-lupa.png";
+import iconeSetaSubindo from "../assets/icone-seta-subindo.png";
+import iconeRelogio from "../assets/icone-relogio.png";
+import iconeCaixaAberta from "../assets/icone-caixa-aberta.png";
+import iconeUsuario from "../assets/icone-usuario.png";
+import iconeSair from "../assets/icone-sair.png";
 
-const cards = [
-  {
-    title: "Cadastrar Endereço",
-    icon: (
-      <img src={iconEndereco} alt="Cadastrar Endereço" width={44} height={44} />
-    ),
-    onClick: () => {},
-  },
-  {
-    title: "Cadastrar Beneficiados",
-    icon: (
-      <img
-        src={iconBeneficiados}
-        alt="Cadastrar Beneficiados"
-        width={44}
-        height={44}
-      />
-    ),
-    onClick: () => {},
-  },
-  {
-    title: "Entregar Cesta",
-    icon: (
-      <img src={iconEntregar} alt="Entregar Cesta" width={44} height={44} />
-    ),
-    onClick: () => {},
-  },
-  {
-    title: "Consultar Beneficiados",
-    icon: (
-      <img
-        src={iconConsultar}
-        alt="Consultar Beneficiados"
-        width={44}
-        height={44}
-      />
-    ),
-    onClick: () => {},
-  },
-  {
-    title: "Relatório",
-    icon: <img src={iconRelatorio} alt="Relatório" width={44} height={44} />,
-    onClick: () => {},
-  },
-  {
-    title: "Histórico de Cestas",
-    icon: (
-      <img
-        src={iconHistorico}
-        alt="Histórico de Cestas"
-        width={44}
-        height={44}
-      />
-    ),
-    onClick: () => {},
-  },
-  {
-    title: "Cestas",
-    icon: <img src={iconCestas} alt="Cestas" width={44} height={44} />,
-    onClick: () => {},
-  },
-  {
-    title: "Voluntários",
-    icon: (
-      <img src={iconVoluntarios} alt="Voluntários" width={44} height={44} />
-    ),
-    onClick: () => {},
-  },
+
+const allCards = [
+	{
+		titulo: "Cadastrar Endereço",
+		icone: <img src={iconeCasa} alt="Cadastrar Endereço" />,
+		rota: "/cadastro-endereco",
+		admin: true,
+		comum: true,
+	},
+	{
+		titulo: "Cadastrar Beneficiados",
+		icone: <img src={iconeUsuarios} alt="Cadastrar Beneficiados" />,
+		rota: "/cadastro-beneficiado-menu",
+		admin: true,
+		comum: true,
+	},
+	{
+		titulo: "Entregar Cesta",
+		icone: <img src={iconeCaixaEnviando} alt="Entregar Cesta" />,
+		rota: "/doar-cesta",
+		admin: true,
+		comum: true,
+	},
+	{
+		titulo: "Consultar Beneficiados",
+		icone: <img src={iconeLupa} alt="Consultar Beneficiados" />,
+		rota: "/consulta-beneficiados-menu",
+		admin: true,
+		comum: true,
+	},
+	{
+		titulo: "Relatório",
+		icone: <img src={iconeSetaSubindo} alt="Relatório" />,
+		rota: "/relatorio",
+		admin: true,
+		comum: false,
+	},
+	{
+		titulo: "Histórico de Cestas",
+		icone: <img src={iconeRelogio} alt="Histórico de Cestas" />,
+		rota: "/historico-doacoes",
+		admin: true,
+		comum: true,
+	},
+	{
+		titulo: "Cestas",
+		icone: <img src={iconeCaixaAberta} alt="Cestas" />,
+		rota: "/controle-cestas",
+		admin: true,
+		comum: true,
+	},
+	{
+		titulo: "Voluntários",
+		icone: <img src={iconeUsuario} alt="Voluntários" />,
+		rota: "/voluntarios-menu",
+		admin: true,
+		comum: false,
+	},
 ];
 
-const Home = () => {
-  return (
-    <div className="home-page">
-      <NavBar userName="Aline" />
-      <div className="home-content">
-        <h1 className="home-title">Central de Acesso</h1>
-        <p className="home-subtitle">
-          Escolha uma das opções abaixo para acessar as informações desejadas
-        </p>
-        <div className="card-grid">
-          {cards.map((card, idx) => (
-            <Card
-              key={idx}
-              title={card.title}
-              icon={card.icon}
-              onClick={card.onClick}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+
+const HomeAdmin = () => {
+	const navigate = useNavigate();
+	const [tipoUsuario, setTipoUsuario] = useState("2");
+
+	useEffect(() => {
+		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
+		setTipoUsuario(tipo);
+	}, []);
+
+	const cards = allCards.filter(card =>
+		tipoUsuario === "2" ? card.admin : card.comum
+	);
+
+	const botoesNavbar = [
+		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
+		{ texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
+		...(tipoUsuario === "2" ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }] : []),
+		{ texto: "Sair", onClick: () => navigate("/"), icone: iconeSair }
+	];
+
+		
+		const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
+		return (
+			<div className="home-page">
+				<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+				<div className="home-content">
+				<div className="home-title">Central de Acesso</div>
+				<div className="home-subtitle">Escolha uma das opções abaixo para acessar as informações desejadas</div>
+				   <div className={`card-grid${cards.length === 6 ? ' tres-colunas' : ''}`}>
+					   {cards.map((card, idx) => (
+						   <Card
+							   key={idx}
+							   titulo={card.titulo}
+							   icone={card.icone}
+							   textoBotao="Acessar"
+							   onClickBotao={() => navigate(card.rota)}
+						   />
+					   ))}
+				   </div>
+			</div>
+		</div>
+	);
 };
 
-export default Home;
+export default HomeAdmin;
+
