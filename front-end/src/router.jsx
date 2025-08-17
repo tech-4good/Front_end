@@ -1,19 +1,17 @@
 import { createBrowserRouter } from "react-router-dom";
 
-
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
-
 import Perfil from "./pages/Perfil";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import ErrorPage from "./components/ErrorPage";
-
 import VoluntariosMenu from "./pages/VoluntariosMenu";
 import Home from "./pages/Home";
 import VoluntariosExcluir from "./pages/VoluntariosExcluir";
-
-
 import VoluntariosCadastro from "./pages/VoluntariosCadastro";
+import CadastroBeneficiadoMenu from "./pages/CadastroBeneficiadoMenu";
+import CadastroBeneficiadoSimples1 from "./pages/CadastroBeneficiadoSimples1";
+import CadastroBeneficiadoCompleto1 from "./pages/CadastroBeneficiadoCompleto1";
 
 export const router = createBrowserRouter([
   {
@@ -38,7 +36,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/home",
-  element: <Home />,
+    element: <Home />,
     errorElement: <ErrorPage />,
   },
   {
@@ -54,6 +52,21 @@ export const router = createBrowserRouter([
   {
     path: "/voluntarios-cadastro",
     element: <VoluntariosCadastro />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-beneficiado-menu",
+    element: <CadastroBeneficiadoMenu />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-beneficiado-simples1",
+    element: <CadastroBeneficiadoSimples1 />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-beneficiado-completo1",
+    element: <CadastroBeneficiadoCompleto1 />,
     errorElement: <ErrorPage />,
   }
 ]);
