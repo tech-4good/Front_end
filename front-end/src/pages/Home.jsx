@@ -75,7 +75,7 @@ const allCards = [
 ];
 
 
-const HomeAdmin = () => {
+const Home = () => {
 	const navigate = useNavigate();
 	const [tipoUsuario, setTipoUsuario] = useState("2");
 
@@ -119,5 +119,5 @@ const HomeAdmin = () => {
 	);
 };
 
-export default HomeAdmin;
+export default Home;
 
