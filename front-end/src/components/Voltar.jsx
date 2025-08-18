@@ -3,9 +3,9 @@ import React from "react";
 import "../styles/Voltar.css";
 import { ArrowLeft } from "lucide-react";
 
-const Voltar = ({ texto = "Voltar", onClick }) => {
+const Voltar = ({ texto = "Voltar", onClick, style }) => {
 	return (
-		<button className="voltar-btn" onClick={onClick} type="button">
+		<button style={style} className="voltar-btn" onClick={onClick} type="button"> 
 			<ArrowLeft className="voltar-icone" />
 			<span className="voltar-texto">{texto}</span>
 		</button>
@@ -13,3 +13,4 @@ const Voltar = ({ texto = "Voltar", onClick }) => {
 };
 
 export default Voltar;
+//teste n vai afetar os outros

@@ -1,0 +1,33 @@
+.menu-endereco {
+  display: flex;
+  background-color: #6ec1cf;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  min-height: 80px;
+  position: relative;
+}
+
+.menu-endereco-titulo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 400;
+  font-size: 3.5rem;
+  margin: 0;
+  color: #222;
+  text-align: center;
+}
+
+.menu-endereco-step {
+  margin-right: 2rem;
+  font-size: 1.75rem;
+  color: #222;
+  font-weight: 500;
+}
+
+.menu-endereco-voltar {
+  margin: 0;
+  z-index: 1;
+}

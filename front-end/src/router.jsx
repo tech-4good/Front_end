@@ -12,6 +12,7 @@ import VoluntariosCadastro from "./pages/VoluntariosCadastro";
 import CadastroBeneficiadoMenu from "./pages/CadastroBeneficiadoMenu";
 import CadastroBeneficiadoSimples1 from "./pages/CadastroBeneficiadoSimples1";
 import CadastroBeneficiadoCompleto1 from "./pages/CadastroBeneficiadoCompleto1";
+import CadastroEndereco from "./pages/CadastroEndereco";
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +68,11 @@ export const router = createBrowserRouter([
   {
     path: "/cadastro-beneficiado-completo1",
     element: <CadastroBeneficiadoCompleto1 />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-endereco",
+    element: <CadastroEndereco />,
     errorElement: <ErrorPage />,
   }
 ]);
