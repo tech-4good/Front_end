@@ -104,7 +104,6 @@ const Login = () => {
             placeholder="email@dominio.com"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            iconImg={iconeUsuario}
           />
           <Input
             label="Senha:"
@@ -112,7 +111,6 @@ const Login = () => {
             placeholder="****************"
             value={senha}
             onChange={e => setSenha(e.target.value)}
-            iconImg={iconeCadeado}
             isPassword
           />
           <button
