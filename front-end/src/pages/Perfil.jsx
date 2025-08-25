@@ -9,6 +9,8 @@ import iconeOlhoAberto from "../assets/icone-olho-aberto.png";
 import iconeOlhoFechado from "../assets/icone-olho-fechado.png";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeRelogio from "../assets/icone-relogio.png";
+
+import iconeUsuario from "../assets/icone-usuario.png";
 import iconeSair from "../assets/icone-sair.png";
 
 function formatCPF(value) {
@@ -53,8 +55,10 @@ export default function Perfil() {
 		setTipoUsuario(tipo);
 	}, []);
 
+
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
+		{ texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario, destaque: true },
 		...(tipoUsuario === "2" ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }] : []),
 		{ texto: "Sair", onClick: () => navigate("/"), icone: iconeSair }
 	];

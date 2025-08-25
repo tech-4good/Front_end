@@ -11,6 +11,7 @@ import VoluntariosExcluir from "./pages/VoluntariosExcluir";
 import VoluntariosCadastro from "./pages/VoluntariosCadastro";
 import CadastroBeneficiadoMenu from "./pages/CadastroBeneficiadoMenu";
 import CadastroBeneficiadoSimples1 from "./pages/CadastroBeneficiadoSimples1";
+import CadastroBeneficiadoSimples2 from "./pages/CadastroBeneficiadoSimples2";
 import CadastroBeneficiadoCompleto1 from "./pages/CadastroBeneficiadoCompleto1";
 import CadastroEndereco from "./pages/CadastroEndereco";
 import FilaEspera from "./pages/FilaEspera"
@@ -79,6 +80,11 @@ export const router = createBrowserRouter([
   {
     path: "/fila-espera",
     element: <FilaEspera />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "//cadastro-beneficiado-simples2",
+    element: <CadastroBeneficiadoSimples2 />,
     errorElement: <ErrorPage />,
   }
 ]);

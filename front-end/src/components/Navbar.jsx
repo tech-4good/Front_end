@@ -55,18 +55,19 @@ const Navbar = ({ nomeUsuario = "Usuário", botoes = [], onUsuarioClick }) => {
 					       texto={btn.texto}
 					       onClick={btn.onClick}
 					       className="navbar-botao"
-					       style={{
-						       background: "none",
-						       color: "#111",
-						       fontSize: 24,
-						       fontWeight: btn.destaque ? 700 : 500,
-						       boxShadow: "none",
-						       padding: "0 18px",
-						       minWidth: 0,
-						       display: "flex",
-						       alignItems: "center",
-						       gap: 8
-					       }}
+										style={{
+											background: "none",
+											color: "#111",
+											fontSize: 24,
+											fontWeight: btn.destaque ? 700 : 500,
+											textDecoration: btn.destaque ? "underline" : "none",
+											boxShadow: "none",
+											padding: "0 18px",
+											minWidth: 0,
+											display: "flex",
+											alignItems: "center",
+											gap: 8
+										}}
 					       {...(btn.icone && { children: <img src={btn.icone} alt="" className="navbar-icone" /> })}
 				       />
 			       ))}

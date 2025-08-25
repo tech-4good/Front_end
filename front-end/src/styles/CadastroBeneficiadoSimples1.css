@@ -1,0 +1,73 @@
+.cadastro-simples-passo1_2 {
+  position: absolute;
+  top: 32px;
+  right: 48px;
+  z-index: 2;
+}
+
+.cadastro-simples-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: #6ec1cf;
+  margin: 0;
+  padding: 0;
+}
+
+.cadastro-simples-container {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px 0 0 0;
+  box-sizing: border-box;
+}
+
+.cadastro-simples-title {
+  font-size: 48px;
+  font-weight: 500;
+  margin: 10px 0 24px 0;
+  text-align: center;
+}
+
+.cadastro-simples-form {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 0 auto;
+}
+
+.cadastro-simples-btn {
+  font-size: 22px;
+  font-weight: 500;
+  padding: 12px 0;
+  background: #e5e5e5;
+  border: 2px solid #222;
+  border-radius: 12px;
+  box-shadow: 2px 3px 3px #2222;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin-top: 24px;
+}
+
+.cadastro-simples-btn:hover {
+  background-color: #bfbfbf;
+}
+
+.cadastro-simples-passo {
+  position: relative;
+  right: 48px;
+  top: 32px;
+  margin-top: 0px;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.cadastrobeneficiado-voltar {
+  position: relative;
+  margin-top: 0;
+  left: 48px;
+  top: 32px;
+}
