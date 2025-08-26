@@ -1,0 +1,127 @@
+/* Resultados da busca de CPF */
+.doar-cesta-resultados {
+	width: 100%;
+	max-width: 600px;
+	background: #fff;
+	border-radius: 0 0 18px 18px;
+	border: 2px solid #222;
+	border-top: none;
+	box-shadow: 2px 3px 3px #2222;
+	font-size: 22px;
+	font-weight: 500;
+	color: #222;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	margin-top: -10px;
+	overflow: hidden;
+	margin-bottom: 18px;
+}
+.doar-cesta-resultado {
+	padding: 16px 24px;
+	border-bottom: 1px solid #eee;
+	width: 100%;
+}
+.doar-cesta-resultado:last-child {
+	border-bottom: none;
+}
+/* Fundo e container principal */
+.doar-cesta-bg {
+	min-height: 100vh;
+	width: 100vw;
+	background: #6dbdc9;
+	margin: 0;
+	padding: 0;
+}
+
+.doar-cesta-container {
+	width: 100%;
+	min-height: calc(100vh - 60px);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	padding-top: 32px;
+	box-sizing: border-box;
+	position: relative;
+}
+.doar-cesta-voltar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin-top: 12px;
+	margin-left: 18px;
+	z-index: 10;
+}
+
+.doar-cesta-title {
+	font-size: 56px;
+	font-weight: 500;
+	margin: 32px 0 32px 0;
+    margin-top: 100px;
+	text-align: center;
+}
+
+.doar-cesta-form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	max-width: 700px;
+	margin: 0 auto;
+}
+
+.doar-cesta-input {
+	width: 100%;
+	max-width: 600px;
+	background: #fff;
+	border: none;
+	border-radius: 22px;
+	padding: 20px 24px;
+	font-size: 24px;
+	color: #222;
+	box-shadow: 2px 3px 8px #2222;
+	margin: 0 -500px 40px 40px;
+	display: block;
+	box-sizing: border-box;
+	align-self: center;
+}
+.doar-cesta-input:focus {
+	background: #f5f5f5;
+	outline: 2px solid #222;
+}
+
+.doar-cesta-radio-row {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	margin: 0 0 38px 0;
+	font-size: 28px;
+	font-weight: 500;
+}
+.doar-cesta-radio-label {
+	font-size: 28px;
+	font-weight: 500;
+	margin-right: 8px;
+}
+
+.doar-cesta-btn-row {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+}
+.doar-cesta-btn-row button {
+	margin: 0 auto;
+	padding: 18px 48px;
+	font-size: 28px;
+	border-radius: 12px;
+	border: 2px solid #222;
+	background: #e5e5e5;
+	color: #222;
+	box-shadow: 2px 3px 8px #2222;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+.doar-cesta-btn-row button:hover {
+	background: #d0d0d0;
+}

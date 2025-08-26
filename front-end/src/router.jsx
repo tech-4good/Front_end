@@ -14,9 +14,15 @@ import CadastroBeneficiadoSimples1 from "./pages/CadastroBeneficiadoSimples1";
 import CadastroBeneficiadoSimples2 from "./pages/CadastroBeneficiadoSimples2";
 import CadastroBeneficiadoCompleto1 from "./pages/CadastroBeneficiadoCompleto1";
 import CadastroEndereco from "./pages/CadastroEndereco";
-import FilaEspera from "./pages/FilaEspera"
+import FilaEspera from "./pages/FilaEspera";
+import DoarCesta from "./pages/DoarCesta";
 
 export const router = createBrowserRouter([
+  {
+    path: "/doar-cesta",
+    element: <DoarCesta />,
+    errorElement: <ErrorPage />,
+  },
   {
     path: "/",
     element: <Login />,
