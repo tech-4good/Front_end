@@ -1,7 +1,7 @@
 /* Resultados da busca de CPF */
 .doar-cesta-resultados {
 	width: 100%;
-	max-width: 600px;
+	max-width: 550px;
 	background: #fff;
 	border-radius: 0 0 18px 18px;
 	border: 2px solid #222;
@@ -13,7 +13,8 @@
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	margin-top: -10px;
+	margin-left: -15px;
+	margin-top: -45px;
 	overflow: hidden;
 	margin-bottom: 18px;
 }
