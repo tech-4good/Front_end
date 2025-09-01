@@ -18,6 +18,7 @@ import CadastroEndereco from "./pages/CadastroEndereco";
 import FilaEspera from "./pages/FilaEspera";
 import DoarCesta from "./pages/DoarCesta";
 import ConsultaBeneficiados from "./pages/ConsultaBeneficiados";
+import ControleCestas from "./pages/ControleCestas";
 export const router = createBrowserRouter([
   {
     path: "/doar-cesta",
@@ -98,5 +99,11 @@ export const router = createBrowserRouter([
     path: "//cadastro-beneficiado-simples2",
     element: <CadastroBeneficiadoSimples2 />,
     errorElement: <ErrorPage />,
-  }
+  },
+  {
+    path: "/controle-cestas",
+    element: <ControleCestas />,
+    errorElement: <ErrorPage />,
+  },
+
 ]);

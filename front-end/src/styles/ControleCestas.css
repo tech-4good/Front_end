@@ -1,0 +1,200 @@
+.controle-cestas-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: #6ec1cf;
+  margin: 0;
+  padding: 0;
+}
+
+.controle-cestas-container {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 32px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.controle-cestas-voltar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-top: 12px;
+  margin-left: 18px;
+  z-index: 10;
+}
+
+.controle-cestas-title {
+  font-size: 56px;
+  font-weight: 500;
+  margin: 32px 0 40px 0;
+  margin-top: 100px;
+  text-align: center;
+  color: #222;
+}
+
+.controle-cestas-cards {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+.controle-cestas-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 220px;
+}
+
+.controle-cestas-card-titulo {
+  font-size: 20px;
+  font-weight: 500;
+  color: #222;
+  margin: 0 0 20px 0;
+  line-height: 1.2;
+}
+
+.controle-cestas-card-numero {
+  background: #d9d9d9;
+  border-radius: 20px;
+  padding: 20px 40px;
+  font-size: 48px;
+  font-weight: 700;
+  color: #222;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.controle-cestas-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.controle-cestas-radio-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0 0 40px 0;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.controle-cestas-radio-label {
+  font-size: 28px;
+  font-weight: 500;
+  margin-right: 8px;
+  color: #222;
+}
+
+.controle-cestas-input-row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 3rem;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.controle-cestas-input {
+  width: 100%;
+  max-width: 550px;
+  background: #fff;
+  border: none;
+  border-radius: 22px;
+  padding: 20px 24px;
+  font-size: 24px;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  display: block;
+  box-sizing: border-box;
+}
+
+.controle-cestas-input:focus {
+  background: #f5f5f5;
+  outline: 2px solid #222;
+}
+
+.controle-cestas-input::placeholder {
+  color: #888;
+  font-size: 24px;
+}
+
+.controle-cestas-input-row .botao-personalizado {
+  margin: 0;
+  padding: 18px 48px;
+  font-size: 28px;
+  border-radius: 12px;
+  border: 2px solid #222;
+  background: #d9d9d9;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.controle-cestas-input-row .botao-personalizado:hover {
+  background: #bfbfbf;
+}
+
+.controle-cestas-sucesso-modal {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 2px solid #222;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 400px;
+  max-width: 90vw;
+  z-index: 1000;
+}
+
+.controle-cestas-sucesso-texto {
+  font-size: 20px;
+  font-weight: 500;
+  color: #222;
+  margin: 0;
+}
+
+.controle-cestas-sucesso-fechar {
+  background: none;
+  border: none;
+  font-size: 24px;
+  font-weight: 700;
+  color: #222;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.controle-cestas-sucesso-fechar:hover {
+  background: #f0f0f0;
+}
