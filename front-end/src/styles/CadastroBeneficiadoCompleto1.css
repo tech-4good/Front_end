@@ -1,3 +1,30 @@
+/* Autocomplete de endereços */
+.cadastro-beneficiado-resultados {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+  z-index: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-top: none;
+}
+.cadastro-beneficiado-resultado {
+  padding: 16px 18px;
+  font-size: 1.15rem;
+  border-bottom: 1px solid #eee;
+  transition: background 0.15s;
+}
+.cadastro-beneficiado-resultado:last-child {
+  border-bottom: none;
+}
+.cadastro-beneficiado-resultado:hover {
+  background: #eaf6f8;
+}
 /* CadastroBeneficiadoCompleto1.css - inspirado em ConsultaBeneficiados.css e DoarCesta.css */
 
 .cadastro-beneficiado-bg {
@@ -12,12 +39,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: -40px;
 }
 
 .cadastro-beneficiado-voltar {
   width: 100%;
   max-width: 1200px;
-  margin-left: 30px;
+  margin-left: -180px;
   margin-bottom: 10px;
   align-self: flex-start;
 }
@@ -33,7 +61,7 @@
 .cadastro-beneficiado-title {
   font-size: 3.2rem;
   font-weight: 400;
-  margin: 30px 0 20px 0;
+  margin: 30px 0 50px 0;
   text-align: center;
   flex: 1;
 }
@@ -44,6 +72,8 @@
   top: 40px;
   font-size: 1.7rem;
   font-weight: 400;
+  margin-top: -95px;
+  margin-right: -90px;
 }
 
 .cadastro-beneficiado-form {
@@ -87,6 +117,8 @@
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
   outline: none;
   transition: box-shadow 0.2s;
+  position: relative;
+  z-index: 1;
 }
 .cadastro-beneficiado-input:focus {
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.13);
