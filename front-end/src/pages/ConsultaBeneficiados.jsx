@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import Modal from '../components/Modal';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import '../styles/ConsultaBeneficiados.css';
@@ -10,7 +11,6 @@ import iconeRelogio from '../assets/icone-relogio.png';
 import iconeSair from '../assets/icone-sair.png';
 import Voltar from '../components/Voltar';
 
-// Dados fake para busca de CPF
 const beneficiadosFake = [
 	{ cpf: "33344455566", nome: "Lucas Almeida" },
 	{ cpf: "22233344455", nome: "Bruna Reginato" },
@@ -40,9 +40,21 @@ export default function ConsultaBeneficiados() {
 
 	const nomeUsuario = sessionStorage.getItem('nomeUsuario') || 'Usuário';
 const [resultados, setResultados] = useState([]);
+const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
+const [modalCampos, setModalCampos] = useState(false);
 
 		function handleBuscar(e) {
 			e.preventDefault();
+			if (!cpf) {
+				setModalCampos(true);
+				return;
+			}
+			const existe = beneficiadosFake.some(v => v.cpf === cpf);
+			if (existe) {
+				navigate('/consulta-beneficiados-resultado');
+			} else {
+				setModalNaoEncontrado(true);
+			}
 		}
 
 		function handleCpfChange(e) {
@@ -75,10 +87,10 @@ const [resultados, setResultados] = useState([]);
 						autoFocus
 					/>
 					{cpf && cpf.length < 11 && resultados.length > 0 && (
-						<div className="doar-cesta-resultados">
+						<div className="consulta-beneficiados-resultados">
 							{resultados.map((v, idx) => (
 								<div
-									className="doar-cesta-resultado"
+									className="consulta-beneficiados-resultado"
 									key={idx}
 									style={{ cursor: "pointer" }}
 									onClick={() => setCpf(v.cpf)}
@@ -92,6 +104,22 @@ const [resultados, setResultados] = useState([]);
 						<FaSearch className="consulta-beneficiados-search-icon" /> Buscar
 					</button>
 				</form>
+				<Modal
+					isOpen={modalNaoEncontrado}
+					onClose={() => setModalNaoEncontrado(false)}
+					texto="Beneficiado com esse CPF não está cadastrado. Deseja cadastrar?"
+					showClose={true}
+					botoes={[{
+						texto: 'Cadastrar',
+						onClick: () => { setModalNaoEncontrado(false); navigate('/cadastro-beneficiado-menu'); }
+					}]}
+				/>
+				<Modal
+					isOpen={modalCampos}
+					onClose={() => setModalCampos(false)}
+					texto="Os campos devem estar preenchidos."
+					showClose={true}
+				/>
 			</div>
 		</div>
 	);

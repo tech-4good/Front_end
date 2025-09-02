@@ -1,4 +1,3 @@
-/* Autocomplete igual DoarCesta, alinhado abaixo do input */
 .consulta-beneficiados-form {
 					position: relative;
 					display: flex;
@@ -20,31 +19,17 @@
 		outline: none;
 		transition: box-shadow 0.2s;
 	}
-	.doar-cesta-resultados {
-					position: absolute;
-					left: 50%;
-					top: 0;
-					transform: translateX(-50%);
-					width: 480px;
-					max-width: 550px;
-					background: #fff;
-					border-radius: 0 0 18px 18px;
-					border: 2px solid #222;
-					border-top: none;
-					box-shadow: 2px 3px 3px #2222;
-					font-size: 22px;
-					font-weight: 500;
-					color: #222;
-					display: flex;
-					flex-direction: column;
-					align-items: flex-start;
-					overflow: hidden;
-					margin-top: 60px;
-					margin-bottom: 18px;
-					z-index: 1;
+.doar-cesta-resultado {
+	padding: 16px 24px;
+	border-bottom: 1px solid #eee;
+	width: 100%;
+	background: #fff;
 }
-.doar-cesta-resultados {
-	position: static;
+.consulta-beneficiados-resultados {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	transform: translateX(-50%);
 	width: 480px;
 	max-width: 550px;
 	background: #fff;
@@ -59,44 +44,18 @@
 	flex-direction: column;
 	align-items: flex-start;
 	overflow: hidden;
+	margin-top: 60px;
 	margin-bottom: 18px;
-	z-index: 10;
+	margin-left: -85px;
+	z-index: 1;
 }
-.doar-cesta-resultado {
+.consulta-beneficiados-resultado {
 	padding: 16px 24px;
 	border-bottom: 1px solid #eee;
 	width: 100%;
 	background: #fff;
 }
-.doar-cesta-resultado:last-child {
-	border-bottom: none;
-}
-/* Autocomplete igual DoarCesta */
-.doar-cesta-resultados {
-	width: 100%;
-	max-width: 550px;
-	background: #fff;
-	border-radius: 0 0 18px 18px;
-	border: 2px solid #222;
-	border-top: none;
-	box-shadow: 2px 3px 3px #2222;
-	font-size: 22px;
-	font-weight: 500;
-	color: #222;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	margin-left: -15px;
-	margin-top: -45px;
-	overflow: hidden;
-	margin-bottom: 18px;
-}
-.doar-cesta-resultado {
-	padding: 16px 24px;
-	border-bottom: 1px solid #eee;
-	width: 100%;
-}
-.doar-cesta-resultado:last-child {
+.consulta-beneficiados-resultado:last-child {
 	border-bottom: none;
 }
 .consulta-beneficiados-bg {
