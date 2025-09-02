@@ -13,7 +13,8 @@ import CadastroBeneficiadoMenu from "./pages/CadastroBeneficiadoMenu";
 import CadastroBeneficiadoSimples1 from "./pages/CadastroBeneficiadoSimples1";
 import CadastroBeneficiadoSimples2 from "./pages/CadastroBeneficiadoSimples2";
 import CadastroBeneficiadoCompleto1 from "./pages/CadastroBeneficiadoCompleto1";
-
+import CadastroBeneficiadoCompleto2 from "./pages/CadastroBeneficiadoCompleto2";
+import CadastroBeneficiadoCompleto3 from "./pages/CadastroBeneficiadoCompleto3";
 import CadastroEndereco from "./pages/CadastroEndereco";
 import FilaEspera from "./pages/FilaEspera";
 import DoarCesta from "./pages/DoarCesta";
@@ -83,6 +84,16 @@ export const router = createBrowserRouter([
   {
     path: "/cadastro-beneficiado-completo1",
     element: <CadastroBeneficiadoCompleto1 />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-beneficiado-completo2",
+    element: <CadastroBeneficiadoCompleto2 />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-beneficiado-completo3",
+    element: <CadastroBeneficiadoCompleto3 />,
     errorElement: <ErrorPage />,
   },
   {

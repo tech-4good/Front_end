@@ -13,7 +13,6 @@ import iconeSair from '../assets/icone-sair.png';
 import { FaSearch } from 'react-icons/fa';
 
 
-// Endereços fake para autocomplete
 const enderecosFake = [
     { logradouro: "Rua Alameda Portuguesa", numero: "34" },
     { logradouro: "Rua Alameda Portuguesa", numero: "53" },
@@ -69,12 +68,10 @@ export default function CadastroBeneficiadoCompleto1() {
 
                 function handleBuscar(e) {
                     e.preventDefault();
-                    // Validação de campos obrigatórios
                     if (!rua || !numero) {
                         setModalErro(true);
                         return;
                     }
-                    // Simula busca: endereço não encontrado se não existir na lista
                     const existe = enderecosFake.some(
                         v => v.logradouro.toLowerCase() === rua.toLowerCase() && v.numero === numero
                     );
@@ -82,7 +79,6 @@ export default function CadastroBeneficiadoCompleto1() {
                         setModalNaoEncontrado(true);
                         return;
                     }
-                    // Endereço encontrado
                     setModalSucesso(true);
                 }
 

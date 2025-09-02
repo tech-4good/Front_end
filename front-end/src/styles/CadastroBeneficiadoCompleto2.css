@@ -1,0 +1,25 @@
+.cadastro-beneficiado-btn-row {
+	margin-top: 32px;
+}
+.cadastro-beneficiado-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 50px;
+	max-width: 500px;
+	margin: 0 auto;
+}
+
+.cadastro-beneficiado-col {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.cadastro-beneficiado-field {
+	display: flex;
+	flex-direction: column;
+}
+
+.cadastro-beneficiado-form {
+	margin-top: 32px;
+}

@@ -1,3 +1,104 @@
+/* Autocomplete igual DoarCesta, alinhado abaixo do input */
+.consulta-beneficiados-form {
+					position: relative;
+					display: flex;
+					flex-direction: row;
+					align-items: flex-start;
+					justify-content: center;
+					gap: 16px;
+				}
+	
+	.consulta-beneficiados-input {
+		width: 480px;
+		height: 60px;
+		border-radius: 24px;
+		border: none;
+		background: #fff;
+		font-size: 1.3rem;
+		padding: 0 28px;
+		box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+		outline: none;
+		transition: box-shadow 0.2s;
+	}
+	.doar-cesta-resultados {
+					position: absolute;
+					left: 50%;
+					top: 0;
+					transform: translateX(-50%);
+					width: 480px;
+					max-width: 550px;
+					background: #fff;
+					border-radius: 0 0 18px 18px;
+					border: 2px solid #222;
+					border-top: none;
+					box-shadow: 2px 3px 3px #2222;
+					font-size: 22px;
+					font-weight: 500;
+					color: #222;
+					display: flex;
+					flex-direction: column;
+					align-items: flex-start;
+					overflow: hidden;
+					margin-top: 60px;
+					margin-bottom: 18px;
+					z-index: 1;
+}
+.doar-cesta-resultados {
+	position: static;
+	width: 480px;
+	max-width: 550px;
+	background: #fff;
+	border-radius: 0 0 18px 18px;
+	border: 2px solid #222;
+	border-top: none;
+	box-shadow: 2px 3px 3px #2222;
+	font-size: 22px;
+	font-weight: 500;
+	color: #222;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	overflow: hidden;
+	margin-bottom: 18px;
+	z-index: 10;
+}
+.doar-cesta-resultado {
+	padding: 16px 24px;
+	border-bottom: 1px solid #eee;
+	width: 100%;
+	background: #fff;
+}
+.doar-cesta-resultado:last-child {
+	border-bottom: none;
+}
+/* Autocomplete igual DoarCesta */
+.doar-cesta-resultados {
+	width: 100%;
+	max-width: 550px;
+	background: #fff;
+	border-radius: 0 0 18px 18px;
+	border: 2px solid #222;
+	border-top: none;
+	box-shadow: 2px 3px 3px #2222;
+	font-size: 22px;
+	font-weight: 500;
+	color: #222;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	margin-left: -15px;
+	margin-top: -45px;
+	overflow: hidden;
+	margin-bottom: 18px;
+}
+.doar-cesta-resultado {
+	padding: 16px 24px;
+	border-bottom: 1px solid #eee;
+	width: 100%;
+}
+.doar-cesta-resultado:last-child {
+	border-bottom: none;
+}
 .consulta-beneficiados-bg {
 	min-height: 100vh;
 	background: #74bec9;
@@ -16,7 +117,7 @@
 	width: 100%;
 	max-width: 1200px;
 	margin-left: 30px;
-	margin-bottom: 10px;
+	margin-top: -50px;
 	align-self: flex-start;
 }
 
@@ -24,6 +125,7 @@
 	font-size: 3.2rem;
 	font-weight: 400;
 	margin: 30px 0 40px 0;
+	margin-top: 50px;
 	text-align: center;
 }
 
@@ -36,16 +138,18 @@
 }
 
 .consulta-beneficiados-input {
-	width: 480px;
-	height: 60px;
-	border-radius: 24px;
-	border: none;
-	background: #fff;
-	font-size: 1.3rem;
-	padding: 0 28px;
-	box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
-	outline: none;
-	transition: box-shadow 0.2s;
+		width: 480px;
+		height: 60px;
+		border-radius: 24px;
+		border: none;
+		background: #fff;
+		font-size: 1.3rem;
+		padding: 0 28px;
+		box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+		outline: none;
+		transition: box-shadow 0.2s;
+		position: relative;
+		z-index: 2;
 }
 .consulta-beneficiados-input:focus {
 	box-shadow: 0 2px 12px 0 rgba(0,0,0,0.13);
