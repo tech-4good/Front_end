@@ -20,7 +20,9 @@ import FilaEspera from "./pages/FilaEspera";
 import DoarCesta from "./pages/DoarCesta";
 import ConsultaBeneficiados from "./pages/ConsultaBeneficiados";
 import ConsultaBeneficiadosResultado from "./pages/ConsultaBeneficiadosResultado";
+import ConsultaBeneficiadosMenu from "./pages/ConsultaBeneficiadosMenu";
 import ControleCestas from "./pages/ControleCestas";
+import ConsultaInformacoesPessoais from "./pages/ConsultaInformacoesPessoais";
 export const router = createBrowserRouter([
   {
     path: "/doar-cesta",
@@ -120,6 +122,16 @@ export const router = createBrowserRouter([
   {
     path: "/consulta-beneficiados-resultado",
     element: <ConsultaBeneficiadosResultado />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/consulta-beneficiados-menu",
+    element: <ConsultaBeneficiadosMenu />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/consulta-informacoes-pessoais",
+    element: <ConsultaInformacoesPessoais />,
     errorElement: <ErrorPage />,
   },
 ]);

@@ -1,0 +1,54 @@
+
+.consulta-beneficiados-menu-bg {
+	min-height: 100vh;
+	background: #6ec1c7;
+	display: flex;
+	flex-direction: column;
+}
+
+.consulta-beneficiados-menu-container {
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 32px 0 0 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.consulta-beneficiados-menu-voltar {
+	align-self: flex-start;
+	margin-bottom: 16px;
+    margin-top: -30px;
+    margin-left: -400px;
+}
+
+.consulta-beneficiados-menu-title {
+	font-size: 3rem;
+	font-weight: bold;
+	margin-bottom: 48px;
+	margin-top: 24px;
+	text-align: center;
+}
+
+.consulta-beneficiados-menu-botoes {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	align-items: center;
+}
+
+.consulta-beneficiados-menu-botao {
+	background: #ededed;
+	border: 2px solid #222;
+	border-radius: 14px;
+	font-size: 1.4rem;
+	font-weight: 500;
+	padding: 16px 48px;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+	transition: background 0.2s, box-shadow 0.2s;
+}
+.consulta-beneficiados-menu-botao:hover {
+	background: #bfbfbf;
+	box-shadow: 0 4px 16px rgba(0,0,0,0.16);
+}

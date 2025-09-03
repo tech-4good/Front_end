@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
-import "../styles/Home.css"; // Para a Navbar
+import "../styles/Home.css"; 
 import "../styles/ConsultaBeneficiadosResultado.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
 
-// Simulação dos beneficiados cadastrados
 const beneficiadosFake = [
   { cpf: "33344455566", nome: "Lucas Almeida" },
   { cpf: "22233344455", nome: "Bruna Reginato" },
@@ -20,7 +19,6 @@ const beneficiadosFake = [
   { cpf: "11122233344", nome: "João Pedro Santos" },
 ];
 
-// Simulação de retiradas do beneficiado
 const retiradasFake = [
   // Bruna Reginato
   { cpf: "22233344455", tipo: "Kit", data: "09/03/2025" },
@@ -50,19 +48,19 @@ export default function ConsultaBeneficiadosResultado() {
   const [tipoUsuario, setTipoUsuario] = useState("2");
   const [beneficiado, setBeneficiado] = useState(null);
   const [retiradas, setRetiradas] = useState([]);
-  const [ordem, setOrdem] = useState('desc'); // 'desc' ou 'asc'
+  const [ordem, setOrdem] = useState('desc'); 
 
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "2";
     setTipoUsuario(tipo);
-    // Recupera o CPF passado via state
+    
     const cpf = location.state?.cpf;
     if (cpf) {
       const encontrado = beneficiadosFake.find(v => v.cpf === cpf);
       setBeneficiado(encontrado);
-      // Filtra retiradas do beneficiado
+      
       let retiradas = retiradasFake.filter(r => r.cpf === cpf);
-      // Ordena por data
+      
       retiradas = retiradas.sort((a, b) => {
         const da = a.data.split('/').reverse().join('-');
         const db = b.data.split('/').reverse().join('-');
@@ -86,7 +84,7 @@ export default function ConsultaBeneficiadosResultado() {
       <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
       <div className="consulta-beneficiados-resultado-container">
         <div className="consulta-beneficiados-resultado-voltar">
-          <Voltar onClick={() => navigate("/consulta-beneficiados")} />
+          <Voltar onClick={() => navigate('/consulta-beneficiados')}/>
         </div>
         <div className="consulta-beneficiados-resultado-filtro">
           <label className="consulta-beneficiados-resultado-filtro-label">Filtrar por data:</label>
@@ -101,13 +99,16 @@ export default function ConsultaBeneficiadosResultado() {
             {retiradas.length > 0 ? (
               retiradas.map((r, idx) => (
                 <div className="consulta-beneficiados-resultado-card" key={idx}>
-                  <div
-                    className="consulta-beneficiados-resultado-nome"
-                    style={{ cursor: 'pointer', textDecoration: 'underline' }}
-                    onClick={() => navigate('/consulta-beneficiados-menu')}
-                  >
-                    {beneficiado.nome}
-                  </div>
+                    <div
+                      className="consulta-beneficiados-resultado-nome"
+                      style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => {
+                        sessionStorage.setItem('cpfSelecionado', beneficiado.cpf);
+                        navigate('/consulta-beneficiados-menu', { state: { cpf: beneficiado.cpf } });
+                      }}
+                    >
+                      {beneficiado.nome}
+                    </div>
                   <div className="consulta-beneficiados-resultado-tipo">
                     <span className="consulta-beneficiados-resultado-tipo-badge">{r.tipo}</span>
                   </div>
