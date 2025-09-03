@@ -51,7 +51,7 @@ const [modalCampos, setModalCampos] = useState(false);
 			}
 			const existe = beneficiadosFake.some(v => v.cpf === cpf);
 			if (existe) {
-				navigate('/consulta-beneficiados-resultado');
+				navigate('/consulta-beneficiados-resultado', { state: { cpf } });
 			} else {
 				setModalNaoEncontrado(true);
 			}

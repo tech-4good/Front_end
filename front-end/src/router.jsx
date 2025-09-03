@@ -19,6 +19,7 @@ import CadastroEndereco from "./pages/CadastroEndereco";
 import FilaEspera from "./pages/FilaEspera";
 import DoarCesta from "./pages/DoarCesta";
 import ConsultaBeneficiados from "./pages/ConsultaBeneficiados";
+import ConsultaBeneficiadosResultado from "./pages/ConsultaBeneficiadosResultado";
 import ControleCestas from "./pages/ControleCestas";
 export const router = createBrowserRouter([
   {
@@ -27,7 +28,7 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: "/consulta-beneficiados-menu",
+    path: "/consulta-beneficiados",
     element: <ConsultaBeneficiados />,
     errorElement: <ErrorPage />,
   },
@@ -116,5 +117,9 @@ export const router = createBrowserRouter([
     element: <ControleCestas />,
     errorElement: <ErrorPage />,
   },
-
+  {
+    path: "/consulta-beneficiados-resultado",
+    element: <ConsultaBeneficiadosResultado />,
+    errorElement: <ErrorPage />,
+  },
 ]);

@@ -40,7 +40,7 @@ const allCards = [
 	{
 		titulo: "Consultar Beneficiados",
 		icone: <img src={iconeLupa} alt="Consultar Beneficiados" />,
-		rota: "/consulta-beneficiados-menu",
+		rota: "/consulta-beneficiados",
 		admin: true,
 		comum: true,
 	},
