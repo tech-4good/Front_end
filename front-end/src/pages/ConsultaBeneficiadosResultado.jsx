@@ -53,20 +53,27 @@ export default function ConsultaBeneficiadosResultado() {
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "2";
     setTipoUsuario(tipo);
-    
-    const cpf = location.state?.cpf;
+
+    // Recupera o CPF do state OU do sessionStorage
+    let cpf = location.state?.cpf;
+    if (!cpf) {
+      cpf = sessionStorage.getItem('cpfSelecionado');
+    }
     if (cpf) {
       const encontrado = beneficiadosFake.find(v => v.cpf === cpf);
       setBeneficiado(encontrado);
-      
+
       let retiradas = retiradasFake.filter(r => r.cpf === cpf);
-      
+
       retiradas = retiradas.sort((a, b) => {
         const da = a.data.split('/').reverse().join('-');
         const db = b.data.split('/').reverse().join('-');
         return ordem === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
       });
       setRetiradas(retiradas);
+    } else {
+      setBeneficiado(null);
+      setRetiradas([]);
     }
   }, [location, ordem]);
 

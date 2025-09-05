@@ -1,3 +1,19 @@
+/* Sobrescreve o estilo dos botões do modal apenas nesta página */
+.modal-botoes .botao-personalizado {
+	background: #111 !important;
+	color: #fff !important;
+	border: none !important;
+	min-width: 160px;
+	font-size: 32px;
+	padding: 18px 10px;
+	border-radius: 16px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+	transition: background 0.2s, color 0.2s;
+}
+.modal-botoes .botao-personalizado:hover {
+	background: #333 !important;
+	color: #fff !important;
+}
 
 .consulta-info-bg {
 	min-height: 100vh;
@@ -90,7 +106,7 @@
 	flex-wrap: wrap;
 	gap: 24px;
 	justify-content: center;
-	margin-bottom: 50px;
+	margin-bottom: 100px;
 }
 .consulta-info-auxilio {
 	background: #fff;
@@ -106,7 +122,8 @@
 	flex-wrap: wrap;
 	gap: 24px;
 	justify-content: center;
-	margin-bottom: 32px;
+	margin-bottom: 100px;
+
 }
 .consulta-info-botao {
 	background: #ededed;

@@ -47,7 +47,7 @@ const allCards = [
 	{
 		titulo: "Relatório",
 		icone: <img src={iconeSetaSubindo} alt="Relatório" />,
-		rota: "/relatorio",
+		rota: "/painel-menu",
 		admin: true,
 		comum: false,
 	},

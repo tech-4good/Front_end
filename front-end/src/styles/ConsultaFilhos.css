@@ -1,0 +1,101 @@
+.consulta-filhos-bg {
+	min-height: 100vh;
+	background: #6ec1c7;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.consulta-filhos-container {
+	max-width: 1800px;
+	padding: 32px 0 0 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	height: calc(100vh - 80px);
+	overflow-y: auto;
+}
+
+.consulta-filhos-voltar {
+	align-self: flex-start;
+	margin-bottom: 16px;
+	margin-top: -30px;
+}
+
+.consulta-filhos-title {
+	font-size: 3rem;
+	font-weight: bold;
+	margin-bottom: 32px;
+	margin-top: 12px;
+	text-align: center;
+}
+
+.consulta-filhos-form {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 30px;
+	align-items: center;
+}
+
+.consulta-filhos-lista {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 80px 100px;
+	width: 100%;
+	justify-content: center;
+}
+
+.consulta-filhos-card {
+	background: none;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	min-width: 320px;
+	max-width: 400px;
+}
+.consulta-filhos-label {
+	font-weight: 600;
+	font-size: 1.5rem;
+	margin-bottom: 8px;
+}
+.consulta-filhos-card label {
+	font-weight: 500;
+	font-size: 20px;
+	margin-bottom: 2px;
+}
+.consulta-filhos-card input {
+	background: #fff;
+	border-radius: 10px;
+	border: none;
+	font-size: 1.3rem;
+	padding: 15px 18px;
+	margin-bottom: 8px;
+	color: #222;
+	width: 100%;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.consulta-filhos-botoes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 24px;
+	justify-content: center;
+	margin: 32px 0 32px 0;
+}
+.consulta-filhos-botao {
+	background: #ededed;
+	border: 2px solid #222;
+	border-radius: 14px;
+	font-size: 1.2rem;
+	font-weight: 500;
+	padding: 14px 32px;
+	width: 300px;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+	transition: background 0.2s, box-shadow 0.2s;
+}
+.consulta-filhos-botao:hover {
+	background: #bfbfbf;
+	box-shadow: 0 4px 16px rgba(0,0,0,0.16);
+}

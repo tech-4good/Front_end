@@ -1,5 +1,4 @@
 import { createBrowserRouter } from "react-router-dom";
-
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Perfil from "./pages/Perfil";
@@ -23,6 +22,10 @@ import ConsultaBeneficiadosResultado from "./pages/ConsultaBeneficiadosResultado
 import ConsultaBeneficiadosMenu from "./pages/ConsultaBeneficiadosMenu";
 import ControleCestas from "./pages/ControleCestas";
 import ConsultaInformacoesPessoais from "./pages/ConsultaInformacoesPessoais";
+import ConsultaEndereco from "./pages/ConsultaEndereco";
+import ConsultaFilhos from "./pages/ConsultaFilhos";
+import PainelMenu from "./pages/PainelMenu";
+import HistoricoDoacoes from "./pages/HistoricoDoacoes";
 export const router = createBrowserRouter([
   {
     path: "/doar-cesta",
@@ -132,6 +135,26 @@ export const router = createBrowserRouter([
   {
     path: "/consulta-informacoes-pessoais",
     element: <ConsultaInformacoesPessoais />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/consulta-endereco",
+    element: <ConsultaEndereco />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/consulta-filhos",
+    element: <ConsultaFilhos />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/painel-menu",
+    element: <PainelMenu />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/historico-doacoes",
+    element: <HistoricoDoacoes />,
     errorElement: <ErrorPage />,
   },
 ]);

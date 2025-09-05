@@ -13,8 +13,13 @@ export default function ConsultaBeneficiadosMenu() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [tipoUsuario, setTipoUsuario] = useState("2");
-	// Recupera o CPF do beneficiado selecionado
+	
 	const cpfSelecionado = location.state?.cpf;
+	useEffect(() => {
+		if (cpfSelecionado) {
+			sessionStorage.setItem('cpfSelecionado', cpfSelecionado);
+		}
+	}, [cpfSelecionado]);
 
 	useEffect(() => {
 		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
