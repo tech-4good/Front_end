@@ -89,6 +89,11 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
+    path: "/cadastro-beneficiado-simples2",
+    element: <CadastroBeneficiadoSimples2 />,
+    errorElement: <ErrorPage />,
+  },
+  {
     path: "/cadastro-beneficiado-completo1",
     element: <CadastroBeneficiadoCompleto1 />,
     errorElement: <ErrorPage />,
@@ -111,11 +116,6 @@ export const router = createBrowserRouter([
   {
     path: "/fila-espera",
     element: <FilaEspera />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "//cadastro-beneficiado-simples2",
-    element: <CadastroBeneficiadoSimples2 />,
     errorElement: <ErrorPage />,
   },
   {

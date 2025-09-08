@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import Modal from "../components/Modal";
 import Voltar from "../components/Voltar";
 import Botao from "../components/Botao";
 import "../styles/CadastroBeneficiadoMenu.css";
@@ -11,6 +12,17 @@ import iconeSair from "../assets/icone-sair.png";
 
 export default function CadastroBeneficiadoMenu() {
   const navigate = useNavigate();
+  const [modalSucesso, setModalSucesso] = useState(false);
+  const [nomeBeneficiado, setNomeBeneficiado] = useState("");
+
+  useEffect(() => {
+    if (localStorage.getItem("modalSucessoBeneficiado") === "true") {
+      const nome = sessionStorage.getItem("nomeBeneficiado") || "";
+      setNomeBeneficiado(nome);
+      setModalSucesso(true);
+      localStorage.removeItem("modalSucessoBeneficiado");
+    }
+  }, []);
   const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
   const tipoUsuario = sessionStorage.getItem("tipoUsuario") || "2";
 
@@ -47,6 +59,11 @@ export default function CadastroBeneficiadoMenu() {
           />
         </div>
       </div>
+      <Modal
+        isOpen={modalSucesso}
+        onClose={() => setModalSucesso(false)}
+        texto={`Beneficiado ${nomeBeneficiado} cadastrado com sucesso!`}
+      />
     </div>
   );
 }

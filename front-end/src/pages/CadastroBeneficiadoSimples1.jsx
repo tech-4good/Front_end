@@ -45,6 +45,14 @@ export default function CadastroBeneficiadoSimples1() {
         return formatted;
     }
 
+    function formatDate(value) {
+	    let numbers = value.replace(/\D/g, "");
+	    if (numbers.length > 8) numbers = numbers.slice(0, 8);
+	    if (numbers.length <= 2) return numbers;
+	    if (numbers.length <= 4) return numbers.replace(/(\d{2})(\d{0,2})/, "$1/$2");
+	    return numbers.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3");
+	}
+
     const handleSubmit = (e) => {
         e.preventDefault();
         let newErros = {};
@@ -53,6 +61,9 @@ export default function CadastroBeneficiadoSimples1() {
         if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dataNascimento)) newErros.dataNascimento = "Data inválida (dd/mm/aaaa)";
         setErros(newErros);
         if (Object.keys(newErros).length === 0) {
+            sessionStorage.setItem("nomeBeneficiado", nome);
+            sessionStorage.setItem("cpfBeneficiado", cpf);
+            sessionStorage.setItem("dataNascimentoBeneficiado", dataNascimento);
             navigate("/cadastro-beneficiado-simples2");
         }
     };
@@ -98,7 +109,7 @@ export default function CadastroBeneficiadoSimples1() {
                         type="text"
                         name="dataNascimento"
                         value={dataNascimento}
-                        onChange={e => setDataNascimento(e.target.value)}
+                        onChange={e => setDataNascimento(formatDate(e.target.value))}
                         maxLength={10}
                         placeholder="DD/MM/AAAA"
                         style={erros.dataNascimento ? { border: '2px solid #e74c3c' } : {}}
