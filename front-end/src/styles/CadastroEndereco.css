@@ -1,101 +1,275 @@
-body {
+.cadastro-endereco-bg {
+  min-height: 100vh;
+  width: 100vw;
   background: #6ec1cf;
+  margin: 0;
+  padding: 0;
 }
 
 .cadastro-container {
   background: #6ec1cf;
-  min-height: 100vh;
-  padding: 40px 0 40px 0;
+  min-height: calc(100vh - 140px);
+  padding: 15px 40px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .cadastro-form {
   max-width: 900px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
   padding: 0 20px;
 }
 
 .cadastro-row {
   display: flex;
-  gap: 40px;
+  gap: 30px;
+  width: 100%;
 }
 
 .cadastro-field {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .cadastro-field label,
 .input-label {
   font-weight: 500;
-  font-size: 22px;
+  font-size: 18px;
   color: #222;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-.cadastro-field input {
-  padding: 22px 18px 20px 18px;
-  border-radius: 12px;
+
+.cadastro-form .input-personalizado {
+  background: #fff;
   border: none;
-  background: #f5f5f5;
-  font-size: 1.18rem;
+  border-radius: 16px;
+  padding: 12px 20px;
+  font-size: 20px;
   color: #222;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   outline: none;
-  box-shadow: 0 6px 12px -6px rgba(0,0,0,0.13);
-  transition: box-shadow 0.2s;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
-.cadastro-field input:disabled {
-  color: #888;
+.cadastro-form .input-personalizado:focus {
   background: #f5f5f5;
+  outline: none;
 }
 
-.cadastro-select {
-  padding: 22px 18px 20px 18px;
-  border-radius: 12px;
+.cadastro-form .input-personalizado::placeholder {
+  color: #b0b0b0;
+  font-size: 20px;
+  opacity: 1;
+}
+
+
+.cadastro-form .data-input {
+  background: #fff;
   border: none;
-  background: #f5f5f5;
-  font-size: 1.18rem;
+  border-radius: 16px;
+  padding: 12px 20px;
+  font-size: 20px;
   color: #222;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   outline: none;
-  box-shadow: 0 6px 12px -6px rgba(0,0,0,0.13);
-  transition: box-shadow 0.2s;
-  cursor: pointer;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
-.cadastro-select:focus {
-  box-shadow: 0 8px 16px -8px rgba(0,0,0,0.2);
+.cadastro-form .data-input::placeholder {
+  color: #b0b0b0;
+  font-size: 20px;
+  opacity: 1;
 }
+
+
+.cadastro-form .select-personalizado {
+  background: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 20px;
+  font-size: 20px;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  outline: none;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.cadastro-form .select-personalizado option {
+  font-size: 18px;
+  color: #222;
+  padding: 8px 16px;
+}
+
+
+.cadastro-form .data-label,
+.cadastro-form .select-label {
+  font-size: 18px;
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 6px;
+}
+
+
+.cadastro-form .input-group {
+  margin-bottom: 16px;
+}
+
+.cadastro-form .data-group {
+  margin-bottom: 16px;
+}
+
+.cadastro-form .select-group {
+  margin-bottom: 16px;
+}
+
 
 .cadastro-btn {
-  margin: 40px auto 0 auto;
-  padding: 16px 38px;
+  margin: 25px auto 0 auto;
+  padding: 14px 32px;
   border-radius: 16px;
   border: 1.5px solid #222;
-  background: #f5f5f5;
-  font-size: 1.18rem;
+  background: #d9d9d9;
+  font-size: 18px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
-  box-shadow: 0 2px 8px -4px rgba(0,0,0,0.10);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   display: block;
   color: #222;
+  min-width: 140px;
 }
 
 .cadastro-btn:hover {
-  background: #e8e8e8;
+  background: #bfbfbf;
 }
 
 .cadastro-btn:active {
-  background: #e0e0e0;
+  background: #a8a8a8;
 }
 
-.erro-msg {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-top: 4px;
+
+.quantidade-pessoas-container {
+  padding: 10px 20px 0 20px;
+}
+
+.quantidade-pessoas-titulo {
+  font-size: 1.5rem;
+  margin-bottom: 25px;
+}
+
+.quantidade-pessoas-form {
+  gap: 20px;
+}
+
+.quantidade-pessoas-input {
+  padding: 12px 16px;
+  font-size: 1rem;
+}
+
+.quantidade-pessoas-label {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+
+@media (max-width: 768px) {
+  .cadastro-container {
+    padding: 15px 20px;
+  }
+  
+  .cadastro-form {
+    padding: 0;
+    gap: 18px;
+  }
+  
+  .cadastro-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .cadastro-field label,
+  .input-label,
+  .cadastro-form .data-label,
+  .cadastro-form .select-label {
+    font-size: 16px;
+  }
+  
+  .cadastro-form .input-personalizado,
+  .cadastro-form .data-input,
+  .cadastro-form .select-personalizado {
+    font-size: 18px;
+    padding: 10px 18px;
+  }
+  
+  .cadastro-form .input-personalizado::placeholder,
+  .cadastro-form .data-input::placeholder {
+    font-size: 18px;
+  }
+  
+  .cadastro-btn {
+    margin: 20px auto 0 auto;
+    padding: 12px 28px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cadastro-container {
+    padding: 10px 15px;
+  }
+  
+  .cadastro-form {
+    gap: 15px;
+  }
+  
+  .cadastro-row {
+    gap: 12px;
+  }
+  
+  .cadastro-field label,
+  .input-label,
+  .cadastro-form .data-label,
+  .cadastro-form .select-label {
+    font-size: 15px;
+  }
+  
+  .cadastro-form .input-personalizado,
+  .cadastro-form .data-input,
+  .cadastro-form .select-personalizado {
+    font-size: 16px;
+    padding: 8px 16px;
+  }
+}
+
+
+@media (max-height: 800px) {
+  .cadastro-container {
+    padding: 10px 40px 15px 40px;
+  }
+  
+  .cadastro-form {
+    gap: 15px;
+  }
+  
+  .cadastro-form .input-group,
+  .cadastro-form .data-group,
+  .cadastro-form .select-group {
+    margin-bottom: 12px;
+  }
+  
+  .cadastro-btn {
+    margin: 20px auto 0 auto;
+  }
 }

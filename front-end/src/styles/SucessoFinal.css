@@ -1,11 +1,12 @@
 .sucesso-final-container {
   background: #6ec1cf;
-  min-height: 100vh;
+  min-height: calc(100vh - 140px);
   padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  margin-top: -60px;
 }
 
 .sucesso-final-card {

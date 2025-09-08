@@ -1,8 +1,7 @@
 .quantidade-pessoas-container {
   background: #6ec1cf;
-  min-height: auto;
+  min-height: 100vh;
   padding: 20px;
-  padding-bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -20,8 +19,9 @@
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 30px;
+  gap: 40px;
   max-width: 1200px;
+  width: 100%;
 }
 
 .quantidade-pessoas-fieldset {
@@ -29,35 +29,70 @@
   display: flex;
   flex-direction: column;
   gap: 25px;
-  min-width: 300px;
+  min-width: 280px;
+  flex: 1;
+  max-width: 400px;
 }
 
 .quantidade-pessoas-field {
   border: none;
   display: flex;
   flex-direction: column;
+  margin-bottom: 5px;
 }
 
 .quantidade-pessoas-label {
-  font-size: 1.375rem;
+  font-size: 1.25rem;
   font-weight: 500;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: #222;
 }
 
 .quantidade-pessoas-input {
-  padding: 22px 18px 20px 18px;
+  padding: 18px 16px;
   border-radius: 12px;
   border: none;
   background: #f5f5f5;
-  font-size: 1.18rem;
+  font-size: 1.1rem;
   color: #222;
   outline: none;
-  box-shadow: 0 6px 12px -6px rgba(0,0,0,0.13);
-  transition: box-shadow 0.2s;
+  box-shadow: 0 4px 8px -4px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
   width: 100%;
 }
 
 .quantidade-pessoas-input:focus {
-  box-shadow: 0 8px 16px -8px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 12px -6px rgba(0,0,0,0.25);
+  background: #ffffff;
+}
+
+.quantidade-pessoas-button-container {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.quantidade-pessoas-button-container .cadastro-btn {
+  margin: 0;
+  padding: 15px 40px;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .quantidade-pessoas-form {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .quantidade-pessoas-fieldset {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .quantidade-pessoas-titulo {
+    font-size: 1.6rem;
+    margin-bottom: 30px;
+  }
 }

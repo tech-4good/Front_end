@@ -2,7 +2,7 @@ import React from "react";
 import { inputsQuantidadePessoas } from "../utils/cadastroEndereco";
 import "../styles/QuantidadePessoas.css";
 
-export default function QuantidadePessoas({ formData, onInputChange }) {
+export default function QuantidadePessoas({ formData, onInputChange, children }) {
   return (
     <div className="quantidade-pessoas-container">
       <h2 className="quantidade-pessoas-titulo">
@@ -58,6 +58,11 @@ export default function QuantidadePessoas({ formData, onInputChange }) {
               />
             </fieldset>
           ))}
+          {children && (
+            <div className="quantidade-pessoas-button-container">
+              {children}
+            </div>
+          )}
         </fieldset>
       </form>
     </div>
