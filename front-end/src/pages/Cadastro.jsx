@@ -4,6 +4,7 @@ import Modal from "../components/Modal";
 import "../styles/Cadastro.css";
 import Botao from "../components/Botao";
 import Input from "../components/Input";
+import { voluntarioService } from "../services/voluntarioService";
 
 const Cadastro = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Cadastro = () => {
     mensagem: "",
   });
   const [modalTimeout, setModalTimeout] = useState(null);
+  const [carregando, setCarregando] = useState(false);
   const [formData, setFormData] = useState({
     nomeCompleto: "",
     cpf: "",
@@ -94,8 +96,11 @@ const Cadastro = () => {
     return null;
   }
 
-  const handleCadastro = (e) => {
+  const handleCadastro = async (e) => {
     e.preventDefault();
+    
+    if (carregando) return;
+    
     let erros = [];
     const campos = { ...formData, TipoUsuario: 1 };
 
@@ -110,6 +115,7 @@ const Cadastro = () => {
 
     const senhaMsg = validarSenha(formData.senha);
     if (senhaMsg) erros.push(senhaMsg);
+    
     if (erros.length > 0) {
       setModalErro({ open: true, mensagem: erros.join("\n") });
       if (modalTimeout) clearTimeout(modalTimeout);
@@ -121,6 +127,8 @@ const Cadastro = () => {
       return;
     }
 
+    setCarregando(true);
+
     const cleanCPF = formData.cpf.replace(/\D/g, "");
     const cleanTelefone = formData.telefone.replace(/\D/g, "");
     const dadosParaEnviar = {
@@ -129,18 +137,51 @@ const Cadastro = () => {
       telefone: cleanTelefone,
       TipoUsuario: 1,
     };
-    console.log(dadosParaEnviar);
 
-    setModalSucesso({
-      open: true,
-      mensagem: "Cadastro realizado com sucesso!",
-    });
-    if (modalTimeout) clearTimeout(modalTimeout);
-    const timeout = setTimeout(() => {
-      setModalSucesso({ open: false, mensagem: "" });
-      navigate("/login");
-    }, 3000);
-    setModalTimeout(timeout);
+    try {
+      const resultado = await voluntarioService.cadastrar(dadosParaEnviar);
+      
+      if (resultado.success) {
+        setModalSucesso({
+          open: true,
+          mensagem: "Cadastro realizado com sucesso!",
+        });
+        
+        if (modalTimeout) clearTimeout(modalTimeout);
+        const timeout = setTimeout(() => {
+          setModalSucesso({ open: false, mensagem: "" });
+          navigate("/");
+        }, 3000);
+        setModalTimeout(timeout);
+      } else {
+        setModalErro({ 
+          open: true, 
+          mensagem: resultado.error || "Erro ao realizar cadastro" 
+        });
+        
+        if (modalTimeout) clearTimeout(modalTimeout);
+        const timeout = setTimeout(
+          () => setModalErro({ open: false, mensagem: "" }),
+          8000
+        );
+        setModalTimeout(timeout);
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setModalErro({ 
+        open: true, 
+        mensagem: "Erro inesperado. Tente novamente." 
+      });
+      
+      if (modalTimeout) clearTimeout(modalTimeout);
+      const timeout = setTimeout(
+        () => setModalErro({ open: false, mensagem: "" }),
+        8000
+      );
+      setModalTimeout(timeout);
+    } finally {
+      setCarregando(false);
+    }
   };
 
   function validarCamposPreenchidos(obj) {
@@ -251,7 +292,11 @@ const Cadastro = () => {
         <div
           style={{ display: "flex", justifyContent: "center", marginTop: 24 }}
         >
-          <Botao texto="Cadastrar" type="submit" />
+          <Botao 
+            texto={carregando ? "Cadastrando..." : "Cadastrar"} 
+            type="submit" 
+            disabled={carregando}
+          />
         </div>
 
         <div className="login-section">

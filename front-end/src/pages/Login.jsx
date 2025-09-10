@@ -7,6 +7,7 @@ import Botao from "../components/Botao";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeCadeado from "../assets/icone-cadeado.png";
 import Modal from "../components/Modal";
+import { voluntarioService } from "../services/voluntarioService";
 
 const Login = () => {
   function validarEmail(email) {
@@ -22,62 +23,88 @@ const Login = () => {
   const [modalTimeout, setModalTimeout] = useState(null);
   const [tentativas, setTentativas] = useState(0);
   const [bloqueado, setBloqueado] = useState(false);
+  const [carregando, setCarregando] = useState(false);
   const bloqueioTimeout = useRef(null);
   const [tipoUsuario, setTipoUsuario] = useState("2");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (bloqueado) {
-      setModalErro({ open: true, mensagem: "Você excedeu o número de tentativas. Tente novamente em 10 minutos." });
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-      setModalTimeout(timeout);
+    
+    if (bloqueado || carregando) {
+      if (bloqueado) {
+        setModalErro({ open: true, mensagem: "Você excedeu o número de tentativas. Tente novamente em 10 minutos." });
+        if (modalTimeout) clearTimeout(modalTimeout);
+        const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
+        setModalTimeout(timeout);
+      }
       return;
     }
+    
     let erros = [];
     if (!email || !senha) {
       erros.push("Todos os campos devem ser preenchidos.");
     }
+    
     const emailMsg = validarEmail(email);
     if (email && emailMsg) erros.push(emailMsg);
-    // Simulação de dois usuários
-    const usuarios = [
-      { email: "teste@teste.com", senha: "123", tipo: "2", nome: "Aline" },
-      { email: "usuario@comum.com", senha: "123", tipo: "1", nome: "Bruna" }
-    ];
-    const usuario = usuarios.find(u => u.email === email && u.senha === senha);
-    let erroLogin = false;
-    if (erros.length === 0 && !usuario) {
-      erroLogin = true;
-      erros.push(`E-mail ou senha incorretos. Você ainda tem ${4 - tentativas} tentativa(s).`);
-    }
+    
     if (erros.length > 0) {
       setModalErro({ open: true, mensagem: erros.join("\n") });
       if (modalTimeout) clearTimeout(modalTimeout);
       const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
       setModalTimeout(timeout);
-      if (erroLogin) {
-        if (tentativas + 1 >= 5) {
+      return;
+    }
+
+    setCarregando(true);
+
+    try {
+      const resultado = await voluntarioService.login(email, senha);
+      
+      if (resultado.success) {
+        // Reset tentativas em caso de sucesso
+        setTentativas(0);
+        
+        // Redirecionar para home
+        navigate("/home");
+      } else {
+        // Incrementar tentativas de login
+        const novasTentativas = tentativas + 1;
+        setTentativas(novasTentativas);
+        
+        let mensagem = resultado.error;
+        
+        if (novasTentativas >= 5) {
           setBloqueado(true);
-          setTentativas(5);
-          setModalErro({ open: true, mensagem: "Você excedeu o número de tentativas. Tente novamente em 10 minutos." });
+          mensagem = "Você excedeu o número de tentativas. Tente novamente em 10 minutos.";
+          
+          // Timeout para desbloquear após 10 minutos
           bloqueioTimeout.current = setTimeout(() => {
             setBloqueado(false);
             setTentativas(0);
             setModalErro({ open: true, mensagem: "Você pode tentar novamente agora." });
             setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-          }, 10 * 60 * 1000); 
+          }, 10 * 60 * 1000);
         } else {
-          setTentativas(tentativas + 1);
+          mensagem += ` Você ainda tem ${5 - novasTentativas} tentativa(s).`;
         }
+        
+        setModalErro({ open: true, mensagem });
+        if (modalTimeout) clearTimeout(modalTimeout);
+        const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
+        setModalTimeout(timeout);
       }
-      return;
-    }
-    setTentativas(0);
-    if (usuario) {
-      sessionStorage.setItem("tipoUsuario", usuario.tipo);
-      sessionStorage.setItem("nomeUsuario", usuario.nome);
-      navigate("/home");
+    } catch (error) {
+      console.error('Erro inesperado no login:', error);
+      setModalErro({ 
+        open: true, 
+        mensagem: "Erro inesperado. Tente novamente." 
+      });
+      if (modalTimeout) clearTimeout(modalTimeout);
+      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
+      setModalTimeout(timeout);
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -121,7 +148,11 @@ const Login = () => {
           >
             ESQUECI MINHA SENHA
           </button>
-          <Botao texto="Entrar" type="submit" disabled={bloqueado} />
+          <Botao 
+            texto={carregando ? "Entrando..." : "Entrar"} 
+            type="submit" 
+            disabled={bloqueado || carregando} 
+          />
         </form>
         <div className="login-link-row">
           <span>AINDA NÃO TEM CONTA? </span>
