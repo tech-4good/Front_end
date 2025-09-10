@@ -19,6 +19,8 @@ export default function CadastroFilhos() {
     const [dataNascimento, setDataNascimento] = useState("");
     const [erros, setErros] = useState({});
     const [modalCampos, setModalCampos] = useState(false);
+    const [modalCamposTexto, setModalCamposTexto] = useState("Preencha todos os campos antes de salvar.");
+    const [modalSucesso, setModalSucesso] = useState(false);
 
     const [tipoUsuario, setTipoUsuario] = useState("2");
     const navigate = useNavigate();
@@ -90,7 +92,9 @@ export default function CadastroFilhos() {
         e.preventDefault();
         let newErros = {};
 
-        if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpfBeneficiado)) {
+        // aceita CPF com ou sem máscara; valida apenas 11 dígitos
+        const cpfDigits = cpfBeneficiado.replace(/\D/g, '');
+        if (cpfDigits.length !== 11) {
             newErros.cpf = "CPF inválido";
         }
         if (isEstudante === null) newErros.estudante = "Selecione uma opção";
@@ -100,8 +104,12 @@ export default function CadastroFilhos() {
         }
 
         setErros(newErros);
+        console.log('Validação cadastro filhos:', newErros);
 
         if (Object.keys(newErros).length > 0) {
+            // montar texto com os erros para o modal
+            const itens = Object.values(newErros).join('\n');
+            setModalCamposTexto(itens || "Preencha todos os campos antes de salvar.");
             setModalCampos(true);
             return;
         }
@@ -113,7 +121,16 @@ export default function CadastroFilhos() {
             dataNascimento,
         });
 
-        navigate("/home");
+        // show success modal instead of navigating away
+        setModalSucesso(true);
+    }
+
+    function resetForm() {
+        setCpfBeneficiado("");
+        setIsEstudante(null);
+        setIsCreche(null);
+        setDataNascimento("");
+        setErros({});
     }
 
     return (
@@ -207,6 +224,22 @@ export default function CadastroFilhos() {
                     onClose={() => setModalCampos(false)}
                     texto="Preencha todos os campos antes de salvar."
                     showClose={true}
+                />
+                <Modal
+                    isOpen={modalSucesso}
+                    onClose={() => setModalSucesso(false)}
+                    texto={"Filho cadastrado com sucesso!\nDeseja cadastrar outro filho?"}
+                    showClose={true}
+                    botoes={[
+                        {
+                            texto: 'Sim',
+                            onClick: () => { setModalSucesso(false); resetForm(); }
+                        },
+                        {
+                            texto: 'Não',
+                            onClick: () => { setModalSucesso(false); navigate('/home'); }
+                        }
+                    ]}
                 />
             </div>
         </div>
