@@ -52,11 +52,12 @@ export const voluntarioService = {
         sessionStorage.setItem('nomeUsuario', response.data.nome);
         sessionStorage.setItem('emailUsuario', response.data.email);
         sessionStorage.setItem('tipoUsuario', response.data.administrador === 1 ? "2" : "1");
-        sessionStorage.setItem('userId', response.data.id?.toString());
+        sessionStorage.setItem('userId', response.data.userId.toString());
         
         console.log('Dados salvos no sessionStorage:', {
           tipoUsuario: response.data.administrador === 1 ? "2" : "1",
-          administrador: response.data.administrador
+          administrador: response.data.administrador,
+          userId: response.data.userId
         }); // Debug log
       }
       
@@ -103,7 +104,19 @@ export const voluntarioService = {
   // Atualizar voluntário
   atualizar: async (id, dadosVoluntario) => {
     try {
-      const response = await apiClient.patch(`/voluntarios/${id}`, dadosVoluntario);
+      const payload = {};
+      // Enviar somente 'nomeCompleto' para o backend (não enviar 'nome')
+      if (dadosVoluntario.nome !== undefined) payload.nomeCompleto = String(dadosVoluntario.nome).trim();
+      if (dadosVoluntario.cpf !== undefined) payload.cpf = String(dadosVoluntario.cpf).replace(/\D/g, '');
+      if (dadosVoluntario.telefone !== undefined) payload.telefone = dadosVoluntario.telefone;
+      if (dadosVoluntario.email !== undefined) payload.email = dadosVoluntario.email;
+      if (dadosVoluntario.senha !== undefined && dadosVoluntario.senha !== "") payload.senha = dadosVoluntario.senha;
+
+      console.log('Enviando payload de atualização:', payload);
+      const response = await apiClient.patch(`/voluntarios/${id}`, payload);
+      console.log('Resposta da atualização (status):', response.status);
+      console.log('Resposta da atualização (headers):', response.headers);
+      console.log('Resposta da atualização (data):', response.data);
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao atualizar voluntário:', error);

@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
 import "../styles/Perfil.css";
 import Voltar from "../components/Voltar";
@@ -9,6 +10,7 @@ import iconeOlhoAberto from "../assets/icone-olho-aberto.png";
 import iconeOlhoFechado from "../assets/icone-olho-fechado.png";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeRelogio from "../assets/icone-relogio.png";
+import { voluntarioService } from "../services/voluntarioService";
 
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeSair from "../assets/icone-sair.png";
@@ -39,14 +41,16 @@ function formatPhone(value) {
 	return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`.replace(/-$/, "");
 }
 
+
 export default function Perfil() {
 	const navigate = useNavigate();
 	const [showPassword, setShowPassword] = useState(false);
-	const [nome, setNome] = useState("");
-	const [telefone, setTelefone] = useState("");
-	const [email, setEmail] = useState("");
+	const [nome, setNome] = useState(sessionStorage.getItem("nomeUsuario") || "");
+	const [telefone, setTelefone] = useState(sessionStorage.getItem("telefoneUsuario") || "");
+	const [email, setEmail] = useState(sessionStorage.getItem("emailUsuario") || "");
 	const [senha, setSenha] = useState("");
-	const [cpf, setCpf] = useState("");
+	const [cpf, setCpf] = useState(sessionStorage.getItem("cpfUsuario") || "");
+	const [nomeUsuario, setNomeUsuario] = useState(sessionStorage.getItem("nomeUsuario") || "Usuário");
 
 	// Recupera tipoUsuario do sessionStorage 
 	const [tipoUsuario, setTipoUsuario] = useState("2");
@@ -54,7 +58,6 @@ export default function Perfil() {
 		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
 		setTipoUsuario(tipo);
 	}, []);
-
 
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -83,7 +86,11 @@ export default function Perfil() {
 
 	const [erros, setErros] = useState({});
 
-	const handleSubmit = (e) => {
+
+	const [modalOpen, setModalOpen] = useState(false);
+	const [modalMsg, setModalMsg] = useState("");
+
+	const handleSubmit = async (e) => {
 		e.preventDefault();
 		let newErros = {};
 		if (!nome || nome.length > 200) newErros.nome = "Nome obrigatório (máx 200)";
@@ -93,13 +100,36 @@ export default function Perfil() {
 		if (senha.length < 5 || senha.length > 12) newErros.senha = "Senha 5-12 caracteres";
 		setErros(newErros);
 		if (Object.keys(newErros).length === 0) {
-			alert("Informações alteradas!\n" +
-				`Nome: ${nome}\nTelefone: ${telefone}\nE-mail: ${email}\nSenha: ${senha}\nCPF: ${cpf}`
-			);
+			const id = sessionStorage.getItem('userId');
+			if (!id) {
+				setModalMsg('ID do usuário não encontrado. Faça login novamente.');
+				setModalOpen(true);
+				return;
+			}
+			const dados = {
+				nome,
+				telefone,
+				email,
+				senha,
+				cpf
+			};
+			console.log('Dados para atualização:', dados); // Debug log
+			const result = await voluntarioService.atualizar(id, dados);
+			if (result.success) {
+				setModalMsg('Informações alteradas com sucesso!');
+				setNome(nome);
+				setNomeUsuario(nome); // Update nomeUsuario state for navbar
+				sessionStorage.setItem("nomeUsuario", nome);
+				setEmail(email);
+				sessionStorage.setItem("emailUsuario", email);
+			} else {
+				setModalMsg(result.error || 'Erro ao atualizar informações.');
+			}
+			setModalOpen(true);
 		}
 	};
 
-	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
+	// Removido: const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 	return (
 		<div>
 			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
@@ -188,6 +218,7 @@ export default function Perfil() {
 						Alterar Informações
 					</button>
 				</form>
+				<Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} texto={modalMsg} />
 			</div>
 		</div>
 	);
