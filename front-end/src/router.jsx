@@ -28,6 +28,7 @@ import PainelMenu from "./pages/PainelMenu";
 import HistoricoDoacoes from "./pages/HistoricoDoacoes";
 import CadastroFilhos from "./pages/CadastroFilhos";
 import CadastroAuxilios from "./pages/CadastroAuxilios";
+import Relatorio from "./pages/Relatorio";
 export const router = createBrowserRouter([
   {
     path: "/doar-cesta",
@@ -169,5 +170,10 @@ export const router = createBrowserRouter([
     element: <CadastroAuxilios />,
     errorElement: <ErrorPage />,
   },
+  {
+  path: "/relatorio",
+  element: <Relatorio />,
+  errorElement: <ErrorPage />,
+},
 
 ]);

@@ -1,0 +1,75 @@
+.relatorio-bg {
+  min-height: 100vh;
+  background: #74bec9;
+  font-family: "Roboto", sans-serif;
+}
+
+.relatorio-container {
+  background: #74bec9;
+  min-height: 100vh;
+  padding: 0 0 40px 0;
+}
+
+.relatorio-paginacao-center {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+.relatorio-main-container {
+  display: flex;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.relatorio-sidebar {
+  padding: 16px;
+  width: 120px;
+  height: 700px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #74bec9 #f0f0f0;
+}
+
+.relatorio-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.relatorio-sidebar::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.relatorio-sidebar::-webkit-scrollbar-thumb {
+  background: #74bec9;
+  border-radius: 4px;
+}
+
+.relatorio-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #6dbdc9;
+}
+
+.miniaturas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.relatorio-main {
+  flex: 1;
+}
+
+.relatorio-actions {
+  padding: 20px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 200px;
+  align-self: flex-start;
+  margin-top: 200px;
+}
