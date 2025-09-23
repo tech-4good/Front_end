@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Voltar from '../components/Voltar';
 import Input from '../components/Input';
+import Select from '../components/Select';
 import Botao from '../components/Botao';
 import '../styles/CadastroBeneficiadoCompleto2.css';
 import iconeCasa from '../assets/icone-casa.png';
@@ -43,8 +44,9 @@ export default function CadastroBeneficiadoCompleto2() {
 
 		function handleChange(e) {
 			const { name, value } = e.target;
-			// Bloquear números nos campos texto
-			const onlyTextFields = ["nome", "estadoCivil", "escolaridade", "religiao"];
+			console.log('handleChange - name:', name, 'value:', value); // Debug
+			// Bloquear números nos campos texto (exceto estadoCivil que agora é select)
+			const onlyTextFields = ["nome", "escolaridade", "religiao"];
 			if (onlyTextFields.includes(name)) {
 				// Remove números
 				const newValue = value.replace(/[0-9]/g, "");
@@ -147,6 +149,9 @@ export default function CadastroBeneficiadoCompleto2() {
 			setModalTimeout(timeout);
 			return;
 		}
+		
+		// Salvar dados da etapa 2 para usar na etapa 3
+		sessionStorage.setItem("dadosCompleto2", JSON.stringify(form));
 		navigate('/cadastro-beneficiado-completo3');
 	}
 
@@ -244,13 +249,20 @@ export default function CadastroBeneficiadoCompleto2() {
 							</div>
 							<div className="cadastro-beneficiado-field">
 								<label htmlFor="estadoCivil">Estado Civil:</label>
-								<Input
+								<Select
 									id="estadoCivil"
 									name="estadoCivil"
-									placeholder="Solteiro"
 									value={form.estadoCivil}
 									onChange={handleChange}
+									placeholder="Selecione seu estado civil"
 									className="cadastro-beneficiado-input"
+									options={[
+										{ value: 'SOLTEIRO', label: 'Solteiro(a)' },
+										{ value: 'CASADO', label: 'Casado(a)' },
+										{ value: 'DIVORCIADO', label: 'Divorciado(a)' },
+										{ value: 'VIUVO', label: 'Viúvo(a)' },
+										{ value: 'SEPARADO', label: 'Separado(a)' }
+									]}
 								/>
 							</div>
 							<div className="cadastro-beneficiado-field">
