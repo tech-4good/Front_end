@@ -51,7 +51,7 @@ const inputsSecondStep = [
     label: "Tipo de Cesta",
     placeholder: "Selecione o tipo",
     inputType: "select",
-    options: ["Kit", "CESTA_BASICA"],
+    options: ["Kit", "Cesta Básica"],
   },
   {
     label: "Status",

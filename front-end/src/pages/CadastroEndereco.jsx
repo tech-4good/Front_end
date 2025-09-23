@@ -91,7 +91,9 @@ export default function CadastroEndereco() {
       dataSaida: formData.datadesada && formData.datadesada.trim() !== "" ? convertDateToISO(formData.datadesada) : null, // Incluir data de saída apenas se preenchida
       tipoMoradia: formData.tipodemoradia || "",
       statusMoradia: formData.moradia || "",
-      tipoCesta: formData.tipodecesta || "Kit",
+      tipoCesta: formData.tipodecesta === "Cesta Básica" ? "BASICA" : 
+                 formData.tipodecesta === "Kit" ? "KIT" : 
+                 "KIT", // default
       statusCesta: formData.status || "Disponível"
     };
     
