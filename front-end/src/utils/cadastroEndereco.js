@@ -12,7 +12,16 @@ const inputsFirstStep = [
   },
   { label: "Bairro", placeholder: "Insira o bairro", inputType: "text" },
   { label: "Cidade", placeholder: "Insira a cidade", inputType: "text" },
-  { label: "Estado", placeholder: "Insira o estado", inputType: "text" },
+  { 
+    label: "Estado", 
+    placeholder: "Selecione o estado", 
+    inputType: "select",
+    options: [
+      "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", 
+      "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", 
+      "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+    ]
+  },
   { label: "CEP", placeholder: "Insira o CEP", inputType: "text", mask: "cep" },
 ];
 
@@ -36,19 +45,19 @@ const inputsSecondStep = [
     label: "Tipo de Moradia",
     placeholder: "Selecione o tipo",
     inputType: "select",
-    options: ["Casa", "Apartamento", "Kitnet", "Quarto", "Outro"],
+     options: ["Casa", "Apartamento", "Kitnet", "Quarto", "Outro"],
   },
   {
     label: "Tipo de Cesta",
     placeholder: "Selecione o tipo",
     inputType: "select",
-    options: ["Cesta Básica", "Kit", "Pacote", "Outro"],
+    options: ["Kit", "CESTA_BASICA"],
   },
   {
     label: "Status",
     placeholder: "Selecione o status",
     inputType: "select",
-    options: ["Disponível", "Indisponível", "Em Manutenção", "Ocupado"],
+    options: ["Disponível", "Indisponível"],
   },
 ];
 
