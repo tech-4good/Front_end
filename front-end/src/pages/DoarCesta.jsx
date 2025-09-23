@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -8,7 +8,6 @@ import Botao from "../components/Botao";
 import Radio from "../components/Radio";
 import { beneficiadoService } from "../services/beneficiadoService";
 import { entregaService } from "../services/entregaService";
-import { cestaService } from "../services/cestaService";
 import "../styles/DoarCesta.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
@@ -20,12 +19,6 @@ export default function DoarCesta() {
   const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
   const tipoUsuario = sessionStorage.getItem("tipoUsuario") || "2";
 
-  // Mapeamento de tipos conforme backend
-  const TIPOS_CESTA_MAP = {
-    'KIT': 'Kit',
-    'BASICA': 'Cesta Básica'
-  };
-
   const botoesNavbar = [
     { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
     { texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
@@ -36,205 +29,125 @@ export default function DoarCesta() {
   ];
 
   const [cpf, setCpf] = useState("");
-  const [beneficiado, setBeneficiado] = useState(null);
-  const [cestasDisponiveis, setCestasDisponiveis] = useState([]);
-  const [cestaEscolhida, setCestaEscolhida] = useState(null);
-  const [loadingBuscar, setLoadingBuscar] = useState(false);
-  const [loadingConfirmar, setLoadingConfirmar] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // Estados dos modais
+  const [tipoCesta, setTipoCesta] = useState("");
+  const [resultados, setResultados] = useState([]);
   const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
   const [modalErro, setModalErro] = useState(false);
   const [modalSucesso, setModalSucesso] = useState(false);
+  const [modalRestricao, setModalRestricao] = useState({ open: false, tipo: "" });
   const [modalLimiteMes, setModalLimiteMes] = useState({ open: false, data: null });
   const [modalLimiteKit, setModalLimiteKit] = useState({ open: false, data: null });
-  const [modalMessage, setModalMessage] = useState("");
-
-  useEffect(() => {
-    carregarCestasDisponiveis();
-  }, []);
-
-  const carregarCestasDisponiveis = async () => {
-    try {
-      const cestas = await cestaService.listarCestas();
-      setCestasDisponiveis(cestas || []);
-    } catch (error) {
-      console.error("Erro ao carregar cestas disponíveis:", error);
-      setCestasDisponiveis([]);
-    }
-  };
 
   function handleCpfChange(e) {
     const valor = e.target.value.replace(/\D/g, "");
     setCpf(valor);
-    // Limpar dados anteriores quando CPF muda
-    if (beneficiado) {
-      setBeneficiado(null);
-      setCestaEscolhida(null);
-      setErrorMessage("");
+    
+    // Buscar beneficiados conforme o usuário digita
+    if (valor.length > 0) {
+      buscarBeneficiados(valor);
+    } else {
+      setResultados([]);
     }
   }
 
-  async function buscarBeneficiado() {
-    if (!cpf || cpf.length < 11) {
-      setErrorMessage("CPF deve ter 11 dígitos");
+  async function buscarBeneficiados(cpfParcial) {
+    try {
+      // Simular busca de beneficiados que começam com o CPF digitado
+      const todosBeneficiados = await beneficiadoService.listar();
+      const encontrados = todosBeneficiados.filter(b => 
+        b.cpf && b.cpf.replace(/\D/g, "").startsWith(cpfParcial)
+      );
+      setResultados(encontrados.slice(0, 5)); // Limitar a 5 resultados
+    } catch (error) {
+      console.error("Erro ao buscar beneficiados:", error);
+      setResultados([]);
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    
+    if (!cpf || !tipoCesta) {
+      setModalErro(true);
       return;
     }
 
-    setLoadingBuscar(true);
-    setErrorMessage("");
-
     try {
-      const beneficiadoEncontrado = await beneficiadoService.buscarPorCpf(cpf);
+      // Buscar beneficiado completo
+      const beneficiado = await beneficiadoService.buscarPorCpf(cpf);
       
-      if (!beneficiadoEncontrado) {
+      if (!beneficiado) {
         setModalNaoEncontrado(true);
-        setBeneficiado(null);
         return;
       }
 
-      // Verificar elegibilidade baseada no endereço
-      if (!beneficiadoEncontrado.endereco) {
+      // Verificar se tem endereço
+      if (!beneficiado.endereco) {
         setModalErro(true);
-        setModalMessage("Beneficiado não possui endereço cadastrado.");
         return;
       }
 
-      if (beneficiadoEncontrado.endereco.status !== "ABERTO") {
-        setModalErro(true);
-        setModalMessage("Endereço do beneficiado está inativo.");
+      // Verificar se o tipo escolhido é permitido
+      const tipoPermitido = beneficiado.endereco.tipoCesta;
+      const tipoEscolhido = tipoCesta === "kit" ? "KIT" : "BASICA";
+      
+      if (tipoPermitido !== tipoEscolhido) {
+        setModalRestricao({ 
+          open: true, 
+          tipo: tipoPermitido === "KIT" ? "kit" : "basica" 
+        });
         return;
       }
 
       // Verificar histórico de entregas
-      const historico = await entregaService.buscarHistorico(beneficiadoEncontrado.id);
-      const podeRetirar = validarElegibilidade(beneficiadoEncontrado.endereco, historico);
+      const historico = await entregaService.buscarHistorico(beneficiado.id);
       
-      if (!podeRetirar.pode) {
-        if (podeRetirar.motivo === "JA_RETIROU_MES") {
-          setModalLimiteMes({ 
-            open: true, 
-            data: new Date(podeRetirar.ultimaRetirada).toLocaleDateString() 
-          });
-        } else if (podeRetirar.motivo === "PRAZO_KIT") {
-          setModalLimiteKit({ 
-            open: true, 
-            data: new Date(podeRetirar.proximaRetirada).toLocaleDateString() 
-          });
-        }
-        setBeneficiado(null);
-        return;
-      }
+      if (historico && historico.length > 0) {
+        const ultimaEntrega = historico[0];
+        const proximaPermitida = new Date(ultimaEntrega.proximaRetirada);
+        const hoje = new Date();
 
-      setBeneficiado(beneficiadoEncontrado);
-
-    } catch (error) {
-      console.error("Erro ao buscar beneficiado:", error);
-      setModalErro(true);
-      setModalMessage("Erro ao buscar beneficiado. Tente novamente.");
-    } finally {
-      setLoadingBuscar(false);
-    }
-  }
-
-  function validarElegibilidade(endereco, historico) {
-    const hoje = new Date();
-    
-    // Verificar data de saída
-    if (endereco.dataSaida && new Date(endereco.dataSaida) < hoje) {
-      return { pode: false, motivo: "DATA_SAIDA_VENCIDA" };
-    }
-
-    // Verificar histórico de entregas
-    if (historico && historico.length > 0) {
-      const ultimaEntrega = historico[0]; // Assumindo que vem ordenado por data
-      const ultimaData = new Date(ultimaEntrega.dataRetirada);
-      const proximaPermitida = new Date(ultimaEntrega.proximaRetirada);
-
-      if (hoje < proximaPermitida) {
-        if (endereco.tipoCesta === "BASICA") {
-          return { 
-            pode: false, 
-            motivo: "JA_RETIROU_MES", 
-            ultimaRetirada: ultimaData.toISOString() 
-          };
-        } else {
-          return { 
-            pode: false, 
-            motivo: "PRAZO_KIT", 
-            proximaRetirada: proximaPermitida.toISOString() 
-          };
+        if (hoje < proximaPermitida) {
+          if (tipoEscolhido === "BASICA") {
+            setModalLimiteMes({ 
+              open: true, 
+              data: proximaPermitida 
+            });
+            return;
+          } else {
+            setModalLimiteKit({ 
+              open: true, 
+              data: proximaPermitida 
+            });
+            return;
+          }
         }
       }
-    }
 
-    return { pode: true };
-  }
+      // Registrar a entrega
+      const proximaRetirada = new Date();
+      if (tipoEscolhido === "BASICA") {
+        proximaRetirada.setMonth(proximaRetirada.getMonth() + 1);
+      } else {
+        proximaRetirada.setDate(proximaRetirada.getDate() + 30);
+      }
 
-  function calcularProximaRetirada(tipoCesta) {
-    const hoje = new Date();
-    const proxima = new Date(hoje);
-    
-    if (tipoCesta === "BASICA") {
-      // Próximo mês
-      proxima.setMonth(proxima.getMonth() + 1);
-    } else {
-      // 30 dias para kit
-      proxima.setDate(proxima.getDate() + 30);
-    }
-    
-    return proxima.toISOString().split('T')[0];
-  }
-
-  async function confirmarEntrega() {
-    if (!beneficiado || !cestaEscolhida) {
-      setModalErro(true);
-      setModalMessage("Selecione uma cesta antes de confirmar.");
-      return;
-    }
-
-    setLoadingConfirmar(true);
-
-    try {
-      const entrega = {
+      await entregaService.registrarEntrega({
         dataRetirada: new Date().toISOString().split('T')[0],
-        proximaRetirada: calcularProximaRetirada(beneficiado.endereco.tipoCesta),
+        proximaRetirada: proximaRetirada.toISOString().split('T')[0],
         enderecoId: beneficiado.endereco.id,
-        cestaId: cestaEscolhida.idCesta,
-        voluntarioId: parseInt(sessionStorage.getItem("userId")),
+        cestaId: 1, // ID genérico - ajustar conforme necessário
+        voluntarioId: parseInt(sessionStorage.getItem("userId") || "1"),
         beneficiadoId: beneficiado.id
-      };
+      });
 
-      const resultado = await entregaService.registrarEntrega(entrega);
-
-      if (resultado) {
-        setModalSucesso(true);
-        setModalMessage("Entrega registrada com sucesso!");
-        
-        // Recarregar cestas disponíveis para atualizar estoque
-        await carregarCestasDisponiveis();
-        
-        // Limpar formulário
-        setCpf("");
-        setBeneficiado(null);
-        setCestaEscolhida(null);
-      }
-
+      setModalSucesso(true);
+      
     } catch (error) {
-      console.error("Erro ao registrar entrega:", error);
+      console.error("Erro ao processar entrega:", error);
       setModalErro(true);
-      setModalMessage(error.message || "Erro ao registrar entrega. Tente novamente.");
-    } finally {
-      setLoadingConfirmar(false);
     }
   }
-
-  // Filtrar cestas do tipo permitido pelo beneficiado
-  const cestasFiltradas = beneficiado ? 
-    cestasDisponiveis.filter(cesta => 
-      cesta.tipo === beneficiado.endereco.tipoCesta && cesta.quantidadeCestas > 0
-    ) : [];
 
   return (
     <div className="doar-cesta-bg">
@@ -244,75 +157,50 @@ export default function DoarCesta() {
           <Voltar onClick={() => navigate("/home")} />
         </div>
         <h1 className="doar-cesta-title">Entregar Cesta</h1>
-        <div className="doar-cesta-form-container">
-          <div className="doar-cesta-buscar">
-            <Input
-              placeholder="Insira o CPF (apenas números)"
-              value={cpf}
-              onChange={handleCpfChange}
-              className="doar-cesta-input"
-              maxLength={11}
-            />
-            {errorMessage && (
-              <div className="doar-cesta-error">{errorMessage}</div>
-            )}
-            <Botao 
-              texto={loadingBuscar ? "Buscando..." : "Buscar Beneficiado"} 
-              onClick={buscarBeneficiado}
-              disabled={loadingBuscar || cpf.length < 11}
-            />
-          </div>
-
-          {beneficiado && (
-            <div className="doar-cesta-beneficiado-info">
-              <h3>Beneficiado Encontrado</h3>
-              <p><strong>Nome:</strong> {beneficiado.nome}</p>
-              <p><strong>CPF:</strong> {beneficiado.cpf}</p>
-              <p><strong>Tipo Permitido:</strong> {TIPOS_CESTA_MAP[beneficiado.endereco.tipoCesta]}</p>
-              
-              <div className="doar-cesta-tipos">
-                <h4>Cestas Disponíveis:</h4>
-                {cestasFiltradas.length > 0 ? (
-                  <div className="doar-cesta-radio-row">
-                    {cestasFiltradas.map(cesta => (
-                      <Radio
-                        key={cesta.idCesta}
-                        name="cestaEscolhida"
-                        options={[{
-                          label: `${TIPOS_CESTA_MAP[cesta.tipo]} - ${cesta.pesoKg}kg (${cesta.quantidadeCestas} disponíveis)`,
-                          value: cesta.idCesta.toString()
-                        }]}
-                        value={cestaEscolhida?.idCesta?.toString() || ""}
-                        onChange={e => {
-                          const cesta = cestasFiltradas.find(c => c.idCesta.toString() === e.target.value);
-                          setCestaEscolhida(cesta);
-                        }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="doar-cesta-sem-estoque">
-                    Não há {TIPOS_CESTA_MAP[beneficiado.endereco.tipoCesta].toLowerCase()} disponível em estoque.
-                  </p>
-                )}
-              </div>
-
-              <div className="doar-cesta-btn-row">
-                <Botao 
-                  texto={loadingConfirmar ? "Confirmando..." : "Confirmar Entrega"} 
-                  onClick={confirmarEntrega}
-                  disabled={loadingConfirmar || !cestaEscolhida || cestasFiltradas.length === 0}
-                />
-              </div>
+        <form className="doar-cesta-form" autoComplete="off" onSubmit={handleSubmit}>
+          <Input
+            placeholder="Insira o CPF"
+            value={cpf}
+            onChange={handleCpfChange}
+            className="doar-cesta-input"
+            maxLength={11}
+          />
+          {cpf && cpf.length < 11 && resultados.length > 0 && (
+            <div className="doar-cesta-resultados">
+              {resultados.map((beneficiado, idx) => (
+                <div
+                  className="doar-cesta-resultado"
+                  key={idx}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setCpf(beneficiado.cpf.replace(/\D/g, ""))}
+                >
+                  {beneficiado.nome}
+                </div>
+              ))}
             </div>
           )}
-
+          <div className="doar-cesta-radio-row">
+            <span className="doar-cesta-radio-label">Tipo:</span>
+            <Radio
+              name="tipoCesta"
+              options={[
+                { label: "Kit", value: "kit" },
+                { label: "Cesta Básica", value: "basica" },
+              ]}
+              value={tipoCesta}
+              onChange={e => setTipoCesta(e.target.value)}
+            />
+          </div>
+          <div className="doar-cesta-btn-row">
+            <Botao texto="Doar" type="submit" />
+          </div>
+          
           <Modal
             isOpen={modalLimiteKit.open}
             onClose={() => setModalLimiteKit({ open: false, data: null })}
             texto={<>
-              Este beneficiado já retirou nos últimos 30 dias.<br/>
-              Próxima retirada permitida a partir de: {modalLimiteKit.data}
+              Este beneficiado ou alguém da família já retirou o kit nos últimos 30 dias.<br/>
+              Próxima retirada permitida a partir de: {modalLimiteKit.data && modalLimiteKit.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </>}
             showClose={true}
           />
@@ -321,29 +209,34 @@ export default function DoarCesta() {
             isOpen={modalLimiteMes.open}
             onClose={() => setModalLimiteMes({ open: false, data: null })}
             texto={<>
-              Este beneficiado já retirou este mês.<br/>
-              Próxima retirada permitida no próximo mês.
+              Este beneficiado ou alguém da família já retirou a cesta básica este mês.<br/>
+              Próxima retirada permitida a partir de: {modalLimiteMes.data && modalLimiteMes.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </>}
             showClose={true}
           />
           
           <Modal
+            isOpen={modalRestricao.open}
+            onClose={() => setModalRestricao({ open: false, tipo: "" })}
+            texto={modalRestricao.tipo === "kit"
+              ? "Este beneficiado só pode retirar o Kit."
+              : modalRestricao.tipo === "basica"
+                ? "Este beneficiado só pode retirar a Cesta Básica."
+                : "Tipo de retirada não permitido."}
+            showClose={true}
+          />
+          
+          <Modal
             isOpen={modalSucesso}
-            onClose={() => { 
-              setModalSucesso(false); 
-              setModalMessage("");
-            }}
-            texto={modalMessage || "Entrega registrada com sucesso!"}
+            onClose={() => { setModalSucesso(false); window.location.reload(); }}
+            texto={"Cesta doada com sucesso!"}
             showClose={true}
           />
           
           <Modal
             isOpen={modalErro}
-            onClose={() => {
-              setModalErro(false);
-              setModalMessage("");
-            }}
-            texto={modalMessage || "Erro ao processar solicitação."}
+            onClose={() => setModalErro(false)}
+            texto={"Todas as informações devem ser preenchidas."}
             showClose={true}
           />
           
@@ -358,7 +251,7 @@ export default function DoarCesta() {
             </>}
             showClose={true}
           />
-        </div>
+        </form>
       </div>
     </div>
   );
