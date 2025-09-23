@@ -5,10 +5,17 @@ const cestaService = {
   async listarCestas() {
     try {
       const response = await api.get("/cestas");
-      return response.data || [];
+      return {
+        success: true,
+        data: response.data || []
+      };
     } catch (error) {
       console.error("Erro ao listar cestas:", error);
-      return [];
+      return {
+        success: false,
+        error: error.response?.data?.error?.message || error.response?.data?.message || "Erro ao listar cestas",
+        data: []
+      };
     }
   },
 
@@ -32,16 +39,17 @@ const cestaService = {
   // Cadastrar nova cesta
   async cadastrarCesta(dadosCesta) {
     try {
+      console.log("� Cadastrando cesta:", dadosCesta);
       const response = await api.post("/cestas", dadosCesta);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error("Erro ao cadastrar cesta:", error);
+      console.error("❌ Erro ao cadastrar cesta:", error.response?.data || error.message);
       return {
         success: false,
-        error: error.response?.data?.message || "Erro ao cadastrar cesta"
+        error: error.response?.data?.message || error.response?.data?.error || error.message || "Erro ao cadastrar cesta"
       };
     }
   },

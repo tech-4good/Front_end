@@ -46,6 +46,23 @@ const entregaService = {
     }
   },
 
+  // Verificar elegibilidade (novo endpoint da documentação)
+  async verificarElegibilidade(beneficiadoId) {
+    try {
+      const response = await api.get(`/entregas/historico/${beneficiadoId}`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error("Erro ao verificar elegibilidade:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error?.message || error.response?.data?.message || "Erro ao verificar elegibilidade"
+      };
+    }
+  },
+
   // Registrar nova entrega
   async registrarEntrega(dadosEntrega) {
     try {
@@ -56,7 +73,10 @@ const entregaService = {
       };
     } catch (error) {
       console.error("Erro ao registrar entrega:", error);
-      throw new Error(error.response?.data?.message || "Erro ao registrar entrega");
+      return {
+        success: false,
+        error: error.response?.data?.error?.message || error.response?.data?.message || "Erro ao registrar entrega"
+      };
     }
   },
 
