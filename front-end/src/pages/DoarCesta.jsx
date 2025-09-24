@@ -35,6 +35,7 @@ export default function DoarCesta() {
   const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
   const [modalErro, setModalErro] = useState(false);
   const [modalSucesso, setModalSucesso] = useState(false);
+  const [modalEstoqueVazio, setModalEstoqueVazio] = useState(false);
   const [modalRestricao, setModalRestricao] = useState({ open: false, tipo: "" });
   const [modalLimiteMes, setModalLimiteMes] = useState({ open: false, data: null });
   const [modalLimiteKit, setModalLimiteKit] = useState({ open: false, data: null });
@@ -171,7 +172,7 @@ export default function DoarCesta() {
       
       if (!response.data || response.data.length === 0) {
         console.warn("⚠️ Nenhuma cesta cadastrada no sistema");
-        alert("Nenhuma cesta disponível no estoque. Entre em contato com o administrador.");
+        setModalEstoqueVazio(true);
         return;
       }
 
@@ -311,6 +312,13 @@ export default function DoarCesta() {
             isOpen={modalErro}
             onClose={() => setModalErro(false)}
             texto={"Todas as informações devem ser preenchidas."}
+            showClose={true}
+          />
+          
+          <Modal
+            isOpen={modalEstoqueVazio}
+            onClose={() => setModalEstoqueVazio(false)}
+            texto={"Nenhuma cesta disponível no estoque. Entre em contato com o administrador."}
             showClose={true}
           />
           
