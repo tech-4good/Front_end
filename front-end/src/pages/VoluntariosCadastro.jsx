@@ -6,6 +6,7 @@ import Voltar from "../components/Voltar";
 import Botao from "../components/Botao";
 import Input from "../components/Input";
 import Select from "../components/Select";
+import { voluntarioService } from "../services/voluntarioService";
 import "../styles/VoluntariosCadastro.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
@@ -110,8 +111,10 @@ export default function VoluntariosCadastro() {
     return null;
   }
 
-  const handleCadastro = (e) => {
+  const handleCadastro = async (e) => {
     e.preventDefault();
+    
+    // Validação dos campos
     let erros = [];
     const campos = { ...formData };
     const camposMsg = validarCamposPreenchidos(campos);
@@ -122,6 +125,7 @@ export default function VoluntariosCadastro() {
     if (emailMsg) erros.push(emailMsg);
     const senhaMsg = validarSenha(formData.senha);
     if (senhaMsg) erros.push(senhaMsg);
+    
     if (erros.length > 0) {
       setModalErro({ open: true, mensagem: erros.join("\n") });
       if (modalTimeout) clearTimeout(modalTimeout);
@@ -129,12 +133,56 @@ export default function VoluntariosCadastro() {
       setModalTimeout(timeout);
       return;
     }
-    setModalSucesso({ open: true, mensagem: `Usuário ${formData.nomeCompleto} cadastrado com sucesso!` });
-    if (modalTimeout) clearTimeout(modalTimeout);
-    const timeout = setTimeout(() => {
-      setModalSucesso({ open: false, mensagem: "" });
-    }, 10000);
-    setModalTimeout(timeout);
+
+    try {
+      // Preparar dados para o backend
+      const dadosVoluntario = {
+        nomeCompleto: formData.nomeCompleto,
+        cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação do CPF
+        telefone: formData.telefone.replace(/\D/g, ''), // Remove formatação do telefone
+        email: formData.email,
+        senha: formData.senha,
+        TipoUsuario: formData.tipo === 2 ? 1 : 0 // Conversão: Frontend 2=Admin -> Backend 1=Admin, Frontend 1=Voluntário -> Backend 0=Voluntário
+      };
+
+      console.log('Enviando dados para cadastro:', dadosVoluntario);
+
+      // Chamada real à API
+      const result = await voluntarioService.cadastrar(dadosVoluntario);
+      
+      if (result.success) {
+        console.log('Voluntário cadastrado com sucesso:', result.data);
+        setModalSucesso({ 
+          open: true, 
+          mensagem: `Voluntário ${formData.nomeCompleto} cadastrado com sucesso!` 
+        });
+        
+        // Limpar o formulário após sucesso
+        setFormData({
+          nomeCompleto: "",
+          cpf: "",
+          telefone: "",
+          email: "",
+          senha: "",
+          tipo: 1
+        });
+      } else {
+        console.error('Erro no cadastro:', result.error);
+        setModalErro({ open: true, mensagem: result.error });
+        if (modalTimeout) clearTimeout(modalTimeout);
+        const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 10000);
+        setModalTimeout(timeout);
+      }
+    } catch (error) {
+      console.error('Erro inesperado no cadastro:', error);
+      setModalErro({ 
+        open: true, 
+        mensagem: "Erro interno do servidor. Tente novamente mais tarde." 
+      });
+      if (modalTimeout) clearTimeout(modalTimeout);
+      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 10000);
+      setModalTimeout(timeout);
+    }
   };
 
   return (
@@ -154,7 +202,7 @@ export default function VoluntariosCadastro() {
             isOpen={modalSucesso.open}
             onClose={() => {
               setModalSucesso({ open: false, mensagem: "" });
-              window.location.reload();
+              navigate("/voluntarios-menu");
             }}
             texto={modalSucesso.mensagem}
             showClose={true}
