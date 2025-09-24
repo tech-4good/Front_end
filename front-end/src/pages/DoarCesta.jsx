@@ -210,6 +210,41 @@ export default function DoarCesta() {
       
       if (resultado.success) {
         console.log("✅ Entrega registrada com sucesso no banco!");
+        
+        // Atualizar estoque - decrementar 1 cesta
+        try {
+          console.log("📦 Cesta disponível antes da atualização:", cestaDisponivel);
+          console.log("🔢 Quantidade atual:", cestaDisponivel.quantidadeCestas);
+          
+          const quantidadeAtual = cestaDisponivel.quantidadeCestas || 0;
+          const novaQuantidade = Math.max(0, quantidadeAtual - 1); // Não deixar negativo
+          
+          console.log("🔢 Nova quantidade:", novaQuantidade);
+          
+          // Payload correto conforme especificação do backend
+          const dadosAtualizacao = {
+            quantidadeCestas: novaQuantidade
+          };
+          
+          console.log("📝 Dados para atualização do estoque:", dadosAtualizacao);
+          console.log("🔑 ID da cesta para atualizar:", cestaDisponivel.idCesta || cestaDisponivel.id);
+          
+          const resultadoEstoque = await cestaService.atualizarCesta(
+            cestaDisponivel.idCesta || cestaDisponivel.id, 
+            dadosAtualizacao
+          );
+          
+          if (resultadoEstoque.success) {
+            console.log("✅ Estoque atualizado com sucesso!", resultadoEstoque.data);
+            console.log("🎯 Quantidade nova no backend:", resultadoEstoque.data?.quantidadeCestas || "verificar");
+          } else {
+            console.warn("⚠️ Entrega registrada mas falha ao atualizar estoque:", resultadoEstoque.error);
+            console.warn("📊 Response completo:", resultadoEstoque);
+          }
+        } catch (errorEstoque) {
+          console.warn("⚠️ Entrega registrada mas erro ao atualizar estoque:", errorEstoque);
+        }
+        
         setModalSucesso(true);
       } else {
         console.error("❌ Erro ao registrar entrega:", resultado.error);

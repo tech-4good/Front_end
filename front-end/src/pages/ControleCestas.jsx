@@ -39,19 +39,37 @@ export default function ControleCestas() {
   const [modalSucesso, setModalSucesso] = useState({ open: false, tipo: "", quantidade: 0 });
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
 
-  // Carregar cestas do backend
+  // Carregar cestas do backend sempre que a página for montada
   useEffect(() => {
+    console.log("🔄 ControleCestas carregado - buscando dados atualizados");
     carregarCestas();
+  }, []);
+
+  // Atualizar quando a página ganha foco (usuário volta de outra página)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("👀 Página voltou ao foco - atualizando estoque");
+        carregarCestas();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   async function carregarCestas() {
     try {
       setCarregando(true);
+      console.log("📦 Buscando dados atualizados do estoque...");
+      
       const response = await cestaService.listarCestas();
       
       if (response.success && response.data) {
         let totalKits = 0;
         let totalBasicas = 0;
+        
+        console.log("📊 Dados do estoque recebidos:", response.data);
         
         response.data.forEach(cesta => {
           if (cesta.tipo === "KIT") {
@@ -61,14 +79,16 @@ export default function ControleCestas() {
           }
         });
         
+        console.log(`✅ Estoque atualizado - Kits: ${totalKits}, Básicas: ${totalBasicas}, Total: ${totalKits + totalBasicas}`);
+        
         setQuantidadeKits(totalKits);
         setQuantidadeCestaBasica(totalBasicas);
         setQuantidadeTotal(totalKits + totalBasicas);
       } else {
-        console.warn("Erro ao carregar cestas ou nenhuma cesta encontrada");
+        console.warn("⚠️ Erro ao carregar cestas ou nenhuma cesta encontrada");
       }
     } catch (error) {
-      console.error("Erro ao carregar cestas:", error);
+      console.error("❌ Erro ao carregar cestas:", error);
       setModalErro({ open: true, mensagem: "Erro ao carregar dados do estoque." });
     } finally {
       setCarregando(false);

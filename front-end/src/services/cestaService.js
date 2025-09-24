@@ -57,16 +57,27 @@ const cestaService = {
   // Atualizar cesta
   async atualizarCesta(id, dadosCesta) {
     try {
-      const response = await api.put(`/cestas/${id}`, dadosCesta);
+      console.log("🔧 cestaService.atualizarCesta - ID:", id);
+      console.log("🔧 cestaService.atualizarCesta - Dados:", dadosCesta);
+      console.log("🔧 cestaService.atualizarCesta - URL:", `/cestas/${id}`);
+      
+      // Usar PATCH conforme especificação do backend
+      const response = await api.patch(`/cestas/${id}`, dadosCesta);
+      
+      console.log("✅ cestaService.atualizarCesta - Sucesso:", response.data);
+      
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error("Erro ao atualizar cesta:", error);
+      console.error("❌ cestaService.atualizarCesta - Erro:", error);
+      console.error("❌ cestaService.atualizarCesta - Response:", error.response?.data);
+      console.error("❌ cestaService.atualizarCesta - Status:", error.response?.status);
+      
       return {
         success: false,
-        error: error.response?.data?.message || "Erro ao atualizar cesta"
+        error: error.response?.data?.message || error.response?.data || "Erro ao atualizar cesta"
       };
     }
   },
