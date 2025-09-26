@@ -430,6 +430,7 @@ export default function CadastroEndereco() {
                         options={input.options.map(opt => ({ value: opt, label: opt }))}
                         value={formData[fieldKey] || ""}
                         onChange={(e) => handleInputChange(fieldKey, e.target.value)}
+                        placeholder={input.placeholder}
                       />
                     ) : (
                       <Input

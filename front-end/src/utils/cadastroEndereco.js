@@ -4,17 +4,29 @@ const inputsFirstStep = [
     placeholder: "Insira o nome da rua",
     inputType: "text",
   },
-  { label: "Número", placeholder: "Insira o número", inputType: "text" },
+  { 
+    label: "Número", 
+    placeholder: "Insira o número", 
+    inputType: "text" 
+  },
   {
     label: "Complemento",
     placeholder: "Insira o complemento",
     inputType: "text",
   },
-  { label: "Bairro", placeholder: "Insira o bairro", inputType: "text" },
-  { label: "Cidade", placeholder: "Insira a cidade", inputType: "text" },
+  { 
+    label: "Bairro", 
+    placeholder: "Insira o bairro", 
+    inputType: "text" 
+  },
+  { 
+    label: "Cidade", 
+    placeholder: "Insira a cidade", 
+    inputType: "text" 
+  },
   { 
     label: "Estado", 
-    placeholder: "Selecione o estado", 
+    placeholder: "Selecionar estado", 
     inputType: "select",
     options: [
       "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", 
@@ -22,7 +34,6 @@ const inputsFirstStep = [
       "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
     ]
   },
-  { label: "CEP", placeholder: "Insira o CEP", inputType: "text", mask: "cep" },
 ];
 
 const inputsSecondStep = [
