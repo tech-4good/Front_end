@@ -2,18 +2,20 @@
 import React from "react";
 import "../styles/Select.css";
 
-const Select = ({ label, options = [], value, onChange, placeholder }) => {
+const Select = ({ label, options = [], value, onChange, placeholder, name, id, className }) => {
 		return (
 			<div className="select-group">
 				{label && <label className="select-label">{label}</label>}
 				<div className="select-wrapper">
 					<select
-						className="select-personalizado"
+						id={id}
+						name={name}
+						className={`select-personalizado ${className || ''}`}
 						value={value}
 						onChange={onChange}
 					>
 						{placeholder && (
-							<option value="" disabled hidden>{placeholder}</option>
+							<option value="" disabled>{placeholder}</option>
 						)}
 						{options.map((option, idx) => (
 							<option key={option.value || option} value={option.value || option}>

@@ -11,6 +11,7 @@ import iconeUsuario from '../assets/icone-usuario.png';
 import iconeRelogio from '../assets/icone-relogio.png';
 import iconeSair from '../assets/icone-sair.png';
 import { Download } from 'lucide-react';
+import { beneficiadoService } from '../services/beneficiadoService';
 
 export default function CadastroBeneficiadoCompleto3() {
   const [form, setForm] = useState({
@@ -23,9 +24,11 @@ export default function CadastroBeneficiadoCompleto3() {
   });
   const [tipoUsuario, setTipoUsuario] = useState('2');
   const [modalSucesso, setModalSucesso] = useState({ open: false, mensagem: "" });
+  const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
   const [modalFilhos, setModalFilhos] = useState(false);
   const [modalAuxilios, setModalAuxilios] = useState(false);
   const [modalTimeout, setModalTimeout] = useState(null);
+  const [cadastrando, setCadastrando] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +53,18 @@ export default function CadastroBeneficiadoCompleto3() {
     return formatted;
   }
 
+  // Função para converter data DD/MM/AAAA para YYYY-MM-DD
+  function convertDateToISO(dateStr) {
+    const [day, month, year] = dateStr.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
+  // Função para converter valor em reais para número
+  function parseReais(value) {
+    if (!value) return 0;
+    return parseFloat(value.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+  }
+
   function handleChange(e) {
     const { name, value, files } = e.target;
     if (name === 'foto') {
@@ -66,7 +81,65 @@ export default function CadastroBeneficiadoCompleto3() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    setModalSucesso({ open: true, mensagem: 'Beneficiado cadastrado com sucesso!' });
+    handleCadastrarBeneficiado();
+  }
+
+  async function handleCadastrarBeneficiado() {
+    setCadastrando(true);
+    
+    try {
+      // Recuperar dados do sessionStorage das etapas anteriores
+      const enderecoSelecionado = JSON.parse(sessionStorage.getItem("enderecoSelecionado") || '{}');
+      
+      // Dados do formulário atual das etapas anteriores (precisaria vir do CadastroBeneficiadoCompleto2)
+      const dadosCompleto2 = JSON.parse(sessionStorage.getItem("dadosCompleto2") || '{}');
+
+      // Validar se temos todos os dados necessários
+      if (!enderecoSelecionado.id || !dadosCompleto2.nome) {
+        setModalErro({ open: true, mensagem: 'Dados incompletos. Refaça o processo de cadastro.' });
+        setCadastrando(false);
+        return;
+      }
+
+      const dadosBeneficiado = {
+        nome: dadosCompleto2.nome,
+        cpf: dadosCompleto2.cpf,
+        rg: dadosCompleto2.rg,
+        dataNascimento: convertDateToISO(dadosCompleto2.nascimento),
+        telefone: dadosCompleto2.telefone,
+        escolaridade: dadosCompleto2.escolaridade,
+        estadoCivil: dadosCompleto2.estadoCivil,
+        religiao: dadosCompleto2.religiao,
+        profissao: form.profissao,
+        empresa: form.empresa,
+        cargo: form.cargo,
+        rendaMensal: parseReais(form.renda),
+        quantidadeDependentes: parseInt(form.dependentes) || 0,
+        enderecoId: enderecoSelecionado.id
+      };
+
+      console.log('Cadastrando beneficiado completo:', dadosBeneficiado);
+      
+      const response = await beneficiadoService.cadastrarBeneficiadoCompleto(dadosBeneficiado);
+      
+      if (response.success) {
+        console.log('Beneficiado cadastrado com sucesso:', response.data);
+        
+        // Limpar dados temporários
+        sessionStorage.removeItem("enderecoSelecionado");
+        sessionStorage.removeItem("dadosCompleto2");
+        
+        setModalSucesso({ open: true, mensagem: 'Beneficiado cadastrado com sucesso!' });
+      } else {
+        console.error('Erro no cadastro:', response.error);
+        setModalErro({ open: true, mensagem: response.error || 'Erro ao cadastrar beneficiado.' });
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setModalErro({ open: true, mensagem: 'Erro inesperado. Tente novamente.' });
+    } finally {
+      setCadastrando(false);
+    }
   }
 
   return (
@@ -85,6 +158,14 @@ export default function CadastroBeneficiadoCompleto3() {
           isOpen={modalSucesso.open}
           onClose={() => { setModalSucesso({ open: false, mensagem: "" }); setModalFilhos(true); }}
           texto={modalSucesso.mensagem}
+          showClose={true}
+        />
+        
+        {/* Modal de erro */}
+        <Modal
+          isOpen={modalErro.open}
+          onClose={() => setModalErro({ open: false, mensagem: "" })}
+          texto={modalErro.mensagem}
           showClose={true}
         />
         {/* Modal de pergunta filhos usando Modal padrão */}
@@ -204,7 +285,12 @@ export default function CadastroBeneficiadoCompleto3() {
             </div>
           </div>
           <div className="cadastro-beneficiado-btn-row">
-            <Botao texto="Cadastrar" type="submit" className="cadastrobeneficiado-botao" />
+            <Botao 
+              texto={cadastrando ? "Cadastrando..." : "Cadastrar"} 
+              type="submit" 
+              className="cadastrobeneficiado-botao"
+              disabled={cadastrando}
+            />
           </div>
         </form>
       </div>

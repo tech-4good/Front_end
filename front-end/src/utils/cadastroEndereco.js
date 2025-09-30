@@ -4,16 +4,36 @@ const inputsFirstStep = [
     placeholder: "Insira o nome da rua",
     inputType: "text",
   },
-  { label: "Número", placeholder: "Insira o número", inputType: "text" },
+  { 
+    label: "Número", 
+    placeholder: "Insira o número", 
+    inputType: "text" 
+  },
   {
     label: "Complemento",
     placeholder: "Insira o complemento",
     inputType: "text",
   },
-  { label: "Bairro", placeholder: "Insira o bairro", inputType: "text" },
-  { label: "Cidade", placeholder: "Insira a cidade", inputType: "text" },
-  { label: "Estado", placeholder: "Insira o estado", inputType: "text" },
-  { label: "CEP", placeholder: "Insira o CEP", inputType: "text", mask: "cep" },
+  { 
+    label: "Bairro", 
+    placeholder: "Insira o bairro", 
+    inputType: "text" 
+  },
+  { 
+    label: "Cidade", 
+    placeholder: "Insira a cidade", 
+    inputType: "text" 
+  },
+  { 
+    label: "Estado", 
+    placeholder: "Selecionar estado", 
+    inputType: "select",
+    options: [
+      "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", 
+      "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", 
+      "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+    ]
+  },
 ];
 
 const inputsSecondStep = [
@@ -36,19 +56,19 @@ const inputsSecondStep = [
     label: "Tipo de Moradia",
     placeholder: "Selecione o tipo",
     inputType: "select",
-    options: ["Casa", "Apartamento", "Kitnet", "Quarto", "Outro"],
+     options: ["Casa", "Apartamento", "Kitnet", "Quarto", "Outro"],
   },
   {
     label: "Tipo de Cesta",
     placeholder: "Selecione o tipo",
     inputType: "select",
-    options: ["Cesta Básica", "Kit", "Pacote", "Outro"],
+    options: ["Kit", "Cesta Básica"],
   },
   {
     label: "Status",
     placeholder: "Selecione o status",
     inputType: "select",
-    options: ["Disponível", "Indisponível", "Em Manutenção", "Ocupado"],
+    options: ["Disponível", "Indisponível"],
   },
 ];
 

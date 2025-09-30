@@ -11,25 +11,19 @@ import iconeUsuario from '../assets/icone-usuario.png';
 import iconeRelogio from '../assets/icone-relogio.png';
 import iconeSair from '../assets/icone-sair.png';
 import { FaSearch } from 'react-icons/fa';
+import { beneficiadoService } from '../services/beneficiadoService';
 
-
-const enderecosFake = [
-    { logradouro: "Rua Alameda Portuguesa", numero: "34" },
-    { logradouro: "Rua Alameda Portuguesa", numero: "53" },
-    { logradouro: "Rua Osvaldo Cruz", numero: "12" },
-    { logradouro: "Rua Osvaldo Cruz", numero: "99" },
-    { logradouro: "Av. Brasil", numero: "100" },
-    { logradouro: "Av. Brasil", numero: "101" },
-];
 
 export default function CadastroBeneficiadoCompleto1() {
     const [rua, setRua] = useState("");
     const [numero, setNumero] = useState("");
     const [tipoUsuario, setTipoUsuario] = useState("2");
-        const [resultados, setResultados] = useState([]);
-            const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
-                const [modalErro, setModalErro] = useState(false);
-                const [modalSucesso, setModalSucesso] = useState(false);
+    const [resultados, setResultados] = useState([]);
+    const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
+    const [modalErro, setModalErro] = useState({ aberto: false, mensagem: 'Todas as informações devem estar preenchidas.' });
+    const [modalSucesso, setModalSucesso] = useState(false);
+    const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -47,40 +41,46 @@ export default function CadastroBeneficiadoCompleto1() {
     ];
     const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 
-    function handleRuaChange(e) {
+    async function handleRuaChange(e) {
         const valor = e.target.value;
         setRua(valor);
-        if (valor.length > 0) {
-            const encontrados = enderecosFake.filter(
-                v => v.logradouro.toLowerCase().includes(valor.toLowerCase())
-            );
-            setResultados(encontrados);
+        if (valor.length > 2) {
+            setLoading(true);
+            const response = await beneficiadoService.buscarEnderecos(valor);
+            if (response.success) {
+                setResultados(response.data);
+            } else {
+                setResultados([]);
+            }
+            setLoading(false);
         } else {
             setResultados([]);
         }
     }
 
     function handleSelectEndereco(endereco) {
-        setRua(endereco.logradouro);
+        setRua(endereco.logradouro || endereco.rua);
         setNumero(endereco.numero);
+        setEnderecoSelecionado(endereco);
         setResultados([]);
     }
 
-                function handleBuscar(e) {
-                    e.preventDefault();
-                    if (!rua || !numero) {
-                        setModalErro(true);
-                        return;
-                    }
-                    const existe = enderecosFake.some(
-                        v => v.logradouro.toLowerCase() === rua.toLowerCase() && v.numero === numero
-                    );
-                    if (!existe) {
-                        setModalNaoEncontrado(true);
-                        return;
-                    }
-                    setModalSucesso(true);
-                }
+    async function handleBuscar(e) {
+        e.preventDefault();
+        if (!rua || !numero) {
+            setModalErro({ aberto: true, mensagem: 'Todas as informações devem estar preenchidas.' });
+            return;
+        }
+        
+        if (!enderecoSelecionado) {
+            setModalNaoEncontrado(true);
+            return;
+        }
+        
+        // Salvar endereço selecionado para as próximas etapas
+        sessionStorage.setItem("enderecoSelecionado", JSON.stringify(enderecoSelecionado));
+        setModalSucesso(true);
+    }
 
     return (
     <div className="cadastro-beneficiado-bg">
@@ -107,16 +107,22 @@ export default function CadastroBeneficiadoCompleto1() {
                                             />
                                             {rua && resultados.length > 0 && (
                                                 <div className="cadastro-beneficiado-resultados">
-                                                    {resultados.map((v, idx) => (
-                                                        <div
-                                                            className="cadastro-beneficiado-resultado"
-                                                            key={idx}
-                                                            style={{ cursor: "pointer" }}
-                                                            onClick={() => handleSelectEndereco(v)}
-                                                        >
-                                                            {v.logradouro}, {v.numero}
+                                                    {loading ? (
+                                                        <div className="cadastro-beneficiado-resultado">
+                                                            Buscando endereços...
                                                         </div>
-                                                    ))}
+                                                    ) : (
+                                                        resultados.map((endereco, idx) => (
+                                                            <div
+                                                                className="cadastro-beneficiado-resultado"
+                                                                key={idx}
+                                                                style={{ cursor: "pointer" }}
+                                                                onClick={() => handleSelectEndereco(endereco)}
+                                                            >
+                                                                {endereco.logradouro || endereco.rua}, {endereco.numero}
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -131,16 +137,17 @@ export default function CadastroBeneficiadoCompleto1() {
                                                 maxLength={6}
                                             />
                                         </div>
-                                        <button className="cadastro-beneficiado-buscar" type="submit">
-                                            <FaSearch className="cadastro-beneficiado-search-icon" /> Buscar
+                                        <button className="cadastro-beneficiado-buscar" type="submit" disabled={loading}>
+                                            <FaSearch className="cadastro-beneficiado-search-icon" /> 
+                                            {loading ? 'Buscando...' : 'Buscar'}
                                         </button>
                                     </div>
                                 </form>
                         {/* Modais fora do form */}
                         <Modal
-                            isOpen={modalErro}
-                            onClose={() => setModalErro(false)}
-                            texto={"Todas as informações devem estar preenchidas."}
+                            isOpen={modalErro.aberto}
+                            onClose={() => setModalErro({ aberto: false, mensagem: '' })}
+                            texto={modalErro.mensagem}
                             showClose={true}
                         />
                         <Modal

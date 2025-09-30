@@ -11,15 +11,20 @@ import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import { auxilioService } from "../services/auxilioService";
+import { beneficiadoService } from "../services/beneficiadoService";
 
 export default function CadastroAuxilios() {
     const [cpfBeneficiado, setCpfBeneficiado] = useState("");
     const [nomeAuxilio, setNomeAuxilio] = useState("");
-    const [modalEncontrado, setModalEncontrado] = useState(false);
+    const [modalEncontrado, setModalEncontrado] = useState({ open: false, auxilio: null });
     const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
     const [modalSucesso, setModalSucesso] = useState(false);
+    const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
     const [erros, setErros] = useState({});
     const [modalCampos, setModalCampos] = useState(false);
+    const [carregando, setCarregando] = useState(false);
+    const [beneficiadoEncontrado, setBeneficiadoEncontrado] = useState(null);
 
     const [tipoUsuario, setTipoUsuario] = useState("2");
     const navigate = useNavigate();
@@ -46,13 +51,6 @@ export default function CadastroAuxilios() {
 
     const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 
-    // base de dados fake de auxílios para demonstração
-    const auxiliosFake = [
-        { id: 1, nome: "Cesta Básica" },
-        { id: 2, nome: "Auxílio Emergencial" },
-        { id: 3, nome: "Auxílio Transporte" },
-    ];
-
     function formatCPF(value) {
         let numbers = value.replace(/\D/g, "");
         if (numbers.length > 11) numbers = numbers.slice(0, 11);
@@ -67,7 +65,7 @@ export default function CadastroAuxilios() {
         return numbers;
     }
 
-    function handleSalvar(e) {
+    async function handleSalvar(e) {
         e.preventDefault();
         let newErros = {};
 
@@ -83,24 +81,85 @@ export default function CadastroAuxilios() {
             return;
         }
 
-        console.log({ cpfBeneficiado, nomeAuxilio });
-        navigate("/home");
+        setCarregando(true);
+        try {
+            // Buscar beneficiário pelo CPF
+            const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
+            const respostaBeneficiados = await beneficiadoService.listar();
+            
+            if (respostaBeneficiados.success) {
+                const beneficiado = respostaBeneficiados.data.find(b => b.cpf === cpfLimpo);
+                if (!beneficiado) {
+                    setModalErro({ open: true, mensagem: "Beneficiário não encontrado com este CPF." });
+                    return;
+                }
+
+                // Verificar se o auxílio existe ou criar um novo
+                let auxilioId = null;
+                const respostaAuxilios = await auxilioService.buscarPorNome(nomeAuxilio.trim());
+                
+                if (respostaAuxilios.success && respostaAuxilios.data.length > 0) {
+                    auxilioId = respostaAuxilios.data[0].id;
+                } else {
+                    // Criar novo auxílio
+                    const novoAuxilio = await auxilioService.cadastrar({ nome: nomeAuxilio.trim() });
+                    if (novoAuxilio.success) {
+                        auxilioId = novoAuxilio.data.id;
+                    } else {
+                        setModalErro({ open: true, mensagem: "Erro ao criar auxílio: " + novoAuxilio.error });
+                        return;
+                    }
+                }
+
+                // Associar auxílio ao beneficiário
+                const associacao = await auxilioService.associarBeneficiario(beneficiado.id, auxilioId);
+                if (associacao.success) {
+                    setModalSucesso(true);
+                    setCpfBeneficiado("");
+                    setNomeAuxilio("");
+                } else {
+                    setModalErro({ open: true, mensagem: "Erro ao associar auxílio: " + associacao.error });
+                }
+            } else {
+                setModalErro({ open: true, mensagem: "Erro ao buscar beneficiários: " + respostaBeneficiados.error });
+            }
+        } catch (error) {
+            setModalErro({ open: true, mensagem: "Erro ao processar cadastro de auxílio" });
+        } finally {
+            setCarregando(false);
+        }
     }
 
-    function handleBuscarAuxilio(e) {
+    async function handleBuscarAuxilio(e) {
         e.preventDefault();
         if (!nomeAuxilio || nomeAuxilio.trim() === "") {
             setModalCampos(true);
             return;
         }
 
-        const encontrado = auxiliosFake.find(a => a.nome.toLowerCase() === nomeAuxilio.trim().toLowerCase());
-        if (encontrado) {
-            setModalEncontrado(true);
-        } else {
-            setModalNaoEncontrado(true);
+        setCarregando(true);
+        try {
+            const resposta = await auxilioService.buscarPorNome(nomeAuxilio.trim());
+            if (resposta.success && resposta.data.length > 0) {
+                setModalEncontrado({ open: true, auxilio: resposta.data[0] });
+            } else {
+                setModalNaoEncontrado(true);
+            }
+        } catch (error) {
+            setModalErro({ open: true, mensagem: "Erro ao buscar auxílio" });
+        } finally {
+            setCarregando(false);
         }
     }
+
+    const handleConfirmarAuxilio = async (criarNovo = false) => {
+        setModalEncontrado({ open: false, auxilio: null });
+        setModalNaoEncontrado(false);
+        
+        // Simular o processo de salvamento automático após confirmação
+        const event = { preventDefault: () => {} };
+        await handleSalvar(event);
+    };
 
     return (
         <div className="cadastro-filhos-bg">
@@ -154,10 +213,16 @@ export default function CadastroAuxilios() {
                         </button>
                     </div>
 
-                    <button className="cadastro-filhos-btn-row" type="submit" style={{ marginTop: 16 }}>
-                        Salvar
+                    <button className="cadastro-filhos-btn-row" type="submit" style={{ marginTop: 16 }} disabled={carregando}>
+                        {carregando ? "Processando..." : "Salvar"}
                     </button>
                 </form>
+
+                {carregando && (
+                    <div style={{ textAlign: 'center', marginTop: 20 }}>
+                        Processando...
+                    </div>
+                )}
 
                 <Modal
                     isOpen={modalCampos}
@@ -166,30 +231,30 @@ export default function CadastroAuxilios() {
                     showClose={true}
                 />
                 <Modal
-                    isOpen={modalEncontrado}
-                    onClose={() => setModalEncontrado(false)}
-                    texto={"Auxílio Encontrado!\nDeseja adicionar este auxílio?"}
+                    isOpen={modalEncontrado.open}
+                    onClose={() => setModalEncontrado({ open: false, auxilio: null })}
+                    texto={`Auxílio "${modalEncontrado.auxilio?.nome}" encontrado!\nDeseja adicionar este auxílio ao beneficiário?`}
                     showClose={true}
                     botoes={[
                         {
                             texto: 'Sim',
-                            onClick: () => { setModalEncontrado(false); setModalSucesso(true); }
+                            onClick: () => handleConfirmarAuxilio(false)
                         },
                         {
                             texto: 'Não',
-                            onClick: () => setModalEncontrado(false)
+                            onClick: () => setModalEncontrado({ open: false, auxilio: null })
                         }
                     ]}
                 />
                 <Modal
                     isOpen={modalNaoEncontrado}
                     onClose={() => setModalNaoEncontrado(false)}
-                    texto={"Auxílio não Encontrado!\nDeseja adicionar este auxílio?"}
+                    texto={"Auxílio não encontrado!\nDeseja criar e adicionar este novo auxílio?"}
                     showClose={true}
                     botoes={[
                         {
                             texto: 'Sim',
-                            onClick: () => { setModalNaoEncontrado(false); setModalSucesso(true); }
+                            onClick: () => handleConfirmarAuxilio(true)
                         },
                         {
                             texto: 'Não',
@@ -203,6 +268,12 @@ export default function CadastroAuxilios() {
                     texto={"Auxílio cadastrado com sucesso!"}
                     showClose={true}
                     botoes={[{ texto: 'OK', onClick: () => setModalSucesso(false) }]}
+                />
+                <Modal
+                    isOpen={modalErro.open}
+                    onClose={() => setModalErro({ open: false, mensagem: "" })}
+                    texto={modalErro.mensagem}
+                    showClose={true}
                 />
             </div>
         </div>

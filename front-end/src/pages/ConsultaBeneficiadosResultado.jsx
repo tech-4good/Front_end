@@ -8,39 +8,8 @@ import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
-
-const beneficiadosFake = [
-  { cpf: "33344455566", nome: "Lucas Almeida" },
-  { cpf: "22233344455", nome: "Bruna Reginato" },
-  { cpf: "48763842135", nome: "Juliana Gomes Oliveira" },
-  { cpf: "12345678901", nome: "Carlos Silva" },
-  { cpf: "98765432100", nome: "Maria Souza" },
-  { cpf: "45678912300", nome: "Ana Paula Lima" },
-  { cpf: "11122233344", nome: "João Pedro Santos" },
-];
-
-const retiradasFake = [
-  // Bruna Reginato
-  { cpf: "22233344455", tipo: "Kit", data: "09/03/2025" },
-  { cpf: "22233344455", tipo: "Kit", data: "23/02/2025" },
-  { cpf: "22233344455", tipo: "Kit", data: "15/02/2025" },
-  { cpf: "22233344455", tipo: "Kit", data: "01/02/2025" },
-  { cpf: "22233344455", tipo: "Kit", data: "29/01/2025" },
-  // Lucas Almeida
-  { cpf: "33344455566", tipo: "Cesta", data: "10/03/2025" },
-  { cpf: "33344455566", tipo: "Cesta", data: "25/02/2025" },
-  // Juliana Gomes Oliveira
-  { cpf: "48763842135", tipo: "Kit", data: "05/03/2025" },
-  // Carlos Silva
-  { cpf: "12345678901", tipo: "Cesta", data: "12/03/2025" },
-  { cpf: "12345678901", tipo: "Cesta", data: "28/02/2025" },
-  // Maria Souza
-  { cpf: "98765432100", tipo: "Kit", data: "08/03/2025" },
-  // Ana Paula Lima
-  { cpf: "45678912300", tipo: "Cesta", data: "03/03/2025" },
-  // João Pedro Santos
-  { cpf: "11122233344", tipo: "Kit", data: "11/03/2025" },
-];
+import { beneficiadoService } from "../services/beneficiadoService";
+import { doacaoService } from "../services/doacaoService";
 
 export default function ConsultaBeneficiadosResultado() {
   const navigate = useNavigate();
@@ -48,7 +17,9 @@ export default function ConsultaBeneficiadosResultado() {
   const [tipoUsuario, setTipoUsuario] = useState("2");
   const [beneficiado, setBeneficiado] = useState(null);
   const [retiradas, setRetiradas] = useState([]);
-  const [ordem, setOrdem] = useState('desc'); 
+  const [ordem, setOrdem] = useState('desc');
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "2";
@@ -60,22 +31,72 @@ export default function ConsultaBeneficiadosResultado() {
       cpf = sessionStorage.getItem('cpfSelecionado');
     }
     if (cpf) {
-      const encontrado = beneficiadosFake.find(v => v.cpf === cpf);
-      setBeneficiado(encontrado);
-
-      let retiradas = retiradasFake.filter(r => r.cpf === cpf);
-
-      retiradas = retiradas.sort((a, b) => {
-        const da = a.data.split('/').reverse().join('-');
-        const db = b.data.split('/').reverse().join('-');
-        return ordem === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
-      });
-      setRetiradas(retiradas);
+      carregarBeneficiado(cpf);
     } else {
       setBeneficiado(null);
       setRetiradas([]);
+      setErro("Nenhum CPF selecionado");
     }
-  }, [location, ordem]);
+  }, [location]);
+
+  useEffect(() => {
+    // Reordenar quando a ordem mudar
+    if (retiradas.length > 0) {
+      const retiradasOrdenadas = [...retiradas].sort((a, b) => {
+        const dataA = new Date(a.data);
+        const dataB = new Date(b.data);
+        return ordem === 'desc' ? dataB - dataA : dataA - dataB;
+      });
+      setRetiradas(retiradasOrdenadas);
+    }
+  }, [ordem]);
+
+  const carregarBeneficiado = async (cpf) => {
+    setCarregando(true);
+    setErro("");
+    try {
+      // Buscar todos os beneficiados e encontrar pelo CPF
+      const respostaBeneficiados = await beneficiadoService.listar();
+      if (respostaBeneficiados.success) {
+        const beneficiadoEncontrado = respostaBeneficiados.data.find(b => b.cpf === cpf);
+        if (beneficiadoEncontrado) {
+          setBeneficiado(beneficiadoEncontrado);
+          // Carregar histórico de doações do beneficiário
+          await carregarHistoricoBeneficiado(beneficiadoEncontrado.id);
+        } else {
+          setBeneficiado(null);
+          setRetiradas([]);
+          setErro("Beneficiado não encontrado");
+        }
+      } else {
+        setErro("Erro ao buscar beneficiado: " + respostaBeneficiados.error);
+      }
+    } catch (error) {
+      setErro("Erro ao carregar dados do beneficiado");
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const carregarHistoricoBeneficiado = async (beneficiadoId) => {
+    try {
+      const resposta = await doacaoService.buscarPorBeneficiado(beneficiadoId);
+      if (resposta.success) {
+        const doacoesOrdenadas = (resposta.data || []).sort((a, b) => {
+          const dataA = new Date(a.data);
+          const dataB = new Date(b.data);
+          return ordem === 'desc' ? dataB - dataA : dataA - dataB;
+        });
+        setRetiradas(doacoesOrdenadas);
+      } else {
+        console.error('Erro ao carregar histórico:', resposta.error);
+        setRetiradas([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar histórico do beneficiário:', error);
+      setRetiradas([]);
+    }
+  };
 
   const botoesNavbar = [
     { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -85,6 +106,15 @@ export default function ConsultaBeneficiadosResultado() {
   ];
 
   const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
+
+  const formatarData = (dataISO) => {
+    const data = new Date(dataISO);
+    return data.toLocaleDateString('pt-BR');
+  };
+
+  const formatarTipo = (tipo) => {
+    return tipo === 'kit' ? 'Kit' : tipo === 'cesta' ? 'Cesta' : tipo;
+  };
 
   return (
     <div className="consulta-beneficiados-resultado-bg">
@@ -101,11 +131,24 @@ export default function ConsultaBeneficiadosResultado() {
           </select>
         </div>
         <h1 className="consulta-beneficiados-resultado-title">Clique no nome do beneficiado para ver suas informações!</h1>
-        {beneficiado ? (
+        
+        {carregando && (
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
+            Carregando dados...
+          </div>
+        )}
+
+        {erro && (
+          <div style={{ textAlign: 'center', marginTop: 20, color: '#e74c3c' }}>
+            {erro}
+          </div>
+        )}
+
+        {beneficiado && !carregando && !erro ? (
           <div className="consulta-beneficiados-resultado-lista-scroll">
             {retiradas.length > 0 ? (
               retiradas.map((r, idx) => (
-                <div className="consulta-beneficiados-resultado-card" key={idx}>
+                <div className="consulta-beneficiados-resultado-card" key={r.id || idx}>
                     <div
                       className="consulta-beneficiados-resultado-nome"
                       style={{ cursor: 'pointer', textDecoration: 'underline' }}
@@ -117,18 +160,18 @@ export default function ConsultaBeneficiadosResultado() {
                       {beneficiado.nome}
                     </div>
                   <div className="consulta-beneficiados-resultado-tipo">
-                    <span className="consulta-beneficiados-resultado-tipo-badge">{r.tipo}</span>
+                    <span className="consulta-beneficiados-resultado-tipo-badge">{formatarTipo(r.tipo)}</span>
                   </div>
-                  <div className="consulta-beneficiados-resultado-data">{r.data}</div>
+                  <div className="consulta-beneficiados-resultado-data">{formatarData(r.data)}</div>
                 </div>
               ))
             ) : (
-              <p className="consulta-beneficiados-resultado-nao-encontrado">Nenhuma retirada encontrada.</p>
+              <p className="consulta-beneficiados-resultado-nao-encontrado">Nenhuma retirada encontrada para este beneficiado.</p>
             )}
           </div>
-        ) : (
+        ) : !carregando && !erro ? (
           <p className="consulta-beneficiados-resultado-nao-encontrado">Beneficiado não encontrado.</p>
-        )}
+        ) : null}
       </div>
     </div>
   );

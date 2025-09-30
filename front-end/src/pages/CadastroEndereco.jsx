@@ -11,6 +11,7 @@ import Input from "../components/Input";
 import Select from "../components/Select";
 import Botao from "../components/Botao";
 import Modal from "../components/Modal";
+import { beneficiadoService } from "../services/beneficiadoService";
 import "../styles/CadastroEndereco.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeRelogio from "../assets/icone-relogio.png";
@@ -32,7 +33,7 @@ export default function CadastroEndereco() {
     datadeentrada: "",
     datadesada: "",
     moradia: "",
-    tipodemoradia: "Casa",
+    tipodemoradia: "Apartamento",
     tipodecesta: "Kit",
     status: "Disponível",
     quantidadedecriancas: "",
@@ -46,6 +47,8 @@ export default function CadastroEndereco() {
 
   const [modalErro, setModalErro] = useState(false);
   const [mensagemErro, setMensagemErro] = useState("");
+  const [loading, setCadastrando] = useState(false);
+  const [enderecoId, setEnderecoId] = useState(null);
 
   const handleInputChange = (field, value, maskType = null) => {
     let processedValue = value;
@@ -60,10 +63,117 @@ export default function CadastroEndereco() {
     }));
   };
 
+  // Função para converter data DD/MM/AAAA para YYYY-MM-DD
+  const convertDateToISO = (dateStr) => {
+    if (!dateStr || dateStr.length !== 10) return null;
+    const [day, month, year] = dateStr.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+
+  // Função para preparar dados para o backend
+  const prepararDadosEndereco = () => {
+    console.log('=== DEBUG PREPARAR DADOS ===');
+    console.log('formData completo:', formData);
+    console.log('formData.rua:', formData.rua, '(tipo:', typeof formData.rua, ')');
+    console.log('formData.numero:', formData.numero, '(tipo:', typeof formData.numero, ')');
+    console.log('formData.datadeentrada:', formData.datadeentrada);
+    console.log('formData.datadesada:', formData.datadesada);
+    
+    const dados = {
+      rua: formData.rua || "",
+      numero: formData.numero && formData.numero.trim() !== "" ? formData.numero.trim() : "", // Garantir que não seja null e trim espaços
+      complemento: formData.complemento || "",
+      bairro: formData.bairro || "",
+      cidade: formData.cidade || "",
+      estado: formData.estado || "",
+      cep: formData.cep || "",
+      dataEntrada: convertDateToISO(formData.datadeentrada),
+      dataSaida: formData.datadesada && formData.datadesada.trim() !== "" ? convertDateToISO(formData.datadesada) : null, // Incluir data de saída apenas se preenchida
+      tipoMoradia: formData.tipodemoradia || "",
+      statusMoradia: formData.moradia || "",
+      tipoCesta: formData.tipodecesta === "Cesta Básica" ? "BASICA" : 
+                 formData.tipodecesta === "Kit" ? "KIT" : 
+                 "KIT", // default
+      statusCesta: formData.status || "Disponível"
+    };
+    
+    console.log('=== DADOS PREPARADOS ===');
+    console.log('dados.rua:', dados.rua);
+    console.log('dados.numero:', dados.numero);
+    console.log('dados.dataEntrada:', dados.dataEntrada);
+    console.log('dados.dataSaida:', dados.dataSaida);
+    
+    return dados;
+  };
+
+  // Função para realizar o cadastro no backend
+  const realizarCadastroEndereco = async () => {
+    setCadastrando(true);
+    
+    try {
+      const dadosEndereco = prepararDadosEndereco();
+      console.log('Dados do formulário original:', formData);
+      console.log('Dados preparados para envio:', dadosEndereco);
+      
+      const response = await beneficiadoService.cadastrarEndereco(dadosEndereco);
+      
+      if (response.success) {
+        console.log('Endereço cadastrado com sucesso:', response.data);
+        setEnderecoId(response.data.id);
+        return true;
+      } else {
+        console.error('Erro no cadastro:', response.error);
+        setMensagemErro(response.error || 'Erro ao cadastrar endereço.');
+        setModalErro(true);
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setMensagemErro('Erro inesperado. Tente novamente.');
+      setModalErro(true);
+      return false;
+    } finally {
+      setCadastrando(false);
+    }
+  };
+
   const getFieldKey = (label) => {
-    return label.toLowerCase()
+    // Mapeamento específico para cada label
+    const labelMapping = {
+      "Rua/Avenida": "rua",
+      "Número": "numero",
+      "Complemento": "complemento",
+      "Bairro": "bairro",
+      "Cidade": "cidade",
+      "Estado": "estado",
+      "CEP": "cep",
+      "Data de Entrada": "datadeentrada",
+      "Data de Saída": "datadesada",
+      "Moradia": "moradia",
+      "Tipo de Moradia": "tipodemoradia",
+      "Tipo de Cesta": "tipodecesta",
+      "Status": "status",
+      "Quantidade de Crianças": "quantidadedecriancas",
+      "Quantidade de Adolescentes": "quantidadedeadolescentes",
+      "Quantidade de Jovens": "quantidadedejovens",
+      "Quantidade de Idosos": "quantidadedeidosos",
+      "Quantidade de Gestantes": "quantidadedegestantes",
+      "Quantidade de Deficientes": "quantidadededeficientes",
+      "Quantidade de Outros": "quantidadedeoutros"
+    };
+    
+    const mappedKey = labelMapping[label];
+    if (mappedKey) {
+      console.log(`Mapeando label "${label}" para chave "${mappedKey}"`);
+      return mappedKey;
+    }
+    
+    // Fallback para o método antigo se não encontrar no mapeamento
+    const fallbackKey = label.toLowerCase()
       .replace(/[^\w\s]/g, '')
       .replace(/\s+/g, '');
+    console.warn(`Label "${label}" não encontrado no mapeamento, usando fallback: "${fallbackKey}"`);
+    return fallbackKey;
   };
 
   const validateStep1 = () => {
@@ -92,10 +202,10 @@ export default function CadastroEndereco() {
   const validateStep2 = () => {
     const requiredFields = [
       { key: "datadeentrada", name: "Data de Entrada" },
-      { key: "datadesada", name: "Data de Saída" },
       { key: "moradia", name: "Moradia" }
     ];
     
+    // Data de Saída é opcional, não obrigatória
     for (let field of requiredFields) {
       if (!formData[field.key] || formData[field.key].trim() === "") {
         setMensagemErro(`O campo "${field.name}" é obrigatório.`);
@@ -111,7 +221,8 @@ export default function CadastroEndereco() {
     
     for (let field of dateFields) {
       const dateValue = formData[field.key];
-      if (dateValue && !/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
+      // Validar formato apenas se o campo estiver preenchido
+      if (dateValue && dateValue.trim() !== "" && !/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
         setMensagemErro(`O campo "${field.name}" deve estar no formato DD/MM/AAAA.`);
         setModalErro(true);
         return false;
@@ -215,13 +326,18 @@ export default function CadastroEndereco() {
     }
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (page === 2) {
       if (!validateStep2()) return;
       setPage(3);
     } else if (page === 4) {
       if (!validateStep4()) return;
-      setPage(5);
+      
+      // Realizar cadastro no backend
+      const sucesso = await realizarCadastroEndereco();
+      if (sucesso) {
+        setPage(5);
+      }
     } else if (page === 5) {
       navigate("/home");
     }
@@ -308,13 +424,23 @@ export default function CadastroEndereco() {
                 const fieldKey = getFieldKey(input.label);
                 return (
                   <div className="cadastro-field" key={input.label}>
-                    <Input
-                      label={input.label}
-                      type={input.inputType}
-                      value={formData[fieldKey] || ""}
-                      onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
-                      placeholder={input.placeholder}
-                    />
+                    {input.inputType === "select" ? (
+                      <Select
+                        label={input.label}
+                        options={input.options.map(opt => ({ value: opt, label: opt }))}
+                        value={formData[fieldKey] || ""}
+                        onChange={(e) => handleInputChange(fieldKey, e.target.value)}
+                        placeholder={input.placeholder}
+                      />
+                    ) : (
+                      <Input
+                        label={input.label}
+                        type={input.inputType}
+                        value={formData[fieldKey] || ""}
+                        onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
+                        placeholder={input.placeholder}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -401,7 +527,12 @@ export default function CadastroEndereco() {
               </div>
             </div>
 
-            <Botao texto="Cadastrar" type="submit" className="cadastro-btn" />
+            <Botao 
+              texto={loading ? "Cadastrando..." : "Cadastrar"} 
+              type="submit" 
+              className="cadastro-btn" 
+              disabled={loading}
+            />
           </form>
         </div>
       )}
@@ -414,7 +545,12 @@ export default function CadastroEndereco() {
             formData={formData} 
             onInputChange={handleInputChange}
           >
-            <Botao texto="Enviar" onClick={handleRegister} className="cadastro-btn" />
+            <Botao 
+              texto={loading ? "Cadastrando..." : "Enviar"} 
+              onClick={handleRegister} 
+              className="cadastro-btn" 
+              disabled={loading}
+            />
           </QuantidadePessoas>
         </div>
       )}
