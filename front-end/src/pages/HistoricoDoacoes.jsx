@@ -49,6 +49,8 @@ export default function HistoricoDoacoes() {
 	const [tipoUsuario, setTipoUsuario] = useState("2");
 	const [ordem, setOrdem] = useState('desc');
 	const [retiradasAleatorias, setRetiradasAleatorias] = useState([]);
+	const [paginaAtual, setPaginaAtual] = useState(1);
+	const itensPorPagina = 5;
 
 	useEffect(() => {
 		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
@@ -68,7 +70,20 @@ export default function HistoricoDoacoes() {
 			return ordem === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
 		});
 		setRetiradasAleatorias(retiradasComBeneficiado);
+		setPaginaAtual(1); // Reset para página 1 quando mudar a ordem
 	}, [ordem]);
+
+	// Cálculos da paginação
+	const totalPaginas = Math.ceil(retiradasAleatorias.length / itensPorPagina);
+	const indiceInicio = (paginaAtual - 1) * itensPorPagina;
+	const indiceFim = indiceInicio + itensPorPagina;
+	const retiradasPaginadas = retiradasAleatorias.slice(indiceInicio, indiceFim);
+
+	const irParaPagina = (pagina) => {
+		if (pagina >= 1 && pagina <= totalPaginas) {
+			setPaginaAtual(pagina);
+		}
+	};
 
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -93,9 +108,9 @@ export default function HistoricoDoacoes() {
 					</select>
 				</div>
 				<h1 className="historico-doacoes-title">Histórico de Atendimentos</h1>
-				<div className="historico-doacoes-lista-scroll">
-					{retiradasAleatorias.length > 0 ? (
-						retiradasAleatorias.map((r, idx) => (
+				<div className="historico-doacoes-lista">
+					{retiradasPaginadas.length > 0 ? (
+						retiradasPaginadas.map((r, idx) => (
 							<div className="historico-doacoes-card" key={r.cpf + r.data + idx}>
 								<div
 									className="historico-doacoes-nome"
@@ -115,6 +130,33 @@ export default function HistoricoDoacoes() {
 						<p className="historico-doacoes-nao-encontrado">Nenhuma retirada encontrada.</p>
 					)}
 				</div>
+				
+				{/* Controles de Paginação */}
+				{totalPaginas > 1 && (
+					<div className="historico-doacoes-paginacao">
+						<button 
+							className="historico-doacoes-btn-pagina"
+							onClick={() => irParaPagina(paginaAtual - 1)}
+							disabled={paginaAtual === 1}
+						>
+							‹
+						</button>
+						
+						<div className="historico-doacoes-info-pagina">
+							<span className="historico-doacoes-pagina-atual">{paginaAtual}</span>
+							<span className="historico-doacoes-pontos">• • •</span>
+							<span className="historico-doacoes-total-paginas">{totalPaginas}</span>
+						</div>
+						
+						<button 
+							className="historico-doacoes-btn-pagina"
+							onClick={() => irParaPagina(paginaAtual + 1)}
+							disabled={paginaAtual === totalPaginas}
+						>
+							›
+						</button>
+					</div>
+				)}
 			</div>
 		</div>
 	);
