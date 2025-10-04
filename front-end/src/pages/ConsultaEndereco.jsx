@@ -3,6 +3,7 @@ import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
+import { beneficiadoService } from "../services/beneficiadoService";
 import "../styles/Home.css"; 
 import "../styles/ConsultaEndereco.css";
 import iconeCasa from "../assets/icone-casa.png";
@@ -35,6 +36,9 @@ export default function ConsultaEndereco() {
 	};
 	const navigate = useNavigate();
 	const [tipoUsuario, setTipoUsuario] = useState("2");
+	const [carregando, setCarregando] = useState(true);
+	const [erro, setErro] = useState(null);
+	const [beneficiado, setBeneficiado] = useState(null);
 	
 	useEffect(() => {
 		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
@@ -42,7 +46,38 @@ export default function ConsultaEndereco() {
 		
 		const cpf = sessionStorage.getItem("cpfSelecionado") || "463.864.234-21";
 		sessionStorage.setItem("cpfSelecionado", cpf);
+		
+		carregarBeneficiado();
 	}, []);
+
+	const carregarBeneficiado = async () => {
+		try {
+			setCarregando(true);
+			setErro(null);
+			
+			const cpfSelecionado = sessionStorage.getItem("cpfSelecionado");
+			if (!cpfSelecionado) {
+				setErro("CPF não encontrado na sessão");
+				return;
+			}
+			
+			console.log('Carregando endereço para CPF:', cpfSelecionado);
+			const response = await beneficiadoService.buscarPorCpf(cpfSelecionado);
+			
+			if (response.success) {
+				console.log('Dados do beneficiado:', response.data);
+				setBeneficiado(response.data);
+			} else {
+				console.error('Erro ao carregar beneficiado:', response.error);
+				setErro(response.error || "Erro ao carregar dados do beneficiado");
+			}
+		} catch (error) {
+			console.error('Erro inesperado:', error);
+			setErro("Erro inesperado ao carregar dados");
+		} finally {
+			setCarregando(false);
+		}
+	};
 
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -55,42 +90,84 @@ export default function ConsultaEndereco() {
 	
 
 	function getEnderecoStorage() {
+		// Se temos dados do beneficiado, usar eles
+		if (beneficiado) {
+			return {
+				rua: beneficiado.logradouro || "",
+				numero: beneficiado.numero || "",
+				complemento: beneficiado.complemento || "",
+				bairro: beneficiado.bairro || "",
+				cidade: beneficiado.cidade || "",
+				estado: beneficiado.estado || "",
+				cep: beneficiado.cep || "",
+				dataEntrada: beneficiado.dataEntrada || "-",
+				dataSaida: beneficiado.dataSaida || "-",
+				moradia: beneficiado.tipoMoradia || "",
+				tipoMoradia: beneficiado.tipoMoradia || "",
+				tipoCesta: beneficiado.tipoCesta || "",
+				status: beneficiado.status || "",
+				criancas: beneficiado.qtdCriancas || "0",
+				jovens: beneficiado.qtdJovens || "0",
+				adolescentes: beneficiado.qtdAdolescentes || "0",
+				idosos: beneficiado.qtdIdosos || "0",
+				gestantes: beneficiado.qtdGestantes || "0",
+				deficientes: beneficiado.qtdDeficientes || "0",
+				outros: beneficiado.qtdOutros || "0",
+				tipoCestaAtual: beneficiado.tipoCestaAtual || "",
+				tempoCestaAtual: beneficiado.tempoCestaAtual || "",
+				tempoCestaRestante: beneficiado.tempoCestaRestante || "",
+				tempoASA: beneficiado.tempoASA || ""
+			};
+		}
+
+		// Fallback para dados locais salvos
 		const salvo = localStorage.getItem('enderecoBeneficiado');
 		if (salvo) {
 			try {
 				return JSON.parse(salvo);
 			} catch {}
 		}
+
+		// Dados padrão enquanto carrega
 		return {
-			rua: "Rua Osvaldo Cruz",
-			numero: "36",
-			complemento: "A",
-			bairro: "Japão Liberdade",
-			cidade: "São Paulo",
-			estado: "São Paulo",
-			cep: "06432-345",
-			dataEntrada: "20/02/2005",
+			rua: "",
+			numero: "",
+			complemento: "",
+			bairro: "",
+			cidade: "",
+			estado: "",
+			cep: "",
+			dataEntrada: "-",
 			dataSaida: "-",
-			moradia: "Alugada",
-			tipoMoradia: "Apartamento",
-			tipoCesta: "Kit",
-			status: "Disponível",
-			criancas: "1",
-			jovens: "1",
-			adolescentes: "2",
-			idosos: "1",
+			moradia: "",
+			tipoMoradia: "",
+			tipoCesta: "",
+			status: "",
+			criancas: "0",
+			jovens: "0",
+			adolescentes: "0",
+			idosos: "0",
 			gestantes: "0",
 			deficientes: "0",
-			outros: "2",
-			tipoCestaAtual: "Cesta Básica",
-			tempoCestaAtual: "2 meses",
-			tempoCestaRestante: "4 meses",
-			tempoASA: "2 anos e 3 meses"
+			outros: "0",
+			tipoCestaAtual: "",
+			tempoCestaAtual: "",
+			tempoCestaRestante: "",
+			tempoASA: ""
 		};
 	}
 
-	const [endereco, setEndereco] = useState(getEnderecoStorage());
-	const [enderecoOriginal, setEnderecoOriginal] = useState(getEnderecoStorage());
+	const [endereco, setEndereco] = useState({});
+	const [enderecoOriginal, setEnderecoOriginal] = useState({});
+
+	// Atualizar endereco quando beneficiado for carregado
+	useEffect(() => {
+		if (beneficiado) {
+			const dadosEndereco = getEnderecoStorage();
+			setEndereco(dadosEndereco);
+			setEnderecoOriginal(dadosEndereco);
+		}
+	}, [beneficiado]);
 
 	const [modalConfirmar, setModalConfirmar] = useState(false);
 	const [alteracaoConfirmada, setAlteracaoConfirmada] = useState(false);
@@ -136,7 +213,24 @@ export default function ConsultaEndereco() {
 					<Voltar onClick={() => navigate("/consulta-beneficiados-menu")} />
 				</div>
 				<h1 className="consulta-endereco-title">Endereço</h1>
-				<form className="consulta-endereco-form">
+				
+				{carregando && (
+					<div style={{ textAlign: 'center', padding: '20px' }}>
+						<p>Carregando endereço do beneficiado...</p>
+					</div>
+				)}
+				
+				{erro && (
+					<div style={{ textAlign: 'center', padding: '20px', color: '#e74c3c' }}>
+						<p>{erro}</p>
+						<button onClick={carregarBeneficiado} style={{ marginTop: '10px', padding: '8px 16px' }}>
+							Tentar Novamente
+						</button>
+					</div>
+				)}
+				
+				{!carregando && !erro && beneficiado && (
+					<form className="consulta-endereco-form">
 					<div className="consulta-endereco-row">
 						<div className="consulta-endereco-col">
 							<label>Rua/Avenida:</label>
@@ -214,6 +308,7 @@ export default function ConsultaEndereco() {
 					</div>
 					<div className="consulta-endereco-botoes">
 						<button type="button" className="consulta-endereco-botao" onClick={handleAlterarClick}>Alterar Informações</button>
+					</div>
 			{/* Modal de confirmação de alteração */}
 			<Modal
 				isOpen={modalConfirmar}
@@ -269,8 +364,8 @@ export default function ConsultaEndereco() {
 				texto={"Endereço excluído com sucesso!"}
 				showClose={false}
 			/>
-					</div>
-				</form>
+					</form>
+				)}
 			</div>
 		</div>
 	);

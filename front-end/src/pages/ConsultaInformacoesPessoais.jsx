@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
 import Modal from "../components/Modal";
+import { beneficiadoService } from "../services/beneficiadoService";
 import "../styles/Home.css"; 
 import "../styles/ConsultaInformacoesPessoais.css";
 import iconeCasa from "../assets/icone-casa.png";
@@ -12,6 +13,10 @@ import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
 
 export default function ConsultaInformacoesPessoais() {
+	const [carregando, setCarregando] = useState(true);
+	const [erro, setErro] = useState("");
+	const [beneficiado, setBeneficiado] = useState(null);
+
 	const formatRenda = (value) => {
 		let v = value.replace(/\D/g, "");
 		if (!v) return "";
@@ -48,7 +53,37 @@ export default function ConsultaInformacoesPessoais() {
 	useEffect(() => {
 		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
 		setTipoUsuario(tipo);
+		carregarBeneficiado();
 	}, []);
+
+	const carregarBeneficiado = async () => {
+		setCarregando(true);
+		setErro("");
+		
+		try {
+			const cpfSelecionado = sessionStorage.getItem('cpfSelecionado');
+			if (!cpfSelecionado) {
+				setErro("Nenhum beneficiado selecionado");
+				return;
+			}
+
+			console.log('Carregando informações pessoais para CPF:', cpfSelecionado);
+			const response = await beneficiadoService.buscarPorCpf(cpfSelecionado);
+			
+			if (response.success) {
+				console.log('Dados do beneficiado:', response.data);
+				setBeneficiado(response.data);
+			} else {
+				console.error('Erro ao carregar beneficiado:', response.error);
+				setErro(response.error || "Erro ao carregar dados do beneficiado");
+			}
+		} catch (error) {
+			console.error('Erro inesperado:', error);
+			setErro("Erro inesperado ao carregar dados");
+		} finally {
+			setCarregando(false);
+		}
+	};
 
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -60,34 +95,55 @@ export default function ConsultaInformacoesPessoais() {
 	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 
 	function getDadosStorage() {
-		const salvo = localStorage.getItem('dadosBeneficiado');
-		if (salvo) {
-			try {
-				return JSON.parse(salvo);
-			} catch {
-				
-			}
+		if (beneficiado) {
+			return {
+				nome: beneficiado.nome || "",
+				cpf: beneficiado.cpf || "",
+				rg: beneficiado.rg || "",
+				nascimento: beneficiado.dataNascimento || "",
+				telefone: beneficiado.telefone || "",
+				escolaridade: beneficiado.escolaridade || "",
+				profissao: beneficiado.profissao || "",
+				empresa: beneficiado.empresa || "",
+				dependentes: beneficiado.dependentes || 0,
+				estadoCivil: beneficiado.estadoCivil || "",
+				religiao: beneficiado.religiao || "",
+				renda: beneficiado.renda ? `R$ ${beneficiado.renda}` : "",
+				cargo: beneficiado.cargo || "",
+				foto: null
+			};
 		}
+		
+		// Fallback para quando ainda não carregou
 		return {
-			nome: "Bruna Reginato",
-			cpf: "463.864.234-21",
-			rg: "435678732",
-			nascimento: "20/04/2000",
-			telefone: "(11) 9345-67435",
-			escolaridade: "Ensino Médio Completo",
-			profissao: "Auxiliar de Limpeza",
-			empresa: "SPTECH",
-			dependentes: 2,
-			estadoCivil: "Solteiro",
-			religiao: "Evangélico",
-			renda: "R$ 600,00",
-			cargo: "Júnior",
+			nome: "",
+			cpf: "",
+			rg: "",
+			nascimento: "",
+			telefone: "",
+			escolaridade: "",
+			profissao: "",
+			empresa: "",
+			dependentes: 0,
+			estadoCivil: "",
+			religiao: "",
+			renda: "",
+			cargo: "",
 			foto: null
 		};
 	}
 
 	const [dadosOriginais, setDadosOriginais] = useState(getDadosStorage());
 	const [dados, setDados] = useState(getDadosStorage());
+
+	// Atualizar estados quando beneficiado carregar
+	useEffect(() => {
+		if (beneficiado) {
+			const novosdados = getDadosStorage();
+			setDadosOriginais(novosdados);
+			setDados(novosdados);
+		}
+	}, [beneficiado]);
 
 	function handleChange(e) {
 		const { name, value } = e.target;
@@ -159,8 +215,26 @@ export default function ConsultaInformacoesPessoais() {
 					<Voltar onClick={() => navigate("/consulta-beneficiados-menu")} />
 				</div>
 				<h1 className="consulta-info-title">Informações Pessoais</h1>
-				<div className="consulta-info-form">
-					<div className="consulta-info-col">
+				
+				{carregando && (
+					<div style={{ textAlign: 'center', padding: '20px' }}>
+						<p>Carregando informações do beneficiado...</p>
+					</div>
+				)}
+				
+				{erro && (
+					<div style={{ textAlign: 'center', padding: '20px', color: '#e74c3c' }}>
+						<p>{erro}</p>
+						<button onClick={carregarBeneficiado} style={{ marginTop: '10px', padding: '8px 16px' }}>
+							Tentar Novamente
+						</button>
+					</div>
+				)}
+				
+				{!carregando && !erro && beneficiado && (
+					<>
+						<div className="consulta-info-form">
+						<div className="consulta-info-col">
 						<label>Nome Completo:</label>
 						<input name="nome" value={dados.nome} onChange={handleChange} />
 						<label>RG:</label>
@@ -304,7 +378,9 @@ export default function ConsultaInformacoesPessoais() {
 									texto={"Informações alteradas com sucesso!"}
 									showClose={false}
 								/>
-						</div>
-					</div>
-				);
-			}
+					</>
+				)}
+			</div>
+		</div>
+	);
+}
