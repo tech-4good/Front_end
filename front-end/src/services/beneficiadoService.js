@@ -585,6 +585,194 @@ export const beneficiadoService = {
     }
   },
 
+  // 🏠 BUSCAR DADOS DA TABELA TIPO_MORADOR - ENDPOINTS REAIS DO BACKEND
+  buscarTipoMoradorPorCpf: async (cpf) => {
+    try {
+      console.log('🏠 Iniciando busca de tipo_morador para CPF:', cpf);
+      
+      // PASSO 1: Buscar o beneficiado para obter o ID
+      const beneficiadoResponse = await apiClient.get(`/beneficiados/cpf/${cpf}`);
+      if (!beneficiadoResponse.data || !beneficiadoResponse.data.id) {
+        console.log('🏠 ❌ Beneficiado não encontrado para CPF:', cpf);
+        return { success: false, error: 'Beneficiado não encontrado' };
+      }
+      
+      const beneficiadoId = beneficiadoResponse.data.id;
+      console.log('🏠 ✅ Beneficiado encontrado com ID:', beneficiadoId);
+      
+      // PASSO 2: Buscar todos os tipos de morador e filtrar por beneficiado (ENDPOINT REAL)
+      try {
+        console.log('🏠 Buscando todos os tipos de morador via GET /tipo-moradores');
+        const tiposMoradorResponse = await apiClient.get('/tipo-moradores');
+        
+        if (tiposMoradorResponse.data && Array.isArray(tiposMoradorResponse.data)) {
+          console.log('🏠 📋 Total de tipos de morador encontrados:', tiposMoradorResponse.data.length);
+          
+          // Filtrar pelo beneficiado ID
+          const tipoMoradorEncontrado = tiposMoradorResponse.data.find(tm => {
+            console.log('🏠 🔍 Comparando:', {
+              tm_fk_beneficiado: tm.fk_beneficiado,
+              tm_beneficiadoId: tm.beneficiadoId,
+              beneficiadoId_procurado: beneficiadoId
+            });
+            
+            return tm.fk_beneficiado === beneficiadoId || 
+                   tm.beneficiadoId === beneficiadoId ||
+                   tm.fk_beneficiado === beneficiadoId.toString() ||
+                   tm.beneficiadoId === beneficiadoId.toString();
+          });
+          
+          if (tipoMoradorEncontrado) {
+            console.log('🏠 ✅ Tipo morador encontrado via filtro:', tipoMoradorEncontrado);
+            return { success: true, data: tipoMoradorEncontrado };
+          } else {
+            console.log('🏠 ⚠️ Nenhum tipo morador encontrado para beneficiado ID:', beneficiadoId);
+            console.log('🏠 📋 IDs disponíveis na tabela:', tiposMoradorResponse.data.map(tm => ({
+              id: tm.id,
+              fk_beneficiado: tm.fk_beneficiado,
+              beneficiadoId: tm.beneficiadoId
+            })));
+          }
+        }
+      } catch (listagemError) {
+        console.log('🏠 ⚠️ Erro ao buscar lista de tipos de morador:', listagemError.response?.status || listagemError.message);
+      }
+      
+      // PASSO 3: Tentar buscar por ID específico (caso exista registro com ID = beneficiadoId)
+      try {
+        console.log('🏠 Tentando buscar tipo morador por ID:', beneficiadoId);
+        const directResponse = await apiClient.get(`/tipo-moradores/${beneficiadoId}`);
+        console.log('🏠 ✅ Dados encontrados via busca por ID:', directResponse.data);
+        return { success: true, data: directResponse.data };
+      } catch (directError) {
+        console.log('🏠 ⚠️ Busca por ID específico falhou:', directError.response?.status || directError.message);
+      }
+      
+      // Se chegou aqui, não encontrou dados na API
+      console.log('🏠 ❌ Nenhum dado de tipo_morador encontrado na API para este beneficiado');
+      return { 
+        success: false, 
+        error: 'Dados de tipo_morador não encontrados na API',
+        warning: 'NOT_FOUND',
+        beneficiadoId: beneficiadoId
+      };
+      
+    } catch (error) {
+      console.error('🏠 💥 Erro inesperado ao buscar tipo_morador:', error);
+      return { 
+        success: false, 
+        error: 'Erro inesperado ao buscar dados de tipo_morador',
+        warning: 'UNEXPECTED_ERROR'
+      };
+    }
+  },
+
+  // Buscar dados de tipo_morador por ID do beneficiado
+  buscarTipoMoradorPorBeneficiado: async (beneficiadoId) => {
+    try {
+      console.log('🏠 Buscando dados de tipo_morador para beneficiado ID:', beneficiadoId);
+      const response = await apiClient.get(`/tipo-morador/beneficiado/${beneficiadoId}`);
+      console.log('🏠 Dados de tipo_morador recebidos:', response.data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao buscar tipo_morador por beneficiado:', error);
+      
+      let mensagem = 'Erro interno do servidor';
+      
+      if (error.response?.status === 404) {
+        mensagem = 'Dados de tipo de morador não encontrados para este beneficiado.';
+        console.log('⚠️ Tipo de morador não encontrado para beneficiado ID:', beneficiadoId);
+      } else if (error.response?.data?.message) {
+        mensagem = error.response.data.message;
+      } else if (error.message === 'Network Error') {
+        mensagem = 'Erro de conexão. Verifique sua internet.';
+      }
+      
+      return { success: false, error: mensagem };
+    }
+  },
+
+  // 🏠 CADASTRAR DADOS NA TABELA TIPO_MORADOR - ENDPOINT REAL DO BACKEND  
+  cadastrarTipoMorador: async (dadosTipoMorador) => {
+    try {
+      console.log('🏠 Cadastrando dados de tipo_morador com dados:', dadosTipoMorador);
+      
+      // Payload conforme estrutura EXATA fornecida pelo backend
+      const payload = {
+        quantidade_crianca: parseInt(dadosTipoMorador.quantidade_crianca) || 0,
+        quantidade_adolescente: parseInt(dadosTipoMorador.quantidade_adolescente) || 0,
+        quantidade_jovem: parseInt(dadosTipoMorador.quantidade_jovem) || 0,
+        quantidade_idoso: parseInt(dadosTipoMorador.quantidade_idoso) || 0,
+        quantidade_gestante: parseInt(dadosTipoMorador.quantidade_gestante) || 0,
+        quantidade_deficiente: parseInt(dadosTipoMorador.quantidade_deficiente) || 0,
+        quantidade_outros: parseInt(dadosTipoMorador.quantidade_outros) || 0,
+        fk_beneficiado: dadosTipoMorador.fk_beneficiado,
+        fk_endereco: dadosTipoMorador.fk_endereco
+      };
+      
+      console.log('🏠 Payload preparado para API:', payload);
+      
+      // Validações obrigatórias conforme backend
+      if (!payload.fk_beneficiado) {
+        console.log('🏠 ❌ fk_beneficiado é obrigatório');
+        return { success: false, error: 'ID do beneficiado é obrigatório' };
+      }
+      
+      if (!payload.fk_endereco) {
+        console.log('🏠 ❌ fk_endereco é obrigatório');  
+        return { success: false, error: 'ID do endereço é obrigatório' };
+      }
+      
+      // USAR ENDPOINT REAL: POST /tipo-moradores
+      try {
+        console.log('🏠 Tentando cadastrar via endpoint REAL: POST /tipo-moradores');
+        const response = await apiClient.post('/tipo-moradores', payload);
+        console.log('🏠 ✅ Tipo de morador cadastrado com sucesso na API:', response.data);
+        return { success: true, data: response.data };
+      } catch (apiError) {
+        console.log('🏠 ⚠️ Erro ao cadastrar na API:', apiError.response?.status, apiError.response?.data);
+        
+        // Se for erro 400, mostrar detalhes
+        if (apiError.response?.status === 400) {
+          console.log('🏠 ❌ Erro de validação no backend:', apiError.response.data);
+          return { 
+            success: false, 
+            error: `Erro de validação: ${apiError.response.data.message || 'Dados inválidos'}` 
+          };
+        }
+        
+        // Para outros erros, salvar localmente como fallback
+        console.log('🏠 💾 API indisponível, salvando localmente como fallback...');
+        
+        const dadosParaSalvar = {
+          ...payload,
+          id: Date.now(), // ID temporário
+          dataHoraCadastro: new Date().toISOString(),
+          status: 'PENDENTE_SINCRONIZACAO'
+        };
+        
+        const tiposMoradorSalvos = JSON.parse(localStorage.getItem('tiposMoradorLocal') || '[]');
+        tiposMoradorSalvos.push(dadosParaSalvar);
+        localStorage.setItem('tiposMoradorLocal', JSON.stringify(tiposMoradorSalvos));
+        
+        console.log('🏠 💾 Dados salvos localmente:', dadosParaSalvar);
+        
+        return { 
+          success: true, 
+          data: dadosParaSalvar, 
+          warning: 'Dados salvos localmente - API indisponível no momento'
+        };
+      }
+      
+    } catch (error) {
+      console.error('🏠 💥 Erro inesperado ao cadastrar tipo_morador:', error);
+      return { 
+        success: false, 
+        error: 'Erro inesperado ao cadastrar dados de tipo_morador'
+      };
+    }
+  },
+
   // Buscar endereço por CEP usando ViaCEP integrado à API
   buscarEnderecoPorCep: async (cep) => {
     try {
@@ -602,6 +790,132 @@ export const beneficiadoService = {
       }
       
       return { success: false, error: mensagem };
+    }
+  },
+
+  // 🏠 ATUALIZAR DADOS DA TABELA TIPO_MORADOR - ENDPOINT REAL DO BACKEND
+  atualizarTipoMorador: async (id, dadosTipoMorador) => {
+    try {
+      console.log('🏠 Atualizando tipo_morador ID:', id, 'com dados:', dadosTipoMorador);
+      
+      // Payload conforme estrutura do backend
+      const payload = {
+        quantidade_crianca: parseInt(dadosTipoMorador.quantidade_crianca) || 0,
+        quantidade_adolescente: parseInt(dadosTipoMorador.quantidade_adolescente) || 0,
+        quantidade_jovem: parseInt(dadosTipoMorador.quantidade_jovem) || 0,
+        quantidade_idoso: parseInt(dadosTipoMorador.quantidade_idoso) || 0,
+        quantidade_gestante: parseInt(dadosTipoMorador.quantidade_gestante) || 0,
+        quantidade_deficiente: parseInt(dadosTipoMorador.quantidade_deficiente) || 0,
+        quantidade_outros: parseInt(dadosTipoMorador.quantidade_outros) || 0,
+        fk_beneficiado: dadosTipoMorador.fk_beneficiado,
+        fk_endereco: dadosTipoMorador.fk_endereco
+      };
+      
+      console.log('🏠 Payload para atualização:', payload);
+      
+      // USAR ENDPOINT REAL: PATCH /tipo-moradores/{id}
+      const response = await apiClient.patch(`/tipo-moradores/${id}`, payload);
+      console.log('🏠 ✅ Tipo morador atualizado com sucesso:', response.data);
+      return { success: true, data: response.data };
+      
+    } catch (error) {
+      console.error('🏠 ❌ Erro ao atualizar tipo_morador:', error);
+      
+      let mensagem = 'Erro ao atualizar dados';
+      
+      if (error.response?.status === 404) {
+        mensagem = 'Tipo de morador não encontrado';
+      } else if (error.response?.status === 400) {
+        mensagem = 'Dados inválidos para atualização';
+      } else if (error.response?.data?.message) {
+        mensagem = error.response.data.message;
+      }
+      
+      return { success: false, error: mensagem };
+    }
+  },
+
+  // 🏠 EXCLUIR DADOS DA TABELA TIPO_MORADOR - ENDPOINT REAL DO BACKEND
+  excluirTipoMorador: async (id) => {
+    try {
+      console.log('🏠 Excluindo tipo_morador ID:', id);
+      
+      // USAR ENDPOINT REAL: DELETE /tipo-moradores/{id}
+      const response = await apiClient.delete(`/tipo-moradores/${id}`);
+      console.log('🏠 ✅ Tipo morador excluído com sucesso');
+      return { success: true, data: response.data };
+      
+    } catch (error) {
+      console.error('🏠 ❌ Erro ao excluir tipo_morador:', error);
+      
+      let mensagem = 'Erro ao excluir dados';
+      
+      if (error.response?.status === 404) {
+        mensagem = 'Tipo de morador não encontrado';
+      } else if (error.response?.data?.message) {
+        mensagem = error.response.data.message;
+      }
+      
+      return { success: false, error: mensagem };
+    }
+  },
+
+  // 🔄 SINCRONIZAR DADOS LOCAIS DE TIPO_MORADOR COM O BACKEND
+  sincronizarTiposMoradorLocais: async () => {
+    try {
+      console.log('🔄 Iniciando sincronização de tipos de morador locais...');
+      
+      const tiposMoradorLocais = JSON.parse(localStorage.getItem('tiposMoradorLocal') || '[]');
+      
+      if (tiposMoradorLocais.length === 0) {
+        console.log('🔄 Nenhum dado local para sincronizar');
+        return { success: true, sincronizados: 0 };
+      }
+      
+      console.log('🔄 Encontrados', tiposMoradorLocais.length, 'registros locais para sincronizar');
+      
+      let sincronizados = 0;
+      const falhas = [];
+      
+      for (const tipoMorador of tiposMoradorLocais) {
+        try {
+          // Remover campos temporários
+          const { id, dataHoraCadastro, status, ...dadosParaEnviar } = tipoMorador;
+          
+          const response = await this.cadastrarTipoMorador(dadosParaEnviar);
+          
+          if (response.success && !response.warning) {
+            sincronizados++;
+            console.log('🔄 ✅ Registro sincronizado:', dadosParaEnviar.fk_cpf);
+          } else {
+            falhas.push({ cpf: dadosParaEnviar.fk_cpf, erro: response.error || 'Falha na sincronização' });
+          }
+        } catch (error) {
+          falhas.push({ cpf: tipoMorador.fk_cpf, erro: error.message });
+        }
+      }
+      
+      // Remover registros sincronizados com sucesso
+      if (sincronizados > 0) {
+        const registrosRestantes = tiposMoradorLocais.slice(sincronizados);
+        localStorage.setItem('tiposMoradorLocal', JSON.stringify(registrosRestantes));
+        console.log('🔄 ✅', sincronizados, 'registros sincronizados com sucesso');
+      }
+      
+      if (falhas.length > 0) {
+        console.log('🔄 ⚠️', falhas.length, 'registros falharam na sincronização:', falhas);
+      }
+      
+      return { 
+        success: true, 
+        sincronizados, 
+        falhas: falhas.length,
+        detalhes: falhas 
+      };
+      
+    } catch (error) {
+      console.error('🔄 ❌ Erro geral na sincronização:', error);
+      return { success: false, error: error.message };
     }
   }
 };
