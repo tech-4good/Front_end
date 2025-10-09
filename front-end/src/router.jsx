@@ -28,7 +28,6 @@ import PainelMenu from "./pages/PainelMenu";
 import HistoricoDoacoes from "./pages/HistoricoDoacoes";
 import CadastroFilhos from "./pages/CadastroFilhos";
 import CadastroAuxilios from "./pages/CadastroAuxilios";
-import Relatorio from "./pages/Relatorio";
 import Dashboard from "./pages/Dashboard";
 export const router = createBrowserRouter([
   {
@@ -171,11 +170,6 @@ export const router = createBrowserRouter([
     element: <CadastroAuxilios />,
     errorElement: <ErrorPage />,
   },
-  {
-  path: "/relatorio",
-  element: <Relatorio />,
-  errorElement: <ErrorPage />,
-},
 {
   path: "/dashboard",
   element: <Dashboard />,

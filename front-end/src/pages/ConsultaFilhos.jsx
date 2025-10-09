@@ -3,6 +3,7 @@ import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
+import { beneficiadoService } from "../services/beneficiadoService";
 import "../styles/Home.css"; 
 import "../styles/ConsultaFilhos.css";
 import iconeCasa from "../assets/icone-casa.png";
@@ -21,12 +22,47 @@ export default function ConsultaFilhos() {
 	};
 	const navigate = useNavigate();
 	const [tipoUsuario, setTipoUsuario] = useState("2");
+	const [carregando, setCarregando] = useState(true);
+	const [erro, setErro] = useState(null);
+	const [beneficiado, setBeneficiado] = useState(null);
+	
 	useEffect(() => {
 		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
 		setTipoUsuario(tipo);
 		const cpf = sessionStorage.getItem("cpfSelecionado") || "463.864.234-21";
 		sessionStorage.setItem("cpfSelecionado", cpf);
+		
+		carregarBeneficiado();
 	}, []);
+
+	const carregarBeneficiado = async () => {
+		try {
+			setCarregando(true);
+			setErro(null);
+			
+			const cpfSelecionado = sessionStorage.getItem("cpfSelecionado");
+			if (!cpfSelecionado) {
+				setErro("CPF não encontrado na sessão");
+				return;
+			}
+			
+			console.log('Carregando filhos para CPF:', cpfSelecionado);
+			const response = await beneficiadoService.buscarPorCpf(cpfSelecionado);
+			
+			if (response.success) {
+				console.log('Dados do beneficiado:', response.data);
+				setBeneficiado(response.data);
+			} else {
+				console.error('Erro ao carregar beneficiado:', response.error);
+				setErro(response.error || "Erro ao carregar dados do beneficiado");
+			}
+		} catch (error) {
+			console.error('Erro inesperado:', error);
+			setErro("Erro inesperado ao carregar dados");
+		} finally {
+			setCarregando(false);
+		}
+	};
 
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -37,15 +73,31 @@ export default function ConsultaFilhos() {
 	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 
 	function getFilhosStorage() {
-		return [
-			{ label: "Filho 1", nascimento: "20/01/2000", creche: "Não", estuda: "Sim" },
-			{ label: "Filho 2", nascimento: "12/03/2004", creche: "Não", estuda: "Sim" },
-			{ label: "Filho 3", nascimento: "31/10/2005", creche: "Não", estuda: "Sim" }
-		];
+		// Se temos dados do beneficiado e filhos, usar eles
+		if (beneficiado && beneficiado.filhos && Array.isArray(beneficiado.filhos)) {
+			return beneficiado.filhos.map((filho, index) => ({
+				label: filho.nome || `Filho ${index + 1}`,
+				nascimento: filho.dataNascimento || "",
+				creche: filho.vaicreche || "Não",
+				estuda: filho.estuda || "Não"
+			}));
+		}
+
+		// Se não há filhos, retornar array vazio
+		return [];
 	}
 
-	const [filhos, setFilhos] = useState(getFilhosStorage());
-	const [filhosOriginais, setFilhosOriginais] = useState(getFilhosStorage());
+	const [filhos, setFilhos] = useState([]);
+	const [filhosOriginais, setFilhosOriginais] = useState([]);
+
+	// Atualizar filhos quando beneficiado for carregado
+	useEffect(() => {
+		if (beneficiado) {
+			const dadosFilhos = getFilhosStorage();
+			setFilhos(dadosFilhos);
+			setFilhosOriginais(dadosFilhos);
+		}
+	}, [beneficiado]);
 
 	const [modalConfirmar, setModalConfirmar] = useState(false);
 	const [alteracaoConfirmada, setAlteracaoConfirmada] = useState(false);
@@ -102,7 +154,32 @@ export default function ConsultaFilhos() {
 					<Voltar onClick={() => navigate("/consulta-beneficiados-menu")} />
 				</div>
 				<h1 className="consulta-filhos-title">Filhos</h1>
-				<form className="consulta-filhos-form">
+				
+				{carregando && (
+					<div style={{ textAlign: 'center', padding: '20px' }}>
+						<p>Carregando filhos do beneficiado...</p>
+					</div>
+				)}
+				
+				{erro && (
+					<div style={{ textAlign: 'center', padding: '20px', color: '#e74c3c' }}>
+						<p>{erro}</p>
+						<button onClick={carregarBeneficiado} style={{ marginTop: '10px', padding: '8px 16px' }}>
+							Tentar Novamente
+						</button>
+					</div>
+				)}
+				
+				{!carregando && !erro && (
+					<>
+						{filhos.length === 0 && (
+							<div style={{ textAlign: 'center', padding: '20px' }}>
+								<p>Este beneficiado não possui filhos cadastrados.</p>
+							</div>
+						)}
+						
+						{filhos.length > 0 && (
+							<form className="consulta-filhos-form">
 					<div className="consulta-filhos-lista">
 						 {filhos.map((filho, idx) => (
 							 <div className="consulta-filhos-card" key={idx}>
@@ -121,8 +198,11 @@ export default function ConsultaFilhos() {
 						<button type="button" className="consulta-filhos-botao" onClick={handleCadastrarOutroFilho}>Cadastrar outro Filho</button>
 						 <button type="button" className="consulta-filhos-botao" onClick={() => setModalEscolherFilho(true)}>Excluir Filho</button>
 					</div>
-				</form>
-				 {/* Modal para escolher qual filho excluir */}
+							</form>
+						)
+					}
+				
+				{/* Modal para escolher qual filho excluir */}
 				 <Modal
 					 isOpen={modalEscolherFilho}
 					 onClose={() => setModalEscolherFilho(false)}
@@ -206,6 +286,8 @@ export default function ConsultaFilhos() {
 					texto={"Informações alteradas com sucesso!"}
 					showClose={false}
 				/>
+					</>
+				)}
 			</div>
 		</div>
 	);

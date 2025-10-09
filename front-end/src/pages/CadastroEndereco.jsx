@@ -118,11 +118,52 @@ export default function CadastroEndereco() {
       const response = await beneficiadoService.cadastrarEndereco(dadosEndereco);
       
       if (response.success) {
-        console.log('Endereço cadastrado com sucesso:', response.data);
+        console.log('✅ Endereço cadastrado com sucesso:', response.data);
         setEnderecoId(response.data.id);
+        
+        // 🏠 CADASTRAR DADOS NA TABELA TIPO_MORADOR
+        console.log('🏠 Iniciando cadastro na tabela tipo_morador...');
+        
+        // Obter CPF e ID do beneficiado da sessão
+        const cpfBeneficiado = sessionStorage.getItem("cpfSelecionado");
+        const beneficiadoId = sessionStorage.getItem("beneficiadoId");
+        
+        if (cpfBeneficiado && response.data.id) {
+          const dadosTipoMorador = {
+            quantidade_crianca: parseInt(formData.quantidadedecriancas) || 0,
+            quantidade_adolescente: parseInt(formData.quantidadedeadolescentes) || 0,
+            quantidade_jovem: parseInt(formData.quantidadedejovens) || 0,
+            quantidade_idoso: parseInt(formData.quantidadedeidosos) || 0,
+            quantidade_gestante: parseInt(formData.quantidadedegestantes) || 0,
+            quantidade_deficiente: parseInt(formData.quantidadededeficientes) || 0,
+            quantidade_outros: parseInt(formData.quantidadedeoutros) || 0,
+            fk_beneficiado: beneficiadoId ? parseInt(beneficiadoId) : null,
+            fk_cpf: cpfBeneficiado.replace(/\D/g, ''), // Remove formatação do CPF
+            fk_endereco: response.data.id
+          };
+          
+          console.log('🏠 Dados preparados para tipo_morador:', dadosTipoMorador);
+          
+          const tipoMoradorResponse = await beneficiadoService.cadastrarTipoMorador(dadosTipoMorador);
+          
+          if (tipoMoradorResponse.success) {
+            if (tipoMoradorResponse.warning) {
+              console.log('🏠 ⚠️ Tipo de morador salvo localmente (backend indisponível):', tipoMoradorResponse.data);
+              console.log('🏠 💡 Os dados serão enviados ao backend quando ele estiver disponível');
+            } else {
+              console.log('🏠 ✅ Tipo de morador cadastrado com sucesso no backend:', tipoMoradorResponse.data);
+            }
+          } else {
+            console.log('🏠 ❌ Erro ao cadastrar tipo de morador:', tipoMoradorResponse.error);
+            // Não bloquear o fluxo se tipo_morador falhar
+          }
+        } else {
+          console.log('🏠 ⚠️ CPF ou ID do beneficiado não encontrados na sessão - pulando cadastro de tipo_morador');
+        }
+        
         return true;
       } else {
-        console.error('Erro no cadastro:', response.error);
+        console.error('❌ Erro no cadastro de endereço:', response.error);
         setMensagemErro(response.error || 'Erro ao cadastrar endereço.');
         setModalErro(true);
         return false;

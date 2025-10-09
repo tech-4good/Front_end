@@ -9,7 +9,7 @@ import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
 import { beneficiadoService } from "../services/beneficiadoService";
-import { doacaoService } from "../services/doacaoService";
+import { entregaService } from "../services/entregaService";
 
 export default function ConsultaBeneficiadosResultado() {
   const navigate = useNavigate();
@@ -25,17 +25,24 @@ export default function ConsultaBeneficiadosResultado() {
     const tipo = sessionStorage.getItem("tipoUsuario") || "2";
     setTipoUsuario(tipo);
 
-    // Recupera o CPF do state OU do sessionStorage
-    let cpf = location.state?.cpf;
-    if (!cpf) {
-      cpf = sessionStorage.getItem('cpfSelecionado');
-    }
-    if (cpf) {
-      carregarBeneficiado(cpf);
+    // Recupera os dados do beneficiado do state passado pela navegação
+    const beneficiadoData = location.state?.beneficiado;
+    
+    if (beneficiadoData) {
+      console.log('Dados do beneficiado recebidos:', beneficiadoData);
+      setBeneficiado(beneficiadoData);
+      // Carregar histórico de doações do beneficiário
+      carregarHistoricoBeneficiado(beneficiadoData.id);
     } else {
-      setBeneficiado(null);
-      setRetiradas([]);
-      setErro("Nenhum CPF selecionado");
+      // Fallback: tentar recuperar CPF do sessionStorage
+      const cpf = sessionStorage.getItem('cpfSelecionado');
+      if (cpf) {
+        carregarBeneficiado(cpf);
+      } else {
+        setBeneficiado(null);
+        setRetiradas([]);
+        setErro("Nenhum beneficiado selecionado");
+      }
     }
   }, [location]);
 
@@ -55,23 +62,22 @@ export default function ConsultaBeneficiadosResultado() {
     setCarregando(true);
     setErro("");
     try {
-      // Buscar todos os beneficiados e encontrar pelo CPF
-      const respostaBeneficiados = await beneficiadoService.listar();
-      if (respostaBeneficiados.success) {
-        const beneficiadoEncontrado = respostaBeneficiados.data.find(b => b.cpf === cpf);
-        if (beneficiadoEncontrado) {
-          setBeneficiado(beneficiadoEncontrado);
-          // Carregar histórico de doações do beneficiário
-          await carregarHistoricoBeneficiado(beneficiadoEncontrado.id);
-        } else {
-          setBeneficiado(null);
-          setRetiradas([]);
-          setErro("Beneficiado não encontrado");
-        }
+      console.log('Carregando beneficiado com CPF:', cpf);
+      // Usar buscarPorCpf diretamente em vez de listar todos
+      const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpf);
+      if (respostaBeneficiado.success) {
+        console.log('Beneficiado encontrado:', respostaBeneficiado.data);
+        setBeneficiado(respostaBeneficiado.data);
+        // Carregar histórico de doações do beneficiário
+        await carregarHistoricoBeneficiado(respostaBeneficiado.data.id);
       } else {
-        setErro("Erro ao buscar beneficiado: " + respostaBeneficiados.error);
+        console.error('Beneficiado não encontrado:', respostaBeneficiado.error);
+        setBeneficiado(null);
+        setRetiradas([]);
+        setErro(respostaBeneficiado.error || "Beneficiado não encontrado");
       }
     } catch (error) {
+      console.error('Erro ao carregar dados do beneficiado:', error);
       setErro("Erro ao carregar dados do beneficiado");
     } finally {
       setCarregando(false);
@@ -80,14 +86,29 @@ export default function ConsultaBeneficiadosResultado() {
 
   const carregarHistoricoBeneficiado = async (beneficiadoId) => {
     try {
-      const resposta = await doacaoService.buscarPorBeneficiado(beneficiadoId);
+      console.log('Carregando histórico para beneficiado ID:', beneficiadoId);
+      // Usar o entregaService que já funciona
+      const resposta = await entregaService.listarEntregas();
+      
       if (resposta.success) {
-        const doacoesOrdenadas = (resposta.data || []).sort((a, b) => {
-          const dataA = new Date(a.data);
-          const dataB = new Date(b.data);
+        console.log('Todas as entregas:', resposta.data);
+        // Filtrar entregas do beneficiado específico
+        const entregasDoBeneficiado = resposta.data.filter(entrega => 
+          entrega.beneficiadoId === beneficiadoId || 
+          entrega.idBeneficiado === beneficiadoId ||
+          entrega.beneficiado?.id === beneficiadoId
+        );
+        
+        console.log('Entregas filtradas para o beneficiado:', entregasDoBeneficiado);
+        
+        // Ordenar por data
+        const entregasOrdenadas = entregasDoBeneficiado.sort((a, b) => {
+          const dataA = new Date(a.dataEntrega || a.data);
+          const dataB = new Date(b.dataEntrega || b.data);
           return ordem === 'desc' ? dataB - dataA : dataA - dataB;
         });
-        setRetiradas(doacoesOrdenadas);
+        
+        setRetiradas(entregasOrdenadas);
       } else {
         console.error('Erro ao carregar histórico:', resposta.error);
         setRetiradas([]);
@@ -113,7 +134,11 @@ export default function ConsultaBeneficiadosResultado() {
   };
 
   const formatarTipo = (tipo) => {
-    return tipo === 'kit' ? 'Kit' : tipo === 'cesta' ? 'Cesta' : tipo;
+    if (!tipo) return 'N/A';
+    const tipoLower = tipo.toLowerCase();
+    if (tipoLower.includes('kit')) return 'Kit';
+    if (tipoLower.includes('cesta') || tipoLower.includes('basica')) return 'Cesta Básica';
+    return tipo;
   };
 
   return (
@@ -148,7 +173,7 @@ export default function ConsultaBeneficiadosResultado() {
           <div className="consulta-beneficiados-resultado-lista-scroll">
             {retiradas.length > 0 ? (
               retiradas.map((r, idx) => (
-                <div className="consulta-beneficiados-resultado-card" key={r.id || idx}>
+                <div className="consulta-beneficiados-resultado-card" key={r.idEntrega || idx}>
                     <div
                       className="consulta-beneficiados-resultado-nome"
                       style={{ cursor: 'pointer', textDecoration: 'underline' }}
@@ -160,9 +185,16 @@ export default function ConsultaBeneficiadosResultado() {
                       {beneficiado.nome}
                     </div>
                   <div className="consulta-beneficiados-resultado-tipo">
-                    <span className="consulta-beneficiados-resultado-tipo-badge">{formatarTipo(r.tipo)}</span>
+                    <span className="consulta-beneficiados-resultado-tipo-badge">
+                      {formatarTipo(r.cesta?.tipo || r.tipo || 'N/A')}
+                    </span>
                   </div>
-                  <div className="consulta-beneficiados-resultado-data">{formatarData(r.data)}</div>
+                  <div className="consulta-beneficiados-resultado-data">
+                    {formatarData(r.dataRetirada ? (Array.isArray(r.dataRetirada) ? 
+                      `${r.dataRetirada[2]}/${String(r.dataRetirada[1]).padStart(2, '0')}/${r.dataRetirada[0]}` 
+                      : r.dataRetirada) 
+                      : r.data || 'Data não disponível')}
+                  </div>
                 </div>
               ))
             ) : (
