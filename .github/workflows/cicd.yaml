@@ -28,16 +28,45 @@ jobs:
              # Se sua app não precisar de build, remova esta etapa
         working-directory: ./front-end
 
-      # 4. Deploy (Transferência de arquivos e execução de comandos remotos)
-      - name: FE - Copiar arquivos e Deploy (Usando SSH com rsync)
+      # 4. Deploy para Web1
+      - name: FE - Deploy para Web1
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: /home/${{ secrets.REMOTE_USER }}/frontend
-          # ARGS para rsync: -rltgoDzvO para cópia recursiva, compressão e outros
+          REMOTE_HOST: ${{ secrets.WEB1_HOST }}
+          REMOTE_USER: ubuntu
+          TARGET: /home/ubuntu/frontend
           ARGS: "-rltgoDzvO --delete" 
-          # SOURCE: O que será copiado. Pode ser o diretório de build (ex: ./dist)
-          SOURCE: "./front-end/dist/" 
+          SOURCE: "./front-end/dist/"
+
+      # 5. Deploy para Web2
+      - name: FE - Deploy para Web2
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.WEB2_HOST }}
+          REMOTE_USER: ubuntu
+          TARGET: /home/ubuntu/frontend
+          ARGS: "-rltgoDzvO --delete" 
+          SOURCE: "./front-end/dist/"
+
+      # 6. Reiniciar NGINX na Web1
+      - name: Reiniciar NGINX na Web1
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.WEB1_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker compose -f /home/ubuntu/compose.yaml restart
+
+      # 7. Reiniciar NGINX na Web2
+      - name: Reiniciar NGINX na Web2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.WEB2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker compose -f /home/ubuntu/compose.yaml restart 
 
