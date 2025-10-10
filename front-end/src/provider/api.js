@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Criar uma instância do axios
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080', 
+  baseURL: 'http://app-load-balancer-47992829.us-east-1.elb.amazonaws.com/api', 
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
