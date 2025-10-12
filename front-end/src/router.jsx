@@ -29,6 +29,8 @@ import HistoricoDoacoes from "./pages/HistoricoDoacoes";
 import CadastroFilhos from "./pages/CadastroFilhos";
 import CadastroAuxilios from "./pages/CadastroAuxilios";
 import Dashboard from "./pages/Dashboard";
+import RedefinirSenha from "./pages/RedefinirSenha";
+
 export const router = createBrowserRouter([
   {
     path: "/doar-cesta",
@@ -175,5 +177,10 @@ export const router = createBrowserRouter([
   element: <Dashboard />,
   errorElement: <ErrorPage />,
 },
+{
+  path: "/redefinir-senha",
+  element: <RedefinirSenha />,
+  errorElement: <ErrorPage />,
+}
 
 ]);
