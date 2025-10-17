@@ -122,18 +122,37 @@ export default function DoarCesta() {
       const historico = await entregaService.buscarHistorico(beneficiado.id_beneficiado || beneficiado.id);
       console.log("📋 Histórico de entregas:", historico);
       
-      if (historico && historico.length > 0) {
-        // Encontrar a última entrega do mesmo tipo
-        const ultimaEntregaMesmoTipo = historico.find(entrega => 
+      // Verificar se é um objeto paginado ou array direto
+      const entregas = historico?.content || historico || [];
+      console.log("📦 Entregas extraídas:", entregas);
+      
+      if (entregas && entregas.length > 0) {
+        // Encontrar TODAS as entregas do mesmo tipo
+        const entregasMesmoTipo = entregas.filter(entrega => 
           entrega.tipo === tipoEscolhido || entrega.cesta?.tipo === tipoEscolhido
         );
         
-        if (ultimaEntregaMesmoTipo) {
+        // Ordenar por data (mais recente primeiro) e pegar a última
+        if (entregasMesmoTipo.length > 0) {
+          entregasMesmoTipo.sort((a, b) => {
+            const dataA = new Date(a.dataRetirada || a.data_retirada);
+            const dataB = new Date(b.dataRetirada || b.data_retirada);
+            return dataB - dataA; // Ordem decrescente (mais recente primeiro)
+          });
+          
+          const ultimaEntregaMesmoTipo = entregasMesmoTipo[0]; // Pega a mais recente
+          
           const dataUltimaEntrega = new Date(ultimaEntregaMesmoTipo.dataRetirada || ultimaEntregaMesmoTipo.data_retirada);
           const hoje = new Date();
+          
+          // Zerar horas para comparar apenas datas
+          dataUltimaEntrega.setHours(0, 0, 0, 0);
+          hoje.setHours(0, 0, 0, 0);
+          
           const diasDecorridos = Math.floor((hoje - dataUltimaEntrega) / (1000 * 60 * 60 * 24));
           
           console.log(`📅 Última retirada de ${tipoEscolhido}: ${dataUltimaEntrega.toLocaleDateString('pt-BR')}`);
+          console.log(`📅 Data de hoje: ${hoje.toLocaleDateString('pt-BR')}`);
           console.log(`📅 Dias decorridos: ${diasDecorridos}`);
           
           // Regras específicas por tipo:
