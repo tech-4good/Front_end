@@ -111,11 +111,18 @@ export default function ControleCestas() {
       const quantidade = parseInt(quantidadeInput);
       const tipoFinal = tipoCesta === "kit" ? "KIT" : "BASICA";
       
-      // Estrutura correta conforme backend
+      // Estrutura correta conforme backend - data como array [ano, mês, dia]
+      const hoje = new Date();
+      const dataArray = [
+        hoje.getFullYear(),
+        hoje.getMonth() + 1, // Mês é 0-indexed, então soma 1
+        hoje.getDate()
+      ];
+      
       const dadosCesta = {
         tipo: tipoFinal,
         pesoKg: tipoFinal === "KIT" ? 2.5 : 15.0,
-        dataEntradaEstoque: new Date().toISOString().split('T')[0],
+        dataEntradaEstoque: dataArray,
         quantidadeCestas: quantidade
       };
 

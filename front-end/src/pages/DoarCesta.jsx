@@ -208,14 +208,26 @@ export default function DoarCesta() {
       // Calcular próxima retirada conforme regras específicas
       // Kit: 14 dias (2x por mês), Cesta: 30 dias (1x por mês)
       const hoje = new Date();
+      
+      // Garantir que está usando data local, não UTC
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+      const dia = String(hoje.getDate()).padStart(2, '0');
+      const dataHojeLocal = `${ano}-${mes}-${dia}`;
+      
       const proximaRetirada = new Date(hoje);
       const diasProximaRetirada = tipoEscolhido === "KIT" ? 14 : 30;
       proximaRetirada.setDate(proximaRetirada.getDate() + diasProximaRetirada);
+      
+      const anoProx = proximaRetirada.getFullYear();
+      const mesProx = String(proximaRetirada.getMonth() + 1).padStart(2, '0');
+      const diaProx = String(proximaRetirada.getDate()).padStart(2, '0');
+      const dataProximaLocal = `${anoProx}-${mesProx}-${diaProx}`;
 
       // Dados da entrega conforme documentação do backend
       const dadosEntrega = {
-        dataRetirada: hoje.toISOString().split('T')[0],
-        proximaRetirada: proximaRetirada.toISOString().split('T')[0],
+        dataRetirada: dataHojeLocal,
+        proximaRetirada: dataProximaLocal,
         voluntarioId: parseInt(sessionStorage.getItem("userId") || "1"),
         enderecoId: beneficiado.endereco.id_endereco || beneficiado.endereco.id,
         cestaId: cestaDisponivel.idCesta || cestaDisponivel.id,
@@ -223,6 +235,8 @@ export default function DoarCesta() {
       };
 
       console.log("🎯 Registrando entrega no banco:", dadosEntrega);
+      console.log("📅 Data de hoje (local):", dataHojeLocal);
+      console.log("📅 Próxima retirada (local):", dataProximaLocal);
 
       // Registrar entrega no backend
       const resultado = await entregaService.registrarEntrega(dadosEntrega);

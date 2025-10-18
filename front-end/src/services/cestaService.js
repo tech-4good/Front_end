@@ -39,7 +39,10 @@ const cestaService = {
   // Cadastrar nova cesta
   async cadastrarCesta(dadosCesta) {
     try {
-      console.log("� Cadastrando cesta:", dadosCesta);
+      console.log("📦 Cadastrando cesta:", dadosCesta);
+      console.log("📦 Tipo de dataEntradaEstoque:", typeof dadosCesta.dataEntradaEstoque);
+      console.log("📦 Valor de dataEntradaEstoque:", dadosCesta.dataEntradaEstoque);
+      
       const response = await api.post("/cestas", dadosCesta);
       return {
         success: true,
@@ -47,9 +50,34 @@ const cestaService = {
       };
     } catch (error) {
       console.error("❌ Erro ao cadastrar cesta:", error.response?.data || error.message);
+      console.error("❌ Detalhes completos do erro:", error.response);
+      
+      // Mostrar erros de validação específicos
+      if (error.response?.data?.errors) {
+        console.error("❌ Erros de validação:", error.response.data.errors);
+        error.response.data.errors.forEach((err, index) => {
+          console.error(`❌ Erro ${index + 1}:`, err);
+        });
+      }
+      
+      // Extrair mensagem de erro mais específica
+      let mensagemErro = "Erro ao cadastrar cesta";
+      
+      if (error.response?.data?.errors && error.response.data.errors.length > 0) {
+        // Se houver erros de validação, mostrar o primeiro
+        const primeiroErro = error.response.data.errors[0];
+        mensagemErro = primeiroErro.defaultMessage || primeiroErro.message || JSON.stringify(primeiroErro);
+      } else if (error.response?.data?.message) {
+        mensagemErro = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        mensagemErro = error.response.data.error;
+      } else if (error.response?.data) {
+        mensagemErro = JSON.stringify(error.response.data);
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || error.response?.data?.error || error.message || "Erro ao cadastrar cesta"
+        error: mensagemErro
       };
     }
   },
