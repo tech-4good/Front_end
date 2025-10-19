@@ -14,6 +14,7 @@ export default function VoluntariosExcluir() {
   const navigate = useNavigate();
   const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
   const tipoUsuario = sessionStorage.getItem("tipoUsuario") || "2";
+  const usuarioLogadoId = sessionStorage.getItem("userId");
 
   const botoesNavbar = [
     { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -60,6 +61,17 @@ export default function VoluntariosExcluir() {
   }
 
   function handleClickVoluntario(v) {
+    const voluntarioId = v.idVoluntario || v.id || v.userId;
+    
+    // Verificar se está tentando excluir a si mesmo
+    if (voluntarioId && usuarioLogadoId && voluntarioId.toString() === usuarioLogadoId.toString()) {
+      setModalErro({ 
+        open: true, 
+        mensagem: "Você não pode excluir seu próprio cadastro!" 
+      });
+      return;
+    }
+    
     setModalConfirm({ open: true, voluntario: v });
   }
 
