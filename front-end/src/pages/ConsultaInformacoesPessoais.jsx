@@ -96,19 +96,37 @@ export default function ConsultaInformacoesPessoais() {
 
 	function getDadosStorage() {
 		if (beneficiado) {
+			// Converter data de nascimento se vier como array [ano, mes, dia]
+			let dataNascimentoFormatada = "";
+			if (Array.isArray(beneficiado.dataNascimento)) {
+				const [ano, mes, dia] = beneficiado.dataNascimento;
+				dataNascimentoFormatada = `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+			} else if (beneficiado.dataNascimento) {
+				dataNascimentoFormatada = beneficiado.dataNascimento;
+			}
+			
+			// Formatar renda se existir
+			let rendaFormatada = "";
+			if (beneficiado.renda) {
+				const rendaNum = parseFloat(beneficiado.renda);
+				if (!isNaN(rendaNum)) {
+					rendaFormatada = `R$ ${rendaNum.toFixed(2).replace('.', ',')}`;
+				}
+			}
+			
 			return {
 				nome: beneficiado.nome || "",
 				cpf: beneficiado.cpf || "",
 				rg: beneficiado.rg || "",
-				nascimento: beneficiado.dataNascimento || "",
+				nascimento: dataNascimentoFormatada,
 				telefone: beneficiado.telefone || "",
 				escolaridade: beneficiado.escolaridade || "",
 				profissao: beneficiado.profissao || "",
 				empresa: beneficiado.empresa || "",
-				dependentes: beneficiado.dependentes || 0,
+				dependentes: beneficiado.dependentes || beneficiado.qtdDependentes || 0,
 				estadoCivil: beneficiado.estadoCivil || "",
 				religiao: beneficiado.religiao || "",
-				renda: beneficiado.renda ? `R$ ${beneficiado.renda}` : "",
+				renda: rendaFormatada,
 				cargo: beneficiado.cargo || "",
 				foto: null
 			};
@@ -142,6 +160,17 @@ export default function ConsultaInformacoesPessoais() {
 			const novosdados = getDadosStorage();
 			setDadosOriginais(novosdados);
 			setDados(novosdados);
+			
+			// Carregar auxílios do beneficiado
+			if (beneficiado.auxilios && Array.isArray(beneficiado.auxilios)) {
+				setAuxilios(beneficiado.auxilios.map(a => a.nome || a.tipo || a));
+			} else if (beneficiado.auxilios) {
+				// Caso seja um objeto ou string
+				setAuxilios([beneficiado.auxilios]);
+			} else {
+				// Caso não tenha auxílios, manter vazio
+				setAuxilios([]);
+			}
 		}
 	}, [beneficiado]);
 
@@ -174,7 +203,7 @@ export default function ConsultaInformacoesPessoais() {
 	}
 
 
-	const [auxilios, setAuxilios] = useState(["Bolsa Família", "Auxílio Emergencial", "Auxílio Gás"]);
+	const [auxilios, setAuxilios] = useState([]);
 
 	const [modalEscolherAuxilio, setModalEscolherAuxilio] = useState(false);
 	const [auxilioParaExcluir, setAuxilioParaExcluir] = useState(null);
@@ -192,12 +221,64 @@ export default function ConsultaInformacoesPessoais() {
 	}
 
 
-	function handleConfirmarSim() {
-		setDadosOriginais(dados);
-		localStorage.setItem('dadosBeneficiado', JSON.stringify(dados));
-		setAlteracaoConfirmada(true);
+	async function handleConfirmarSim() {
 		setModalConfirmar(false);
-		setTimeout(() => setAlteracaoConfirmada(false), 2000);
+		setCarregando(true);
+		
+		try {
+			const beneficiadoId = beneficiado.id || beneficiado.idBeneficiado;
+			if (!beneficiadoId) {
+				setErro("ID do beneficiado não encontrado");
+				return;
+			}
+			
+			// Converter data de DD/MM/YYYY para YYYY-MM-DD
+			let dataNascimento = dados.nascimento;
+			if (dataNascimento && dataNascimento.includes('/')) {
+				const [dia, mes, ano] = dataNascimento.split('/');
+				dataNascimento = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+			}
+			
+			// Extrair valor numérico da renda (remover R$ e formatação)
+			let rendaMensal = 0;
+			if (dados.renda) {
+				const rendaNum = dados.renda.replace(/[R$\s.]/g, '').replace(',', '.');
+				rendaMensal = parseFloat(rendaNum) || 0;
+			}
+			
+			const dadosAtualizados = {
+				nome: dados.nome,
+				cpf: dados.cpf,
+				rg: dados.rg,
+				dataNascimento: dataNascimento,
+				telefone: dados.telefone,
+				escolaridade: dados.escolaridade,
+				profissao: dados.profissao,
+				empresa: dados.empresa,
+				estadoCivil: dados.estadoCivil,
+				religiao: dados.religiao,
+				rendaMensal: rendaMensal,
+				cargo: dados.cargo,
+				quantidadeDependentes: parseInt(dados.dependentes) || 0,
+				enderecoId: beneficiado.enderecoId || beneficiado.endereco?.id
+			};
+			
+			console.log('Atualizando beneficiado ID:', beneficiadoId, 'com dados:', dadosAtualizados);
+			const response = await beneficiadoService.atualizarBeneficiado(beneficiadoId, dadosAtualizados);
+			
+			if (response.success) {
+				setDadosOriginais(dados);
+				setAlteracaoConfirmada(true);
+				setTimeout(() => setAlteracaoConfirmada(false), 2000);
+			} else {
+				setErro(response.error || "Erro ao atualizar informações");
+			}
+		} catch (error) {
+			console.error('Erro ao atualizar informações:', error);
+			setErro("Erro inesperado ao atualizar informações");
+		} finally {
+			setCarregando(false);
+		}
 	}
 
 
@@ -205,6 +286,37 @@ export default function ConsultaInformacoesPessoais() {
 		setModalConfirmar(false);
 		setDados(getDadosStorage());
 		window.location.reload();
+	}
+
+	async function handleExcluirBeneficiado() {
+		setModalExcluirBeneficiado(false);
+		setCarregando(true);
+		
+		try {
+			const beneficiadoId = beneficiado.id || beneficiado.idBeneficiado;
+			if (!beneficiadoId) {
+				setErro("ID do beneficiado não encontrado");
+				return;
+			}
+			
+			console.log('Excluindo beneficiado ID:', beneficiadoId);
+			const response = await beneficiadoService.removerBeneficiado(beneficiadoId);
+			
+			if (response.success) {
+				setModalExcluidoSucesso(true);
+				setTimeout(() => {
+					setModalExcluidoSucesso(false);
+					navigate('/consulta-beneficiados');
+				}, 2000);
+			} else {
+				setErro(response.error || "Erro ao excluir beneficiado");
+			}
+		} catch (error) {
+			console.error('Erro ao excluir beneficiado:', error);
+			setErro("Erro inesperado ao excluir beneficiado");
+		} finally {
+			setCarregando(false);
+		}
 	}
 
 	return (
@@ -307,14 +419,7 @@ export default function ConsultaInformacoesPessoais() {
 									showClose={false}
 									botoes={[{
 										texto: "SIM",
-										onClick: () => {
-													setModalExcluirBeneficiado(false);
-													setModalExcluidoSucesso(true);
-													setTimeout(() => {
-														setModalExcluidoSucesso(false);
-														navigate('/consulta-beneficiados');
-													}, 2000);
-										},
+										onClick: handleExcluirBeneficiado,
 										style: { background: '#fff', color: '#111', border: '2px solid #111' }
 									}, {
 										texto: "NÃO",

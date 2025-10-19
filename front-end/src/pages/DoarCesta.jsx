@@ -254,9 +254,12 @@ export default function DoarCesta() {
           
           console.log("🔢 Nova quantidade:", novaQuantidade);
           
-          // Payload correto conforme especificação do backend
+          // Payload COMPLETO com todos os campos da cesta, alterando apenas quantidade
           const dadosAtualizacao = {
-            quantidadeCestas: novaQuantidade
+            tipo: cestaDisponivel.tipo,
+            quantidadeCestas: novaQuantidade,
+            pesoKg: cestaDisponivel.pesoKg,
+            dataEntradaEstoque: cestaDisponivel.dataEntradaEstoque
           };
           
           console.log("📝 Dados para atualização do estoque:", dadosAtualizacao);

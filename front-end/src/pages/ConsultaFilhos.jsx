@@ -52,6 +52,24 @@ export default function ConsultaFilhos() {
 			if (response.success) {
 				console.log('Dados do beneficiado:', response.data);
 				setBeneficiado(response.data);
+				
+				// Se o beneficiado tem ID, buscar filhos específicos
+				if (response.data.id || response.data.idBeneficiado) {
+					const beneficiadoId = response.data.id || response.data.idBeneficiado;
+					console.log('Buscando filhos para beneficiado ID:', beneficiadoId);
+					
+					const responseFilhos = await beneficiadoService.listarFilhosPorBeneficiado(beneficiadoId);
+					if (responseFilhos.success && Array.isArray(responseFilhos.data)) {
+						console.log('Filhos encontrados:', responseFilhos.data);
+						// Atualizar beneficiado com a lista de filhos
+						setBeneficiado({
+							...response.data,
+							filhos: responseFilhos.data
+						});
+					} else {
+						console.log('Nenhum filho encontrado ou erro:', responseFilhos.error);
+					}
+				}
 			} else {
 				console.error('Erro ao carregar beneficiado:', response.error);
 				setErro(response.error || "Erro ao carregar dados do beneficiado");
@@ -75,12 +93,24 @@ export default function ConsultaFilhos() {
 	function getFilhosStorage() {
 		// Se temos dados do beneficiado e filhos, usar eles
 		if (beneficiado && beneficiado.filhos && Array.isArray(beneficiado.filhos)) {
-			return beneficiado.filhos.map((filho, index) => ({
-				label: filho.nome || `Filho ${index + 1}`,
-				nascimento: filho.dataNascimento || "",
-				creche: filho.vaicreche || "Não",
-				estuda: filho.estuda || "Não"
-			}));
+			return beneficiado.filhos.map((filho, index) => {
+				// Converter data se vier como array [ano, mes, dia]
+				let dataNascimento = "";
+				if (Array.isArray(filho.dataNascimento)) {
+					const [ano, mes, dia] = filho.dataNascimento;
+					dataNascimento = `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+				} else if (filho.dataNascimento) {
+					dataNascimento = filho.dataNascimento;
+				}
+				
+				return {
+					id: filho.id || filho.idFilho,
+					label: filho.nome || `Filho ${index + 1}`,
+					nascimento: dataNascimento,
+					creche: filho.hasCreche ? "Sim" : "Não",
+					estuda: filho.isEstudante ? "Sim" : "Não"
+				};
+			});
 		}
 
 		// Se não há filhos, retornar array vazio
