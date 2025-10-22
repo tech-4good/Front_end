@@ -4,6 +4,7 @@ import Cadastro from "./pages/Cadastro";
 import Perfil from "./pages/Perfil";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import ErrorPage from "./components/ErrorPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 import VoluntariosMenu from "./pages/VoluntariosMenu";
 import Home from "./pages/Home";
 import VoluntariosExcluir from "./pages/VoluntariosExcluir";
@@ -32,16 +33,9 @@ import Dashboard from "./pages/Dashboard";
 import RedefinirSenha from "./pages/RedefinirSenha";
 
 export const router = createBrowserRouter([
-  {
-    path: "/doar-cesta",
-    element: <DoarCesta />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "/consulta-beneficiados",
-    element: <ConsultaBeneficiados />,
-    errorElement: <ErrorPage />,
-  },
+  // ============================================
+  // ROTAS PÚBLICAS (não requerem autenticação)
+  // ============================================
   {
     path: "/",
     element: <Login />,
@@ -53,134 +47,148 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: "/perfil",
-    element: <Perfil />,
-    errorElement: <ErrorPage />,
-  },
-  {
     path: "/recuperar-senha",
     element: <RecuperarSenha />,
     errorElement: <ErrorPage />,
   },
   {
+    path: "/redefinir-senha",
+    element: <RedefinirSenha />,
+    errorElement: <ErrorPage />,
+  },
+  
+  // ============================================
+  // ROTAS PROTEGIDAS (requerem autenticação)
+  // ============================================
+  {
     path: "/home",
-    element: <Home />,
+    element: <ProtectedRoute><Home /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/perfil",
+    element: <ProtectedRoute><Perfil /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/doar-cesta",
+    element: <ProtectedRoute><DoarCesta /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/consulta-beneficiados",
+    element: <ProtectedRoute><ConsultaBeneficiados /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/voluntarios-menu",
-    element: <VoluntariosMenu />,
+    element: <ProtectedRoute><VoluntariosMenu /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/voluntarios-excluir",
-    element: <VoluntariosExcluir />,
+    element: <ProtectedRoute><VoluntariosExcluir /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/voluntarios-cadastro",
-    element: <VoluntariosCadastro />,
+    element: <ProtectedRoute><VoluntariosCadastro /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/cadastro-beneficiado-menu",
-    element: <CadastroBeneficiadoMenu />,
+    element: <ProtectedRoute><CadastroBeneficiadoMenu /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/cadastro-beneficiado-simples1",
-    element: <CadastroBeneficiadoSimples1 />,
+    element: <ProtectedRoute><CadastroBeneficiadoSimples1 /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/cadastro-beneficiado-simples2",
-    element: <CadastroBeneficiadoSimples2 />,
+    element: <ProtectedRoute><CadastroBeneficiadoSimples2 /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/cadastro-beneficiado-completo1",
-    element: <CadastroBeneficiadoCompleto1 />,
+    element: <ProtectedRoute><CadastroBeneficiadoCompleto1 /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/cadastro-beneficiado-completo2",
-    element: <CadastroBeneficiadoCompleto2 />,
+    element: <ProtectedRoute><CadastroBeneficiadoCompleto2 /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/cadastro-beneficiado-completo3",
-    element: <CadastroBeneficiadoCompleto3 />,
+    element: <ProtectedRoute><CadastroBeneficiadoCompleto3 /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/cadastro-endereco",
-    element: <CadastroEndereco />,
+    element: <ProtectedRoute><CadastroEndereco /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/fila-espera",
-    element: <FilaEspera />,
+    element: <ProtectedRoute><FilaEspera /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/controle-cestas",
-    element: <ControleCestas />,
+    element: <ProtectedRoute><ControleCestas /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/consulta-beneficiados-resultado",
-    element: <ConsultaBeneficiadosResultado />,
+    element: <ProtectedRoute><ConsultaBeneficiadosResultado /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/consulta-beneficiados-menu",
-    element: <ConsultaBeneficiadosMenu />,
+    element: <ProtectedRoute><ConsultaBeneficiadosMenu /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/consulta-informacoes-pessoais",
-    element: <ConsultaInformacoesPessoais />,
+    element: <ProtectedRoute><ConsultaInformacoesPessoais /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/consulta-endereco",
-    element: <ConsultaEndereco />,
+    element: <ProtectedRoute><ConsultaEndereco /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/consulta-filhos",
-    element: <ConsultaFilhos />,
+    element: <ProtectedRoute><ConsultaFilhos /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/painel-menu",
-    element: <PainelMenu />,
+    element: <ProtectedRoute><PainelMenu /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
     path: "/historico-doacoes",
-    element: <HistoricoDoacoes />,
+    element: <ProtectedRoute><HistoricoDoacoes /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
-   {
-  path: "/cadastro-filhos",
-  element: <CadastroFilhos />,
-  errorElement: <ErrorPage />,
-},
+  {
+    path: "/cadastro-filhos",
+    element: <ProtectedRoute><CadastroFilhos /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
   {
     path: "/cadastro-auxilios",
-    element: <CadastroAuxilios />,
+    element: <ProtectedRoute><CadastroAuxilios /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
-{
-  path: "/dashboard",
-  element: <Dashboard />,
-  errorElement: <ErrorPage />,
-},
-{
-  path: "/redefinir-senha",
-  element: <RedefinirSenha />,
-  errorElement: <ErrorPage />,
-}
+  {
+    path: "/dashboard",
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  }
 
 ]);

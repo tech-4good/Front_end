@@ -102,30 +102,43 @@ export const voluntarioService = {
   },
 
   // Atualizar voluntário
+  // ⚠️ IMPORTANTE: Backend atual só aceita TELEFONE e EMAIL
+  // Outros campos (nome, cpf, senha) são ignorados pela API
   atualizar: async (id, dadosVoluntario) => {
     try {
       const payload = {};
-      // Enviar somente 'nomeCompleto' para o backend (não enviar 'nome')
-      if (dadosVoluntario.nome !== undefined) payload.nomeCompleto = String(dadosVoluntario.nome).trim();
-      if (dadosVoluntario.cpf !== undefined) payload.cpf = String(dadosVoluntario.cpf).replace(/\D/g, '');
-      if (dadosVoluntario.telefone !== undefined) payload.telefone = dadosVoluntario.telefone;
-      if (dadosVoluntario.email !== undefined) payload.email = dadosVoluntario.email;
-      if (dadosVoluntario.senha !== undefined && dadosVoluntario.senha !== "") payload.senha = dadosVoluntario.senha;
+      
+      // Backend só aceita estes 2 campos:
+      if (dadosVoluntario.telefone !== undefined) {
+        payload.telefone = String(dadosVoluntario.telefone).replace(/\D/g, '');
+      }
+      
+      if (dadosVoluntario.email !== undefined) {
+        payload.email = String(dadosVoluntario.email).toLowerCase().trim();
+      }
 
-      console.log('Enviando payload de atualização:', payload);
+      console.log('📤 Enviando payload de atualização (telefone e email apenas):', payload);
       const response = await apiClient.patch(`/voluntarios/${id}`, payload);
-      console.log('Resposta da atualização (status):', response.status);
-      console.log('Resposta da atualização (headers):', response.headers);
-      console.log('Resposta da atualização (data):', response.data);
+      console.log('✅ Atualização bem-sucedida:', response.data);
+      console.log('ℹ️ Campos atualizados: telefone e email');
+      console.log('⚠️ Campos NÃO atualizados: nome, cpf, senha (backend não suporta)');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Erro ao atualizar voluntário:', error);
+      console.error('❌ Erro ao atualizar voluntário:', error);
+      console.error('❌ Detalhes:', error.response?.data);
+      
       let mensagem = 'Erro ao atualizar dados';
       
       if (error.response?.status === 400) {
         mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Se houver erros de validação específicos
+        const erros = error.response.data.errors;
+        if (Array.isArray(erros)) {
+          mensagem = erros.map(e => e.defaultMessage || e.message).join(', ');
+        }
       }
       
       return { success: false, error: mensagem };

@@ -87,25 +87,41 @@ export default function ConsultaBeneficiadosResultado() {
   const carregarHistoricoBeneficiado = async (beneficiadoId) => {
     try {
       console.log('Carregando histórico para beneficiado ID:', beneficiadoId);
-      // Usar o entregaService que já funciona
+      // Buscar entregas com paginação
       const resposta = await entregaService.listarEntregas();
       
       if (resposta.success) {
-        console.log('Todas as entregas:', resposta.data);
+        // Extrair do objeto paginado se necessário
+        const todasEntregas = resposta.data?.content || resposta.data || [];
+        console.log('Todas as entregas:', todasEntregas);
+        
         // Filtrar entregas do beneficiado específico
-        const entregasDoBeneficiado = resposta.data.filter(entrega => 
-          entrega.beneficiadoId === beneficiadoId || 
-          entrega.idBeneficiado === beneficiadoId ||
-          entrega.beneficiado?.id === beneficiadoId
-        );
+        const entregasDoBeneficiado = todasEntregas.filter(entrega => {
+          const entregaBeneficiadoId = 
+            entrega.beneficiado?.idBeneficiado || 
+            entrega.beneficiado?.id || 
+            entrega.beneficiadoId || 
+            entrega.idBeneficiado;
+          
+          return entregaBeneficiadoId === beneficiadoId;
+        });
         
         console.log('Entregas filtradas para o beneficiado:', entregasDoBeneficiado);
         
         // Ordenar por data
         const entregasOrdenadas = entregasDoBeneficiado.sort((a, b) => {
-          const dataA = new Date(a.dataEntrega || a.data);
-          const dataB = new Date(b.dataEntrega || b.data);
-          return ordem === 'desc' ? dataB - dataA : dataA - dataB;
+          // Converter array [ano, mes, dia] para timestamp
+          const getTimestamp = (entrega) => {
+            const dataArray = entrega.dataRetirada || entrega.dataEntrega;
+            if (Array.isArray(dataArray)) {
+              return new Date(dataArray[0], dataArray[1] - 1, dataArray[2]).getTime();
+            }
+            return new Date(dataArray).getTime();
+          };
+          
+          const timestampA = getTimestamp(a);
+          const timestampB = getTimestamp(b);
+          return ordem === 'desc' ? timestampB - timestampA : timestampA - timestampB;
         });
         
         setRetiradas(entregasOrdenadas);
@@ -128,9 +144,20 @@ export default function ConsultaBeneficiadosResultado() {
 
   const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 
-  const formatarData = (dataISO) => {
-    const data = new Date(dataISO);
-    return data.toLocaleDateString('pt-BR');
+  const formatarData = (dataArray) => {
+    // Se for array [ano, mes, dia] do backend
+    if (Array.isArray(dataArray) && dataArray.length === 3) {
+      const [ano, mes, dia] = dataArray;
+      return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+    }
+    
+    // Se for string ISO ou outro formato
+    if (typeof dataArray === 'string') {
+      const data = new Date(dataArray);
+      return data.toLocaleDateString('pt-BR');
+    }
+    
+    return 'Data não disponível';
   };
 
   const formatarTipo = (tipo) => {
@@ -190,10 +217,7 @@ export default function ConsultaBeneficiadosResultado() {
                     </span>
                   </div>
                   <div className="consulta-beneficiados-resultado-data">
-                    {formatarData(r.dataRetirada ? (Array.isArray(r.dataRetirada) ? 
-                      `${r.dataRetirada[2]}/${String(r.dataRetirada[1]).padStart(2, '0')}/${r.dataRetirada[0]}` 
-                      : r.dataRetirada) 
-                      : r.data || 'Data não disponível')}
+                    {formatarData(r.dataRetirada || r.dataEntrega || r.data)}
                   </div>
                 </div>
               ))

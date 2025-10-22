@@ -39,7 +39,10 @@ const cestaService = {
   // Cadastrar nova cesta
   async cadastrarCesta(dadosCesta) {
     try {
-      console.log("� Cadastrando cesta:", dadosCesta);
+      console.log("📦 Cadastrando cesta:", dadosCesta);
+      console.log("📦 Tipo de dataEntradaEstoque:", typeof dadosCesta.dataEntradaEstoque);
+      console.log("📦 Valor de dataEntradaEstoque:", dadosCesta.dataEntradaEstoque);
+      
       const response = await api.post("/cestas", dadosCesta);
       return {
         success: true,
@@ -47,9 +50,34 @@ const cestaService = {
       };
     } catch (error) {
       console.error("❌ Erro ao cadastrar cesta:", error.response?.data || error.message);
+      console.error("❌ Detalhes completos do erro:", error.response);
+      
+      // Mostrar erros de validação específicos
+      if (error.response?.data?.errors) {
+        console.error("❌ Erros de validação:", error.response.data.errors);
+        error.response.data.errors.forEach((err, index) => {
+          console.error(`❌ Erro ${index + 1}:`, err);
+        });
+      }
+      
+      // Extrair mensagem de erro mais específica
+      let mensagemErro = "Erro ao cadastrar cesta";
+      
+      if (error.response?.data?.errors && error.response.data.errors.length > 0) {
+        // Se houver erros de validação, mostrar o primeiro
+        const primeiroErro = error.response.data.errors[0];
+        mensagemErro = primeiroErro.defaultMessage || primeiroErro.message || JSON.stringify(primeiroErro);
+      } else if (error.response?.data?.message) {
+        mensagemErro = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        mensagemErro = error.response.data.error;
+      } else if (error.response?.data) {
+        mensagemErro = JSON.stringify(error.response.data);
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || error.response?.data?.error || error.message || "Erro ao cadastrar cesta"
+        error: mensagemErro
       };
     }
   },
@@ -59,6 +87,7 @@ const cestaService = {
     try {
       console.log("🔧 cestaService.atualizarCesta - ID:", id);
       console.log("🔧 cestaService.atualizarCesta - Dados:", dadosCesta);
+      console.log("🔧 cestaService.atualizarCesta - Dados JSON:", JSON.stringify(dadosCesta, null, 2));
       console.log("🔧 cestaService.atualizarCesta - URL:", `/cestas/${id}`);
       
       // Usar PATCH conforme especificação do backend
@@ -73,11 +102,24 @@ const cestaService = {
     } catch (error) {
       console.error("❌ cestaService.atualizarCesta - Erro:", error);
       console.error("❌ cestaService.atualizarCesta - Response:", error.response?.data);
+      console.error("❌ cestaService.atualizarCesta - Response JSON:", JSON.stringify(error.response?.data, null, 2));
       console.error("❌ cestaService.atualizarCesta - Status:", error.response?.status);
+      console.error("❌ cestaService.atualizarCesta - Errors array:", error.response?.data?.errors);
+      
+      // Extrair mensagens de erro detalhadas
+      let mensagemErro = "Erro ao atualizar cesta";
+      
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const erros = error.response.data.errors.map(e => `${e.field}: ${e.defaultMessage}`).join(', ');
+        mensagemErro = erros;
+        console.error("❌ Erros de validação:", erros);
+      } else if (error.response?.data?.message) {
+        mensagemErro = error.response.data.message;
+      }
       
       return {
         success: false,
-        error: error.response?.data?.message || error.response?.data || "Erro ao atualizar cesta"
+        error: mensagemErro
       };
     }
   },

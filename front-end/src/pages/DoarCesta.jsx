@@ -122,18 +122,37 @@ export default function DoarCesta() {
       const historico = await entregaService.buscarHistorico(beneficiado.id_beneficiado || beneficiado.id);
       console.log("📋 Histórico de entregas:", historico);
       
-      if (historico && historico.length > 0) {
-        // Encontrar a última entrega do mesmo tipo
-        const ultimaEntregaMesmoTipo = historico.find(entrega => 
+      // Verificar se é um objeto paginado ou array direto
+      const entregas = historico?.content || historico || [];
+      console.log("📦 Entregas extraídas:", entregas);
+      
+      if (entregas && entregas.length > 0) {
+        // Encontrar TODAS as entregas do mesmo tipo
+        const entregasMesmoTipo = entregas.filter(entrega => 
           entrega.tipo === tipoEscolhido || entrega.cesta?.tipo === tipoEscolhido
         );
         
-        if (ultimaEntregaMesmoTipo) {
+        // Ordenar por data (mais recente primeiro) e pegar a última
+        if (entregasMesmoTipo.length > 0) {
+          entregasMesmoTipo.sort((a, b) => {
+            const dataA = new Date(a.dataRetirada || a.data_retirada);
+            const dataB = new Date(b.dataRetirada || b.data_retirada);
+            return dataB - dataA; // Ordem decrescente (mais recente primeiro)
+          });
+          
+          const ultimaEntregaMesmoTipo = entregasMesmoTipo[0]; // Pega a mais recente
+          
           const dataUltimaEntrega = new Date(ultimaEntregaMesmoTipo.dataRetirada || ultimaEntregaMesmoTipo.data_retirada);
           const hoje = new Date();
+          
+          // Zerar horas para comparar apenas datas
+          dataUltimaEntrega.setHours(0, 0, 0, 0);
+          hoje.setHours(0, 0, 0, 0);
+          
           const diasDecorridos = Math.floor((hoje - dataUltimaEntrega) / (1000 * 60 * 60 * 24));
           
           console.log(`📅 Última retirada de ${tipoEscolhido}: ${dataUltimaEntrega.toLocaleDateString('pt-BR')}`);
+          console.log(`📅 Data de hoje: ${hoje.toLocaleDateString('pt-BR')}`);
           console.log(`📅 Dias decorridos: ${diasDecorridos}`);
           
           // Regras específicas por tipo:
@@ -189,14 +208,26 @@ export default function DoarCesta() {
       // Calcular próxima retirada conforme regras específicas
       // Kit: 14 dias (2x por mês), Cesta: 30 dias (1x por mês)
       const hoje = new Date();
+      
+      // Garantir que está usando data local, não UTC
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+      const dia = String(hoje.getDate()).padStart(2, '0');
+      const dataHojeLocal = `${ano}-${mes}-${dia}`;
+      
       const proximaRetirada = new Date(hoje);
       const diasProximaRetirada = tipoEscolhido === "KIT" ? 14 : 30;
       proximaRetirada.setDate(proximaRetirada.getDate() + diasProximaRetirada);
+      
+      const anoProx = proximaRetirada.getFullYear();
+      const mesProx = String(proximaRetirada.getMonth() + 1).padStart(2, '0');
+      const diaProx = String(proximaRetirada.getDate()).padStart(2, '0');
+      const dataProximaLocal = `${anoProx}-${mesProx}-${diaProx}`;
 
       // Dados da entrega conforme documentação do backend
       const dadosEntrega = {
-        dataRetirada: hoje.toISOString().split('T')[0],
-        proximaRetirada: proximaRetirada.toISOString().split('T')[0],
+        dataRetirada: dataHojeLocal,
+        proximaRetirada: dataProximaLocal,
         voluntarioId: parseInt(sessionStorage.getItem("userId") || "1"),
         enderecoId: beneficiado.endereco.id_endereco || beneficiado.endereco.id,
         cestaId: cestaDisponivel.idCesta || cestaDisponivel.id,
@@ -204,6 +235,8 @@ export default function DoarCesta() {
       };
 
       console.log("🎯 Registrando entrega no banco:", dadosEntrega);
+      console.log("📅 Data de hoje (local):", dataHojeLocal);
+      console.log("📅 Próxima retirada (local):", dataProximaLocal);
 
       // Registrar entrega no backend
       const resultado = await entregaService.registrarEntrega(dadosEntrega);
@@ -221,9 +254,12 @@ export default function DoarCesta() {
           
           console.log("🔢 Nova quantidade:", novaQuantidade);
           
-          // Payload correto conforme especificação do backend
+          // Payload COMPLETO com todos os campos da cesta, alterando apenas quantidade
           const dadosAtualizacao = {
-            quantidadeCestas: novaQuantidade
+            tipo: cestaDisponivel.tipo,
+            quantidadeCestas: novaQuantidade,
+            pesoKg: cestaDisponivel.pesoKg,
+            dataEntradaEstoque: cestaDisponivel.dataEntradaEstoque
           };
           
           console.log("📝 Dados para atualização do estoque:", dadosAtualizacao);

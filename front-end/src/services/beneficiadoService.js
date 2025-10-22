@@ -119,10 +119,22 @@ export const beneficiadoService = {
   // Listar todos os filhos de um beneficiado
   listarFilhosPorBeneficiado: async (beneficiadoId) => {
     try {
-      const response = await apiClient.get(`/beneficiados/${beneficiadoId}/filhos`);
+      const response = await apiClient.get(`/filhos-beneficiados?beneficiadoId=${beneficiadoId}`);
+      
+      // Verificar se é paginado
+      if (response.data?.content) {
+        return { success: true, data: response.data.content };
+      }
+      
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao listar filhos:', error);
+      
+      // Se 404, significa que não tem filhos
+      if (error.response?.status === 404) {
+        return { success: true, data: [] };
+      }
+      
       return { success: false, error: 'Erro ao carregar lista de filhos' };
     }
   },
