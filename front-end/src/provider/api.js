@@ -6,7 +6,7 @@ const apiClient = axios.create({
 <<<<<<< HEAD
   baseURL: 'http://app-load-balancer-530489435.us-east-1.elb.amazonaws.com/api', 
 =======
-  baseURL: 'http://app-load-balancer-1746419262.us-east-1.elb.amazonaws.com/api', 
+  baseURL: 'http://app-load-balancer-530489435.us-east-1.elb.amazonaws.com/api', 
 >>>>>>> bc8754d7b9909738d0fb8c68a243c2da7ce69006
   timeout: 10000,
   headers: {
