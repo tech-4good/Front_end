@@ -3,7 +3,7 @@
 
 // Criar uma instância do axios
 const apiClient = axios.create({
-  baseURL: 'http://app-load-balancer-1428084765.us-east-1.elb.amazonaws.com/api', 
+  baseURL: 'http://app-load-balancer-79266106.us-east-1.elb.amazonaws.com/api', 
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
