@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
+import { entregaService } from "../services/entregaService";
 import "../styles/Home.css";
 import "../styles/HistoricoDoacoes.css";
 import iconeCasa from "../assets/icone-casa.png";
@@ -10,74 +11,91 @@ import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
 
-const beneficiadosFake = [
-	{ cpf: "33344455566", nome: "Lucas Almeida" },
-	{ cpf: "22233344455", nome: "Bruna Reginato" },
-	{ cpf: "48763842135", nome: "Juliana Gomes Oliveira" },
-	{ cpf: "12345678901", nome: "Carlos Silva" },
-	{ cpf: "98765432100", nome: "Maria Souza" },
-	{ cpf: "45678912300", nome: "Ana Paula Lima" },
-	{ cpf: "11122233344", nome: "João Pedro Santos" },
-];
+// Função auxiliar para formatar data de array [ano, mes, dia] para DD/MM/YYYY
+const formatarData = (dataArray) => {
+	if (!dataArray || !Array.isArray(dataArray)) return "Data inválida";
+	const [ano, mes, dia] = dataArray;
+	return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+};
 
-const retiradasFake = [
-	// Bruna Reginato
-	{ cpf: "22233344455", tipo: "Kit", data: "09/03/2025" },
-	{ cpf: "22233344455", tipo: "Kit", data: "23/02/2025" },
-	{ cpf: "22233344455", tipo: "Kit", data: "15/02/2025" },
-	{ cpf: "22233344455", tipo: "Kit", data: "01/02/2025" },
-	{ cpf: "22233344455", tipo: "Kit", data: "29/01/2025" },
-	// Lucas Almeida
-	{ cpf: "33344455566", tipo: "Cesta", data: "10/03/2025" },
-	{ cpf: "33344455566", tipo: "Cesta", data: "25/02/2025" },
-	// Juliana Gomes Oliveira
-	{ cpf: "48763842135", tipo: "Kit", data: "05/03/2025" },
-	// Carlos Silva
-	{ cpf: "12345678901", tipo: "Cesta", data: "12/03/2025" },
-	{ cpf: "12345678901", tipo: "Cesta", data: "28/02/2025" },
-	// Maria Souza
-	{ cpf: "98765432100", tipo: "Kit", data: "08/03/2025" },
-	// Ana Paula Lima
-	{ cpf: "45678912300", tipo: "Cesta", data: "03/03/2025" },
-	// João Pedro Santos
-	{ cpf: "11122233344", tipo: "Kit", data: "11/03/2025" },
-];
-
+// Função para converter data DD/MM/YYYY para objeto Date para ordenação
+const dataParaTimestamp = (dataString) => {
+	const [dia, mes, ano] = dataString.split('/');
+	return new Date(ano, mes - 1, dia).getTime();
+};
 
 export default function HistoricoDoacoes() {
 	const navigate = useNavigate();
 	const [tipoUsuario, setTipoUsuario] = useState("2");
 	const [ordem, setOrdem] = useState('desc');
-	const [retiradasAleatorias, setRetiradasAleatorias] = useState([]);
+	const [entregas, setEntregas] = useState([]);
+	const [carregando, setCarregando] = useState(true);
+	const [erro, setErro] = useState(null);
 	const [paginaAtual, setPaginaAtual] = useState(1);
 	const itensPorPagina = 5;
 
 	useEffect(() => {
 		const tipo = sessionStorage.getItem("tipoUsuario") || "2";
 		setTipoUsuario(tipo);
+		carregarEntregas();
+	}, []);
 
-		let retiradasComBeneficiado = retiradasFake.map(r => {
-			const beneficiado = beneficiadosFake.find(b => b.cpf === r.cpf);
-			return {
-				...r,
-				nome: beneficiado ? beneficiado.nome : "Desconhecido"
-			};
-		});
+	const carregarEntregas = async () => {
+		setCarregando(true);
+		setErro(null);
+		
+		try {
+			const result = await entregaService.listarEntregas();
+			
+			if (result.success) {
+				console.log("✅ Entregas carregadas:", result.data);
+				
+				// Backend retorna objeto paginado: { content: [], totalPages, totalElements, ... }
+				const dadosEntregas = result.data?.content || result.data || [];
+				
+				console.log("📦 Array de entregas extraído:", dadosEntregas);
+				
+				// Processar entregas
+				const entregasProcessadas = dadosEntregas.map(entrega => ({
+					id: entrega.id,
+					cpf: entrega.beneficiado?.cpf || "CPF não disponível",
+					nome: entrega.beneficiado?.nome || "Nome não disponível",
+					tipo: entrega.cesta?.tipo || "Tipo não especificado",
+					data: formatarData(entrega.dataRetirada),
+					dataOriginal: entrega.dataRetirada // Para ordenação
+				}));
+				
+				console.log("✅ Entregas processadas:", entregasProcessadas);
+				setEntregas(entregasProcessadas);
+			} else {
+				setErro(result.error || "Erro ao carregar histórico");
+				console.error("❌ Erro ao carregar entregas:", result.error);
+			}
+		} catch (error) {
+			console.error("❌ Erro ao carregar entregas:", error);
+			setErro("Erro ao carregar histórico de atendimentos");
+		} finally {
+			setCarregando(false);
+		}
+	};
 
-		retiradasComBeneficiado = retiradasComBeneficiado.sort((a, b) => {
-			const da = a.data.split('/').reverse().join('-');
-			const db = b.data.split('/').reverse().join('-');
-			return ordem === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
-		});
-		setRetiradasAleatorias(retiradasComBeneficiado);
-		setPaginaAtual(1); // Reset para página 1 quando mudar a ordem
+	// Aplicar ordenação
+	const entregasOrdenadas = [...entregas].sort((a, b) => {
+		const timestampA = dataParaTimestamp(a.data);
+		const timestampB = dataParaTimestamp(b.data);
+		return ordem === 'desc' ? timestampB - timestampA : timestampA - timestampB;
+	});
+
+	// Resetar página quando mudar a ordem
+	useEffect(() => {
+		setPaginaAtual(1);
 	}, [ordem]);
 
 	// Cálculos da paginação
-	const totalPaginas = Math.ceil(retiradasAleatorias.length / itensPorPagina);
+	const totalPaginas = Math.ceil(entregasOrdenadas.length / itensPorPagina);
 	const indiceInicio = (paginaAtual - 1) * itensPorPagina;
 	const indiceFim = indiceInicio + itensPorPagina;
-	const retiradasPaginadas = retiradasAleatorias.slice(indiceInicio, indiceFim);
+	const entregasPaginadas = entregasOrdenadas.slice(indiceInicio, indiceFim);
 
 	const irParaPagina = (pagina) => {
 		if (pagina >= 1 && pagina <= totalPaginas) {
@@ -109,25 +127,31 @@ export default function HistoricoDoacoes() {
 				</div>
 				<h1 className="historico-doacoes-title">Histórico de Atendimentos</h1>
 				<div className="historico-doacoes-lista">
-					{retiradasPaginadas.length > 0 ? (
-						retiradasPaginadas.map((r, idx) => (
-							<div className="historico-doacoes-card" key={r.cpf + r.data + idx}>
+					{carregando ? (
+						<p className="historico-doacoes-nao-encontrado">Carregando histórico...</p>
+					) : erro ? (
+						<p className="historico-doacoes-nao-encontrado" style={{ color: '#e74c3c' }}>
+							{erro}
+						</p>
+					) : entregasPaginadas.length > 0 ? (
+						entregasPaginadas.map((entrega) => (
+							<div className="historico-doacoes-card" key={entrega.id}>
 								<div
 									className="historico-doacoes-nome"
 									style={{ cursor: 'pointer', textDecoration: 'underline' }}
 									onClick={() => {
-										sessionStorage.setItem('cpfSelecionado', r.cpf);
-										navigate('/consulta-beneficiados-menu', { state: { cpf: r.cpf } });
+										sessionStorage.setItem('cpfSelecionado', entrega.cpf);
+										navigate('/consulta-beneficiados-menu', { state: { cpf: entrega.cpf } });
 									}}
 								>
-									{r.nome}
+									{entrega.nome}
 								</div>
-								<span className="historico-doacoes-tipo-badge">{r.tipo}</span>
-								<span className="historico-doacoes-data">{r.data}</span>
+								<span className="historico-doacoes-tipo-badge">{entrega.tipo}</span>
+								<span className="historico-doacoes-data">{entrega.data}</span>
 							</div>
 						))
 					) : (
-						<p className="historico-doacoes-nao-encontrado">Nenhuma retirada encontrada.</p>
+						<p className="historico-doacoes-nao-encontrado">Nenhum atendimento encontrado.</p>
 					)}
 				</div>
 				
