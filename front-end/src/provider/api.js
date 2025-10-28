@@ -1,9 +1,9 @@
 ﻿import axios from 'axios';
 
 
-// Criar uma instância do axios
+// Criar uma instância do axios com proxy reverso
 const apiClient = axios.create({
-  baseURL: 'http://app-load-balancer-79266106.us-east-1.elb.amazonaws.com/api', 
+  baseURL: '/api', // Usa proxy reverso configurado no Vite (dev) e no Nginx (produção)
   timeout: 10000,
   // ⚠️ NÃO definir Content-Type aqui - deixar cada requisição definir o seu
   // headers: {

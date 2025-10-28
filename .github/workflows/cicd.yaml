@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main # O branch que acionará o deploy
+      - proxy # Outro branch que também acionará o deploy
 
 jobs:
   build_and_deploy:
@@ -29,44 +30,84 @@ jobs:
         working-directory: ./front-end
 
       # 4. Deploy para Web1
-      - name: FE - Deploy para Web1
+      - name: FE - Deploy dist para Web1
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.WEB1_HOST }}
           REMOTE_USER: ubuntu
           TARGET: /home/ubuntu/frontend
-          ARGS: "-rltgoDzvO --delete" 
+          ARGS: "-rltgoDzvO --delete --exclude=nginx/" 
           SOURCE: "./front-end/dist/"
 
+      # 4.1 Deploy template nginx para Web1
+      - name: FE - Deploy template nginx para Web1
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.WEB1_HOST }}
+          REMOTE_USER: ubuntu
+          TARGET: /home/ubuntu/frontend/nginx/templates/
+          ARGS: "-rltgoDzvO" 
+          SOURCE: "./front-end/nginx/templates/"
+
       # 5. Deploy para Web2
-      - name: FE - Deploy para Web2
+      - name: FE - Deploy dist para Web2
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.WEB2_HOST }}
           REMOTE_USER: ubuntu
           TARGET: /home/ubuntu/frontend
-          ARGS: "-rltgoDzvO --delete" 
+          ARGS: "-rltgoDzvO --delete --exclude=nginx/" 
           SOURCE: "./front-end/dist/"
 
-      # 6. Reiniciar NGINX na Web1
-      - name: Reiniciar NGINX na Web1
-        uses: appleboy/ssh-action@master
+      # 5.1 Deploy template nginx para Web2
+      - name: FE - Deploy template nginx para Web2
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.WEB2_HOST }}
+          REMOTE_USER: ubuntu
+          TARGET: /home/ubuntu/frontend/nginx/templates/
+          ARGS: "-rltgoDzvO" 
+          SOURCE: "./front-end/nginx/templates/"
+
+      # 6. Copiar template como conf e reiniciar Nginx na Web1
+      - name: FE - Copiar config e reiniciar Nginx na Web1
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WEB1_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker compose -f /home/ubuntu/compose.yaml restart
+            set -e
+            
+            # Copiar template para conf.d (já tem o IP fixo 10.0.0.20:8080)
+            cp /home/ubuntu/frontend/nginx/templates/default.conf.template /home/ubuntu/frontend/nginx/conf.d/default.conf
+            echo "✅ Arquivo default.conf copiado"
 
-      # 7. Reiniciar NGINX na Web2
-      - name: Reiniciar NGINX na Web2
-        uses: appleboy/ssh-action@master
+            # Reiniciar Nginx
+            docker compose -f /home/ubuntu/compose.yaml down
+            docker compose -f /home/ubuntu/compose.yaml up -d
+            echo "✅ Docker compose do Nginx reiniciado"
+
+      # 7. Copiar template como conf e reiniciar Nginx na Web2
+      - name: FE - Copiar config e reiniciar Nginx na Web2
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WEB2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker compose -f /home/ubuntu/compose.yaml restart 
+            set -e
+            
+            # Copiar template para conf.d (já tem o IP fixo 10.0.0.20:8080)
+            cp /home/ubuntu/frontend/nginx/templates/default.conf.template /home/ubuntu/frontend/nginx/conf.d/default.conf
+            echo "✅ Arquivo default.conf copiado"
+
+            # Reiniciar Nginx
+            docker compose -f /home/ubuntu/compose.yaml down
+            docker compose -f /home/ubuntu/compose.yaml up -d
+            echo "✅ Docker compose do Nginx reiniciado" 
 
