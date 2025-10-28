@@ -1,7 +1,7 @@
 import api from "../provider/api";
 
 const entregaService = {
-  // Listar todas as entregas
+  // Listar todas as entregas (busca todas as páginas)
   async listarEntregas() {
     try {
       const response = await api.get("/entregas");
@@ -14,6 +14,72 @@ const entregaService = {
       return {
         success: false,
         error: error.response?.data?.message || "Erro ao listar entregas"
+      };
+    }
+  },
+
+  // Listar entregas com paginação específica
+  async listarEntregasPaginadas(page = 0, size = 5) {
+    try {
+      const response = await api.get("/entregas", {
+        params: { page, size }
+      });
+      return {
+        success: true,
+        data: response.data // { content: [], totalPages, totalElements, currentPage, size }
+      };
+    } catch (error) {
+      console.error("Erro ao listar entregas paginadas:", error);
+      return {
+        success: false,
+        error: error.response?.data?.message || "Erro ao listar entregas"
+      };
+    }
+  },
+
+  // Buscar TODAS as entregas (todas as páginas) para histórico completo
+  async buscarTodasEntregas() {
+    try {
+      // Primeiro, buscar a primeira página para saber quantas páginas existem
+      const primeiraPagina = await api.get("/entregas", {
+        params: { page: 0, size: 100 } // Buscar 100 por vez
+      });
+      
+      const dados = primeiraPagina.data;
+      let todasEntregas = dados.content || [];
+      const totalPaginas = dados.totalPages || 1;
+      
+      console.log(`📄 Primeira página carregada: ${todasEntregas.length} entregas`);
+      console.log(`📊 Total de páginas: ${totalPaginas}`);
+      
+      // Se houver mais páginas, buscar todas
+      if (totalPaginas > 1) {
+        const promessas = [];
+        for (let page = 1; page < totalPaginas; page++) {
+          promessas.push(
+            api.get("/entregas", {
+              params: { page, size: 100 }
+            })
+          );
+        }
+        
+        const respostas = await Promise.all(promessas);
+        respostas.forEach(resp => {
+          todasEntregas = [...todasEntregas, ...(resp.data.content || [])];
+        });
+      }
+      
+      console.log(`✅ Total de entregas carregadas: ${todasEntregas.length}`);
+      
+      return {
+        success: true,
+        data: todasEntregas
+      };
+    } catch (error) {
+      console.error("Erro ao buscar todas as entregas:", error);
+      return {
+        success: false,
+        error: error.response?.data?.message || "Erro ao buscar entregas"
       };
     }
   },

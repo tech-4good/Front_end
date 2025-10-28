@@ -45,15 +45,16 @@ export default function HistoricoDoacoes() {
 		setErro(null);
 		
 		try {
-			const result = await entregaService.listarEntregas();
+			console.log("📥 Buscando TODAS as entregas para histórico...");
+			const result = await entregaService.buscarTodasEntregas();
 			
 			if (result.success) {
-				console.log("✅ Entregas carregadas:", result.data);
+				console.log("✅ Entregas carregadas:", result.data.length, "entregas");
 				
-				// Backend retorna objeto paginado: { content: [], totalPages, totalElements, ... }
-				const dadosEntregas = result.data?.content || result.data || [];
+				// Agora result.data já é o array completo de entregas
+				const dadosEntregas = result.data || [];
 				
-				console.log("📦 Array de entregas extraído:", dadosEntregas);
+				console.log("📦 Array de entregas extraído:", dadosEntregas.length, "itens");
 				
 				// Processar entregas
 				const entregasProcessadas = dadosEntregas.map(entrega => ({
@@ -65,7 +66,7 @@ export default function HistoricoDoacoes() {
 					dataOriginal: entrega.dataRetirada // Para ordenação
 				}));
 				
-				console.log("✅ Entregas processadas:", entregasProcessadas);
+				console.log("✅ Entregas processadas:", entregasProcessadas.length, "entregas");
 				setEntregas(entregasProcessadas);
 			} else {
 				setErro(result.error || "Erro ao carregar histórico");
