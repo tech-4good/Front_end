@@ -73,8 +73,8 @@ jobs:
           ARGS: "-rltgoDzvO" 
           SOURCE: "./front-end/nginx/templates/"
 
-      # 6. Atualizar IP privado da API e reiniciar Nginx na Web1
-      - name: FE - Atualizar IP da API e reiniciar Nginx na Web1
+      # 6. Copiar template como conf e reiniciar Nginx na Web1
+      - name: FE - Copiar config e reiniciar Nginx na Web1
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WEB1_HOST }}
@@ -82,21 +82,18 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-
-            export IP_PORTA_API=${{ secrets.REMOTE_HOST_PRIVADO }}:8080
-            echo "Variável de IP e porta da API criada: $IP_PORTA_API"
             
-            envsubst '${IP_PORTA_API}' < /home/ubuntu/frontend/nginx/templates/default.conf.template > /home/ubuntu/frontend/nginx/conf.d/default.conf
-            echo "Arquivo default.conf do nginx criado com variável: $IP_PORTA_API"
+            # Copiar template para conf.d (já tem o IP fixo 10.0.0.20:8080)
+            cp /home/ubuntu/frontend/nginx/templates/default.conf.template /home/ubuntu/frontend/nginx/conf.d/default.conf
+            echo "✅ Arquivo default.conf copiado"
 
+            # Reiniciar Nginx
             docker compose -f /home/ubuntu/compose.yaml down
-            echo "Docker compose do Nginx parado"
-            
-            docker compose -f /home/ubuntu/compose.yaml up -d --build
-            echo "Docker compose do Nginx reiniciado"
+            docker compose -f /home/ubuntu/compose.yaml up -d
+            echo "✅ Docker compose do Nginx reiniciado"
 
-      # 7. Atualizar IP privado da API e reiniciar Nginx na Web2
-      - name: FE - Atualizar IP da API e reiniciar Nginx na Web2
+      # 7. Copiar template como conf e reiniciar Nginx na Web2
+      - name: FE - Copiar config e reiniciar Nginx na Web2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WEB2_HOST }}
@@ -104,16 +101,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-
-            export IP_PORTA_API=${{ secrets.REMOTE_HOST_PRIVADO }}:8080
-            echo "Variável de IP e porta da API criada: $IP_PORTA_API"
             
-            envsubst '${IP_PORTA_API}' < /home/ubuntu/frontend/nginx/templates/default.conf.template > /home/ubuntu/frontend/nginx/conf.d/default.conf
-            echo "Arquivo default.conf do nginx criado com variável: $IP_PORTA_API"
+            # Copiar template para conf.d (já tem o IP fixo 10.0.0.20:8080)
+            cp /home/ubuntu/frontend/nginx/templates/default.conf.template /home/ubuntu/frontend/nginx/conf.d/default.conf
+            echo "✅ Arquivo default.conf copiado"
 
+            # Reiniciar Nginx
             docker compose -f /home/ubuntu/compose.yaml down
-            echo "Docker compose do Nginx parado"
-            
-            docker compose -f /home/ubuntu/compose.yaml up -d --build
-            echo "Docker compose do Nginx reiniciado" 
+            docker compose -f /home/ubuntu/compose.yaml up -d
+            echo "✅ Docker compose do Nginx reiniciado" 
 
