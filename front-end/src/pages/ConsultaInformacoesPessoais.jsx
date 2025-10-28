@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
 import Modal from "../components/Modal";
 import { beneficiadoService } from "../services/beneficiadoService";
+import { getFotoBlobUrl } from "../services/fileService";
 import "../styles/Home.css"; 
 import "../styles/ConsultaInformacoesPessoais.css";
 import iconeCasa from "../assets/icone-casa.png";
@@ -16,6 +17,8 @@ export default function ConsultaInformacoesPessoais() {
 	const [carregando, setCarregando] = useState(true);
 	const [erro, setErro] = useState("");
 	const [beneficiado, setBeneficiado] = useState(null);
+	const [fotoBlobUrl, setFotoBlobUrl] = useState(null);
+	const [carregandoFoto, setCarregandoFoto] = useState(false);
 
 	const formatRenda = (value) => {
 		let v = value.replace(/\D/g, "");
@@ -55,6 +58,35 @@ export default function ConsultaInformacoesPessoais() {
 		setTipoUsuario(tipo);
 		carregarBeneficiado();
 	}, []);
+
+	// Carregar foto quando beneficiado for carregado
+	useEffect(() => {
+		const carregarFoto = async () => {
+			if (beneficiado?.fotoId) {
+				setCarregandoFoto(true);
+				try {
+					console.log('📸 Carregando foto ID:', beneficiado.fotoId);
+					const blobUrl = await getFotoBlobUrl(beneficiado.fotoId);
+					setFotoBlobUrl(blobUrl);
+					console.log('✅ Foto carregada com sucesso!');
+				} catch (error) {
+					console.error('❌ Erro ao carregar foto:', error);
+					setFotoBlobUrl(null); // Usar placeholder no render
+				} finally {
+					setCarregandoFoto(false);
+				}
+			}
+		};
+
+		carregarFoto();
+
+		// Cleanup: revogar blob URL quando componente desmontar
+		return () => {
+			if (fotoBlobUrl) {
+				URL.revokeObjectURL(fotoBlobUrl);
+			}
+		};
+	}, [beneficiado?.fotoId]);
 
 	const carregarBeneficiado = async () => {
 		setCarregando(true);
@@ -128,7 +160,7 @@ export default function ConsultaInformacoesPessoais() {
 				religiao: beneficiado.religiao || "",
 				renda: rendaFormatada,
 				cargo: beneficiado.cargo || "",
-				foto: null
+				fotoId: beneficiado.fotoId || null // ✅ ID numérico da foto (campo correto do backend)
 			};
 		}
 		
@@ -377,10 +409,30 @@ export default function ConsultaInformacoesPessoais() {
 						<input name="renda" value={dados.renda} onChange={handleChange} maxLength={15} />
 						<label>Cargo:</label>
 						<input name="cargo" value={dados.cargo} onChange={handleChange} />
-						<label>Foto do Beneficiado:</label>
-						<div className="consulta-info-foto">
-							<img src={foto3x4} alt="Foto do Beneficiado" style={{ width: "200px", height: "200px", objectFit: "cover", borderRadius: "10px" }} />
-						</div>
+					<label>Foto do Beneficiado:</label>
+					<div className="consulta-info-foto">
+						{carregandoFoto ? (
+							<div style={{ width: "200px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #ddd", borderRadius: "10px" }}>
+								<span>Carregando foto...</span>
+							</div>
+						) : fotoBlobUrl ? (
+							<img 
+								src={fotoBlobUrl}
+								alt="Foto do Beneficiado" 
+								style={{ width: "200px", height: "200px", objectFit: "cover", borderRadius: "10px" }}
+								onError={(e) => {
+									console.log('❌ Erro ao exibir foto - Usando placeholder');
+									e.target.src = foto3x4;
+								}}
+							/>
+						) : (
+							<img 
+								src={foto3x4} 
+								alt="Sem foto cadastrada" 
+								style={{ width: "200px", height: "200px", objectFit: "cover", borderRadius: "10px" }} 
+							/>
+						)}
+					</div>
 					</div>
 				</div>
 				<hr className="consulta-info-divisor" />

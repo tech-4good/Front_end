@@ -5,9 +5,10 @@
 const apiClient = axios.create({
   baseURL: 'http://app-load-balancer-79266106.us-east-1.elb.amazonaws.com/api', 
   timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // ⚠️ NÃO definir Content-Type aqui - deixar cada requisição definir o seu
+  // headers: {
+  //   'Content-Type': 'application/json',
+  // },
 });
 
 // Adicionar token automaticamente nas requisições
@@ -17,6 +18,13 @@ apiClient.interceptors.request.use(
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
     }
+    
+    // ✅ Se não for FormData, definir Content-Type como JSON
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+    // ✅ Se for FormData, deixar o axios definir automaticamente (multipart/form-data)
+    
     return config;
   },
   (error) => Promise.reject(error)

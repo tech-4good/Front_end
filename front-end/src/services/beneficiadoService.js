@@ -1,4 +1,5 @@
 import apiClient from '../provider/api.js';
+import fileService from './fileService.js';
 
 // Serviços para Beneficiados e Filhos
 export const beneficiadoService = {
@@ -319,6 +320,41 @@ export const beneficiadoService = {
         return 'SOLTEIRO';
       };
       
+      // ========================================
+      // PASSO 1: Upload da foto (se existir)
+      // ========================================
+      let fotoId = null;
+      
+      if (dadosBeneficiado.fotoBeneficiado) {
+        try {
+          console.log('📸 Foto detectada! Iniciando upload separado...');
+          console.log('   Tamanho da string Base64:', dadosBeneficiado.fotoBeneficiado.length, 'caracteres');
+          
+          // Fazer upload da foto para POST /files
+          fotoId = await fileService.uploadFoto(dadosBeneficiado.fotoBeneficiado, 'foto_beneficiado.jpg');
+          
+          console.log('✅ Foto enviada com sucesso!');
+          console.log('   ID da foto recebido:', fotoId);
+          
+        } catch (fotoError) {
+          console.error('❌ Erro ao fazer upload da foto:', fotoError);
+          
+          // Decidir se o erro de foto deve bloquear o cadastro ou não
+          // Por enquanto, vamos continuar sem foto e avisar o usuário
+          console.warn('⚠️ Continuando cadastro sem foto...');
+          fotoId = null;
+          
+          // Você pode descomentar a linha abaixo para bloquear o cadastro se a foto falhar
+          // throw new Error(`Falha no upload da foto: ${fotoError.message}`);
+        }
+      } else {
+        console.log('ℹ️ Nenhuma foto fornecida, continuando cadastro sem foto');
+      }
+      
+      // ========================================
+      // PASSO 2: Cadastrar beneficiado com fotoId
+      // ========================================
+      
       // Payload conforme BeneficiadoRequestDto para cadastro completo
       const payload = {
         nome: dadosBeneficiado.nome,
@@ -335,16 +371,17 @@ export const beneficiadoService = {
         cargo: dadosBeneficiado.cargo || '',
         religiao: dadosBeneficiado.religiao || '',
         enderecoId: dadosBeneficiado.enderecoId, // Integer - ID do endereço encontrado
-        quantidadeDependentes: parseInt(dadosBeneficiado.quantidadeDependentes) || 0
-        // Foto será tratada separadamente se necessário
+        quantidadeDependentes: parseInt(dadosBeneficiado.quantidadeDependentes) || 0,
+        fotoId: fotoId // ✅ ID retornado do upload (ou null se não tiver foto)
       };
 
       console.log('=== PAYLOAD FINAL COMPLETO ===');
       console.log('payload.estadoCivil:', payload.estadoCivil);
-      console.log('Payload completo:', payload);
+      console.log('payload.fotoId:', payload.fotoId);
+      console.log('payload.fotoBeneficiado REMOVIDO - Agora usando fotoId:', fotoId ? `ID ${fotoId}` : 'Sem foto');
+      console.log('Payload completo:', { ...payload });
 
       const response = await apiClient.post('/beneficiados', payload);
-      return { success: true, data: response.data };
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao cadastrar beneficiado completo:', error);

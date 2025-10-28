@@ -244,42 +244,13 @@ export default function DoarCesta() {
       if (resultado.success) {
         console.log("✅ Entrega registrada com sucesso no banco!");
         
-        // Atualizar estoque - decrementar 1 cesta
-        try {
-          console.log("📦 Cesta disponível antes da atualização:", cestaDisponivel);
-          console.log("🔢 Quantidade atual:", cestaDisponivel.quantidadeCestas);
-          
-          const quantidadeAtual = cestaDisponivel.quantidadeCestas || 0;
-          const novaQuantidade = Math.max(0, quantidadeAtual - 1); // Não deixar negativo
-          
-          console.log("🔢 Nova quantidade:", novaQuantidade);
-          
-          // Payload COMPLETO com todos os campos da cesta, alterando apenas quantidade
-          const dadosAtualizacao = {
-            tipo: cestaDisponivel.tipo,
-            quantidadeCestas: novaQuantidade,
-            pesoKg: cestaDisponivel.pesoKg,
-            dataEntradaEstoque: cestaDisponivel.dataEntradaEstoque
-          };
-          
-          console.log("📝 Dados para atualização do estoque:", dadosAtualizacao);
-          console.log("🔑 ID da cesta para atualizar:", cestaDisponivel.idCesta || cestaDisponivel.id);
-          
-          const resultadoEstoque = await cestaService.atualizarCesta(
-            cestaDisponivel.idCesta || cestaDisponivel.id, 
-            dadosAtualizacao
-          );
-          
-          if (resultadoEstoque.success) {
-            console.log("✅ Estoque atualizado com sucesso!", resultadoEstoque.data);
-            console.log("🎯 Quantidade nova no backend:", resultadoEstoque.data?.quantidadeCestas || "verificar");
-          } else {
-            console.warn("⚠️ Entrega registrada mas falha ao atualizar estoque:", resultadoEstoque.error);
-            console.warn("📊 Response completo:", resultadoEstoque);
-          }
-        } catch (errorEstoque) {
-          console.warn("⚠️ Entrega registrada mas erro ao atualizar estoque:", errorEstoque);
-        }
+        // ⚠️ IMPORTANTE: Não atualizamos o estoque automaticamente aqui
+        // Motivo: Existe uma constraint de FK entre entrega e cesta
+        // A cesta NÃO PODE ser deletada se houver entregas referenciando ela
+        // O backend deve gerenciar o estoque separadamente ou usar soft delete
+        
+        console.log("ℹ️ Estoque não foi decrementado automaticamente (evita erro de FK constraint)");
+        console.log("� Cesta utilizada na entrega:", cestaDisponivel.tipo, "- ID:", cestaDisponivel.idCesta || cestaDisponivel.id);
         
         setModalSucesso(true);
       } else {

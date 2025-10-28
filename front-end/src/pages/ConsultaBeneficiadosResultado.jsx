@@ -87,48 +87,48 @@ export default function ConsultaBeneficiadosResultado() {
   const carregarHistoricoBeneficiado = async (beneficiadoId) => {
     try {
       console.log('Carregando histórico para beneficiado ID:', beneficiadoId);
-      // Buscar entregas com paginação
-      const resposta = await entregaService.listarEntregas();
       
-      if (resposta.success) {
-        // Extrair do objeto paginado se necessário
-        const todasEntregas = resposta.data?.content || resposta.data || [];
-        console.log('Todas as entregas:', todasEntregas);
-        
-        // Filtrar entregas do beneficiado específico
-        const entregasDoBeneficiado = todasEntregas.filter(entrega => {
-          const entregaBeneficiadoId = 
-            entrega.beneficiado?.idBeneficiado || 
-            entrega.beneficiado?.id || 
-            entrega.beneficiadoId || 
-            entrega.idBeneficiado;
-          
-          return entregaBeneficiadoId === beneficiadoId;
-        });
-        
-        console.log('Entregas filtradas para o beneficiado:', entregasDoBeneficiado);
-        
-        // Ordenar por data
-        const entregasOrdenadas = entregasDoBeneficiado.sort((a, b) => {
-          // Converter array [ano, mes, dia] para timestamp
-          const getTimestamp = (entrega) => {
-            const dataArray = entrega.dataRetirada || entrega.dataEntrega;
-            if (Array.isArray(dataArray)) {
-              return new Date(dataArray[0], dataArray[1] - 1, dataArray[2]).getTime();
-            }
-            return new Date(dataArray).getTime();
-          };
-          
-          const timestampA = getTimestamp(a);
-          const timestampB = getTimestamp(b);
-          return ordem === 'desc' ? timestampB - timestampA : timestampA - timestampB;
-        });
-        
-        setRetiradas(entregasOrdenadas);
+      // ✅ Usar endpoint específico de histórico em vez de filtrar manualmente
+      const resposta = await entregaService.buscarHistorico(beneficiadoId);
+      
+      console.log('📦 Entregas do beneficiado retornadas pelo backend:', resposta);
+      
+      // ✅ Backend pode retornar objeto paginado {content: [...]} ou array direto
+      let entregasDoBeneficiado = [];
+      
+      if (Array.isArray(resposta)) {
+        entregasDoBeneficiado = resposta;
+      } else if (resposta?.content && Array.isArray(resposta.content)) {
+        entregasDoBeneficiado = resposta.content;
       } else {
-        console.error('Erro ao carregar histórico:', resposta.error);
+        console.warn('⚠️ Formato de resposta inesperado:', resposta);
         setRetiradas([]);
+        return;
       }
+      
+      if (entregasDoBeneficiado.length === 0) {
+        console.log('ℹ️ Nenhuma entrega encontrada para este beneficiado');
+        setRetiradas([]);
+        return;
+      }
+      
+      // Ordenar por data
+      const entregasOrdenadas = entregasDoBeneficiado.sort((a, b) => {
+        // Converter array [ano, mes, dia] para timestamp
+        const getTimestamp = (entrega) => {
+          const dataArray = entrega.dataRetirada || entrega.dataEntrega;
+          if (Array.isArray(dataArray)) {
+            return new Date(dataArray[0], dataArray[1] - 1, dataArray[2]).getTime();
+          }
+          return new Date(dataArray).getTime();
+        };
+        
+        const timestampA = getTimestamp(a);
+        const timestampB = getTimestamp(b);
+        return ordem === 'desc' ? timestampB - timestampA : timestampA - timestampB;
+      });
+      
+      setRetiradas(entregasOrdenadas);
     } catch (error) {
       console.error('Erro ao carregar histórico do beneficiário:', error);
       setRetiradas([]);
