@@ -29,44 +29,90 @@ jobs:
         working-directory: ./front-end
 
       # 4. Deploy para Web1
-      - name: FE - Deploy para Web1
+      - name: FE - Deploy dist para Web1
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.WEB1_HOST }}
           REMOTE_USER: ubuntu
           TARGET: /home/ubuntu/frontend
-          ARGS: "-rltgoDzvO --delete" 
+          ARGS: "-rltgoDzvO --delete --exclude=nginx/" 
           SOURCE: "./front-end/dist/"
 
+      # 4.1 Deploy template nginx para Web1
+      - name: FE - Deploy template nginx para Web1
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.WEB1_HOST }}
+          REMOTE_USER: ubuntu
+          TARGET: /home/ubuntu/frontend/nginx/templates/
+          ARGS: "-rltgoDzvO" 
+          SOURCE: "./front-end/nginx/templates/"
+
       # 5. Deploy para Web2
-      - name: FE - Deploy para Web2
+      - name: FE - Deploy dist para Web2
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.WEB2_HOST }}
           REMOTE_USER: ubuntu
           TARGET: /home/ubuntu/frontend
-          ARGS: "-rltgoDzvO --delete" 
+          ARGS: "-rltgoDzvO --delete --exclude=nginx/" 
           SOURCE: "./front-end/dist/"
 
-      # 6. Reiniciar NGINX na Web1
-      - name: Reiniciar NGINX na Web1
-        uses: appleboy/ssh-action@master
+      # 5.1 Deploy template nginx para Web2
+      - name: FE - Deploy template nginx para Web2
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.WEB2_HOST }}
+          REMOTE_USER: ubuntu
+          TARGET: /home/ubuntu/frontend/nginx/templates/
+          ARGS: "-rltgoDzvO" 
+          SOURCE: "./front-end/nginx/templates/"
+
+      # 6. Atualizar IP privado da API e reiniciar Nginx na Web1
+      - name: FE - Atualizar IP da API e reiniciar Nginx na Web1
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WEB1_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker compose -f /home/ubuntu/compose.yaml restart
+            set -e
 
-      # 7. Reiniciar NGINX na Web2
-      - name: Reiniciar NGINX na Web2
-        uses: appleboy/ssh-action@master
+            export IP_PORTA_API=${{ secrets.REMOTE_HOST_PRIVADO }}:8080
+            echo "Variável de IP e porta da API criada: $IP_PORTA_API"
+            
+            envsubst '${IP_PORTA_API}' < /home/ubuntu/frontend/nginx/templates/default.conf.template > /home/ubuntu/frontend/nginx/conf.d/default.conf
+            echo "Arquivo default.conf do nginx criado com variável: $IP_PORTA_API"
+
+            docker compose -f /home/ubuntu/compose.yaml down
+            echo "Docker compose do Nginx parado"
+            
+            docker compose -f /home/ubuntu/compose.yaml up -d --build
+            echo "Docker compose do Nginx reiniciado"
+
+      # 7. Atualizar IP privado da API e reiniciar Nginx na Web2
+      - name: FE - Atualizar IP da API e reiniciar Nginx na Web2
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WEB2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker compose -f /home/ubuntu/compose.yaml restart 
+            set -e
+
+            export IP_PORTA_API=${{ secrets.REMOTE_HOST_PRIVADO }}:8080
+            echo "Variável de IP e porta da API criada: $IP_PORTA_API"
+            
+            envsubst '${IP_PORTA_API}' < /home/ubuntu/frontend/nginx/templates/default.conf.template > /home/ubuntu/frontend/nginx/conf.d/default.conf
+            echo "Arquivo default.conf do nginx criado com variável: $IP_PORTA_API"
+
+            docker compose -f /home/ubuntu/compose.yaml down
+            echo "Docker compose do Nginx parado"
+            
+            docker compose -f /home/ubuntu/compose.yaml up -d --build
+            echo "Docker compose do Nginx reiniciado" 
 
