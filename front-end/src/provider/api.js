@@ -1,7 +1,7 @@
 ﻿import axios from 'axios';
 
 
-// Criar uma instância do axios com proxy reverso
+// Criar uma instância do axios com proxy reverso!
 const apiClient = axios.create({
   baseURL: '/api', // Usa proxy reverso configurado no Vite (dev) e no Nginx (produção)
   timeout: 10000,
