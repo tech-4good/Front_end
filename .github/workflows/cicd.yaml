@@ -83,6 +83,10 @@ jobs:
           script: |
             set -e
             
+            # Garantir que o diretório conf.d existe e tem permissões corretas
+            sudo mkdir -p /home/ubuntu/frontend/nginx/conf.d
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/frontend/nginx
+            
             # Copiar template para conf.d (já tem o IP fixo 10.0.0.20:8080)
             cp /home/ubuntu/frontend/nginx/templates/default.conf.template /home/ubuntu/frontend/nginx/conf.d/default.conf
             echo "✅ Arquivo default.conf copiado"
@@ -101,6 +105,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
+            
+            # Garantir que o diretório conf.d existe e tem permissões corretas
+            sudo mkdir -p /home/ubuntu/frontend/nginx/conf.d
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/frontend/nginx
             
             # Copiar template para conf.d (já tem o IP fixo 10.0.0.20:8080)
             cp /home/ubuntu/frontend/nginx/templates/default.conf.template /home/ubuntu/frontend/nginx/conf.d/default.conf
