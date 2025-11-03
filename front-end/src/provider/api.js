@@ -1,7 +1,7 @@
 ﻿import axios from 'axios';
 
 
-// Criar uma instância do axios com proxy reverso!
+// Criar uma instância do axios
 const apiClient = axios.create({
   baseURL: '/api', // Usa proxy reverso configurado no Vite (dev) e no Nginx (produção)
   timeout: 10000,
@@ -14,9 +14,22 @@ const apiClient = axios.create({
 // Adicionar token automaticamente nas requisições
 apiClient.interceptors.request.use(
   (config) => {
-    const authToken = sessionStorage.getItem('authToken');
-    if (authToken) {
-      config.headers.Authorization = `Bearer ${authToken}`;
+    // 🔓 Rotas públicas que NÃO precisam de autenticação
+    const rotasPublicas = [
+      '/voluntarios/login',
+      '/voluntarios/cadastrar',
+      '/voluntarios/solicitar-redefinicao-senha'
+    ];
+    
+    // Verifica se a URL da requisição é uma rota pública
+    const isRotaPublica = rotasPublicas.some(rota => config.url.includes(rota));
+    
+    // 🔐 Apenas adiciona token se NÃO for rota pública
+    if (!isRotaPublica) {
+      const authToken = sessionStorage.getItem('authToken');
+      if (authToken) {
+        config.headers.Authorization = `Bearer ${authToken}`;
+      }
     }
     
     // ✅ Se não for FormData, definir Content-Type como JSON

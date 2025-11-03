@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Input from "../components/Input";
 import Botao from "../components/Botao";
+import { authService } from "../services/authService";
 import "../styles/RecuperarSenha.css";
 
 const RecuperarSenha = () => {
@@ -12,6 +13,7 @@ const RecuperarSenha = () => {
   const [email, setEmail] = useState("");
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
   const [modalTimeout, setModalTimeout] = useState(null);
+  const [carregando, setCarregando] = useState(false);
 
   const handleVoltarLogin = () => {
     navigate("/");
@@ -21,8 +23,8 @@ const RecuperarSenha = () => {
     navigate("/");
   };
 
-  const handleEnviarEmail = () => {
-    const emailCadastrado = "teste@teste.com";
+  const handleEnviarEmail = async () => {
+    // Validação básica
     if (!email.trim()) {
       setModalErro({ open: true, mensagem: "Preencha o campo de e-mail." });
       if (modalTimeout) clearTimeout(modalTimeout);
@@ -30,14 +32,47 @@ const RecuperarSenha = () => {
       setModalTimeout(timeout);
       return;
     }
-    if (email !== emailCadastrado) {
-      setModalErro({ open: true, mensagem: "E-mail não cadastrado." });
+
+    // Validação de formato de e-mail
+    const validacaoEmail = authService.validarEmail(email);
+    if (!validacaoEmail.valido) {
+      setModalErro({ open: true, mensagem: validacaoEmail.erro });
       if (modalTimeout) clearTimeout(modalTimeout);
       const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
       setModalTimeout(timeout);
       return;
     }
-    setCurrentPage("feedback");
+
+    setCarregando(true);
+
+    try {
+      const resultado = await authService.solicitarRecuperacaoSenha(email);
+      
+      if (resultado.sucesso) {
+        setCurrentPage("feedback");
+      } else {
+        setModalErro({ 
+          open: true, 
+          mensagem: resultado.mensagem || "Erro ao enviar e-mail de recuperação." 
+        });
+        if (modalTimeout) clearTimeout(modalTimeout);
+        const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
+        setModalTimeout(timeout);
+      }
+    } catch (erro) {
+      console.error("Erro ao solicitar recuperação:", erro);
+      // Usar a mensagem de erro que vem da exceção
+      const mensagemErro = erro.message || "Erro inesperado ao processar solicitação. Tente novamente.";
+      setModalErro({ 
+        open: true, 
+        mensagem: mensagemErro
+      });
+      if (modalTimeout) clearTimeout(modalTimeout);
+      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
+      setModalTimeout(timeout);
+    } finally {
+      setCarregando(false);
+    }
   };
 
   if (currentPage === "feedback") {
@@ -87,7 +122,11 @@ const RecuperarSenha = () => {
               placeholder="email@dominio.com"
             />
             <div className="botao-container">
-              <Botao texto="Enviar" onClick={handleEnviarEmail} />
+              <Botao 
+                texto={carregando ? "Enviando..." : "Enviar"} 
+                onClick={handleEnviarEmail}
+                disabled={carregando}
+              />
             </div>
           </div>
         </div>
