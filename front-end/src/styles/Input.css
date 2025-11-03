@@ -84,3 +84,15 @@
 .password-field {
   letter-spacing: 0.1em;
 }
+
+/* 🌐 Estilos para campos desabilitados (preenchidos automaticamente pelo ViaCep) */
+.input-personalizado:disabled {
+  background: #e8e8e8;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.input-personalizado:disabled::placeholder {
+  color: #999;
+}
+

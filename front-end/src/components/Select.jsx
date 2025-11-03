@@ -2,7 +2,7 @@
 import React from "react";
 import "../styles/Select.css";
 
-const Select = ({ label, options = [], value, onChange, placeholder, name, id, className }) => {
+const Select = ({ label, options = [], value, onChange, placeholder, name, id, className, disabled, style, ...props }) => {
 		return (
 			<div className="select-group">
 				{label && <label className="select-label">{label}</label>}
@@ -13,6 +13,9 @@ const Select = ({ label, options = [], value, onChange, placeholder, name, id, c
 						className={`select-personalizado ${className || ''}`}
 						value={value}
 						onChange={onChange}
+						disabled={disabled}
+						style={style}
+						{...props}
 					>
 						{placeholder && (
 							<option value="" disabled>{placeholder}</option>

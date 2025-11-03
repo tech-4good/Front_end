@@ -12,6 +12,7 @@ import Select from "../components/Select";
 import Botao from "../components/Botao";
 import Modal from "../components/Modal";
 import { beneficiadoService } from "../services/beneficiadoService";
+import { enderecoService } from "../services/enderecoService";
 import "../styles/CadastroEndereco.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeRelogio from "../assets/icone-relogio.png";
@@ -49,6 +50,11 @@ export default function CadastroEndereco() {
   const [mensagemErro, setMensagemErro] = useState("");
   const [loading, setCadastrando] = useState(false);
   const [enderecoId, setEnderecoId] = useState(null);
+  
+  // Estados para controle da busca de CEP
+  const [loadingCep, setLoadingCep] = useState(false);
+  const [cepEncontrado, setCepEncontrado] = useState(false);
+  const [camposEditaveis, setCamposEditaveis] = useState(true);
 
   const handleInputChange = (field, value, maskType = null) => {
     let processedValue = value;
@@ -62,6 +68,89 @@ export default function CadastroEndereco() {
       [field]: processedValue,
     }));
   };
+
+  // 🌐 Função para buscar CEP via ViaCep
+  const buscarEnderecoPorCep = async (cep) => {
+    // Remove caracteres não numéricos
+    const cepLimpo = cep.replace(/\D/g, '');
+    
+    // Só busca se tiver 8 dígitos
+    if (cepLimpo.length !== 8) {
+      return;
+    }
+    
+    setLoadingCep(true);
+    setCepEncontrado(false);
+    
+    try {
+      console.log('🌐 Buscando CEP:', cepLimpo);
+      
+      const resultado = await enderecoService.buscarCep(cepLimpo);
+      
+      if (resultado.success) {
+        const dados = resultado.data;
+        console.log('✅ Endereço encontrado:', dados);
+        
+        // Extrai apenas a sigla do estado (ex: "SP - São Paulo" → "SP")
+        const estadoSigla = dados.estado ? dados.estado.split(' - ')[0].trim() : '';
+        
+        // Preenche os campos automaticamente
+        setFormData((prev) => ({
+          ...prev,
+          rua: dados.logradouro || '',
+          bairro: dados.bairro || '',
+          cidade: dados.cidade || '',
+          estado: estadoSigla,
+          complemento: dados.complemento || prev.complemento // Mantém o que usuário digitou se ViaCep não retornar
+        }));
+        
+        setCepEncontrado(true);
+        
+        // Se algum campo vier vazio, permite edição
+        if (!dados.logradouro || !dados.bairro) {
+          setCamposEditaveis(true);
+          console.log('⚠️ Alguns campos não encontrados, permitindo edição manual');
+        } else {
+          setCamposEditaveis(false);
+        }
+        
+        // Feedback visual de sucesso (opcional)
+        // Você pode adicionar uma mensagem de sucesso aqui se quiser
+        
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar CEP:', error);
+      setMensagemErro(error.message || 'Erro ao buscar CEP. Preencha manualmente.');
+      setModalErro(true);
+      
+      // Permite edição manual em caso de erro
+      setCamposEditaveis(true);
+      
+      // Limpa os campos preenchidos automaticamente
+      setFormData((prev) => ({
+        ...prev,
+        rua: '',
+        bairro: '',
+        cidade: '',
+        estado: ''
+      }));
+    } finally {
+      setLoadingCep(false);
+    }
+  };
+
+  // 🔄 Effect para buscar CEP automaticamente quando usuário digitar 8 dígitos
+  useEffect(() => {
+    const cepLimpo = formData.cep.replace(/\D/g, '');
+    
+    if (cepLimpo.length === 8) {
+      buscarEnderecoPorCep(formData.cep);
+    } else {
+      // Se CEP for apagado ou incompleto, permite edição de todos os campos
+      setCamposEditaveis(true);
+      setCepEncontrado(false);
+    }
+  }, [formData.cep]);
 
   // Função para converter data DD/MM/AAAA para YYYY-MM-DD
   const convertDateToISO = (dateStr) => {
@@ -205,7 +294,6 @@ export default function CadastroEndereco() {
     
     const mappedKey = labelMapping[label];
     if (mappedKey) {
-      console.log(`Mapeando label "${label}" para chave "${mappedKey}"`);
       return mappedKey;
     }
     
@@ -425,9 +513,38 @@ export default function CadastroEndereco() {
       {page === 1 && (
         <div className="cadastro-container">
           <form className="cadastro-form" onSubmit={(e) => { e.preventDefault(); handleNextPage(); }}>
+            {/* Linha do CEP - movida para o topo */}
+            <div className="cadastro-row">
+              <div className="cadastro-field"></div>
+              <div className="cadastro-field">
+                <Input
+                  label="CEP"
+                  type="text"
+                  value={formData.cep || ""}
+                  onChange={(e) => handleInputChange("cep", e.target.value, "cep")}
+                  placeholder="00000-000"
+                  maxLength={9}
+                />
+                {loadingCep && (
+                  <span style={{ color: '#ffc107', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    ⏳ Buscando CEP...
+                  </span>
+                )}
+                {cepEncontrado && !loadingCep && (
+                  <span style={{ color: '#28a745', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    ✅ Endereço encontrado!
+                  </span>
+                )}
+              </div>
+              <div className="cadastro-field"></div>
+            </div>
+
+            {/* Rua e Número */}
             <div className="cadastro-row">
               {inputsFirstStep.slice(0, 2).map((input) => {
                 const fieldKey = getFieldKey(input.label);
+                const isAddressField = ['rua', 'bairro', 'cidade', 'estado'].includes(fieldKey);
+                
                 return (
                   <div className="cadastro-field" key={input.label}>
                     <Input
@@ -437,15 +554,23 @@ export default function CadastroEndereco() {
                       onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
                       placeholder={input.placeholder}
                       maxLength={input.mask === "cep" ? 9 : undefined}
+                      disabled={isAddressField && !camposEditaveis && cepEncontrado}
+                      style={isAddressField && !camposEditaveis && cepEncontrado ? {
+                        backgroundColor: '#f0f0f0',
+                        cursor: 'not-allowed'
+                      } : {}}
                     />
                   </div>
                 );
               })}
             </div>
 
+            {/* Complemento e Bairro */}
             <div className="cadastro-row">
               {inputsFirstStep.slice(2, 4).map((input) => {
                 const fieldKey = getFieldKey(input.label);
+                const isAddressField = ['rua', 'bairro', 'cidade', 'estado'].includes(fieldKey);
+                
                 return (
                   <div className="cadastro-field" key={input.label}>
                     <Input
@@ -454,15 +579,25 @@ export default function CadastroEndereco() {
                       value={formData[fieldKey] || ""}
                       onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
                       placeholder={input.placeholder}
+                      disabled={isAddressField && !camposEditaveis && cepEncontrado}
+                      style={isAddressField && !camposEditaveis && cepEncontrado ? {
+                        backgroundColor: '#f0f0f0',
+                        cursor: 'not-allowed'
+                      } : {}}
                     />
                   </div>
                 );
               })}
             </div>
 
+            {/* Cidade e Estado */}
             <div className="cadastro-row">
               {inputsFirstStep.slice(4, 6).map((input) => {
                 const fieldKey = getFieldKey(input.label);
+                // Estado sempre editável, outros campos (rua, bairro, cidade) podem ser bloqueados
+                const isAddressField = ['rua', 'bairro', 'cidade'].includes(fieldKey);
+                const shouldDisable = isAddressField && !camposEditaveis && cepEncontrado;
+                
                 return (
                   <div className="cadastro-field" key={input.label}>
                     {input.inputType === "select" ? (
@@ -472,6 +607,11 @@ export default function CadastroEndereco() {
                         value={formData[fieldKey] || ""}
                         onChange={(e) => handleInputChange(fieldKey, e.target.value)}
                         placeholder={input.placeholder}
+                        disabled={shouldDisable}
+                        style={shouldDisable ? {
+                          backgroundColor: '#f0f0f0',
+                          cursor: 'not-allowed'
+                        } : {}}
                       />
                     ) : (
                       <Input
@@ -480,27 +620,29 @@ export default function CadastroEndereco() {
                         value={formData[fieldKey] || ""}
                         onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
                         placeholder={input.placeholder}
+                        disabled={shouldDisable}
+                        style={shouldDisable ? {
+                          backgroundColor: '#f0f0f0',
+                          cursor: 'not-allowed'
+                        } : {}}
                       />
                     )}
                   </div>
                 );
               })}
             </div>
-
-            <div className="cadastro-row">
-              <div className="cadastro-field"></div>
-              <div className="cadastro-field">
-                <Input
-                  label="CEP"
-                  type="text"
-                  value={formData.cep || ""}
-                  onChange={(e) => handleInputChange("cep", e.target.value, "cep")}
-                  placeholder="06432-345"
-                  maxLength={9}
-                />
+            
+            {!camposEditaveis && cepEncontrado && (
+              <div style={{ 
+                textAlign: 'center', 
+                color: '#6c757d', 
+                fontSize: '13px', 
+                marginTop: '10px',
+                marginBottom: '10px'
+              }}>
+                ℹ️ Rua, Bairro e Cidade foram preenchidos automaticamente. Estado, Número e Complemento podem ser editados.
               </div>
-              <div className="cadastro-field"></div>
-            </div>
+            )}
 
             <Botao texto="Próximo" type="submit" className="cadastro-btn" />
           </form>

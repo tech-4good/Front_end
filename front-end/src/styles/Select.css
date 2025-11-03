@@ -37,3 +37,12 @@
 	color: #222;
 	padding: 12px 20px;
 }
+
+/* 🌐 Estilos para selects desabilitados (preenchidos automaticamente pelo ViaCep) */
+.select-personalizado:disabled {
+	background: #e8e8e8;
+	color: #666;
+	cursor: not-allowed;
+	border-color: #ccc;
+}
+
