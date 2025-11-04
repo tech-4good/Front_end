@@ -18,7 +18,8 @@ apiClient.interceptors.request.use(
     const rotasPublicas = [
       '/voluntarios/login',
       '/voluntarios/cadastrar',
-      '/voluntarios/solicitar-redefinicao-senha'
+      '/voluntarios/solicitar-redefinicao-senha',
+      '/voluntarios/redefinir-senha',
     ];
     
     // Verifica se a URL da requisição é uma rota pública
