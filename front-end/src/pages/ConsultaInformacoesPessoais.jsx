@@ -62,7 +62,8 @@ export default function ConsultaInformacoesPessoais() {
 	// Carregar foto quando beneficiado for carregado
 	useEffect(() => {
 		const carregarFoto = async () => {
-			if (beneficiado?.fotoId) {
+			// Verifica se fotoId existe e é válido (não é null, undefined, 0 ou string vazia)
+			if (beneficiado?.fotoId && beneficiado.fotoId !== 0 && beneficiado.fotoId !== '') {
 				setCarregandoFoto(true);
 				try {
 					console.log('📸 Carregando foto ID:', beneficiado.fotoId);
@@ -75,6 +76,10 @@ export default function ConsultaInformacoesPessoais() {
 				} finally {
 					setCarregandoFoto(false);
 				}
+			} else {
+				console.log('ℹ️ Beneficiado sem foto cadastrada (fotoId:', beneficiado?.fotoId, ')');
+				setFotoBlobUrl(null); // Garantir que não tem foto
+				setCarregandoFoto(false);
 			}
 		};
 
@@ -426,11 +431,24 @@ export default function ConsultaInformacoesPessoais() {
 								}}
 							/>
 						) : (
-							<img 
-								src={foto3x4} 
-								alt="Sem foto cadastrada" 
-								style={{ width: "200px", height: "200px", objectFit: "cover", borderRadius: "10px" }} 
-							/>
+							<div style={{ 
+								width: "200px", 
+								height: "200px", 
+								display: "flex", 
+								flexDirection: "column",
+								alignItems: "center", 
+								justifyContent: "center", 
+								border: "2px dashed #ddd", 
+								borderRadius: "10px",
+								backgroundColor: "#f9f9f9",
+								color: "#999",
+								textAlign: "center",
+								padding: "20px"
+							}}>
+								<span style={{ fontSize: "40px", marginBottom: "10px" }}>📷</span>
+								<span style={{ fontSize: "20px" }}>Sem foto cadastrada</span>
+							
+							</div>
 						)}
 					</div>
 					</div>

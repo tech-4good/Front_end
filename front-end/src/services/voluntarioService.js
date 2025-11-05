@@ -19,14 +19,60 @@ export const voluntarioService = {
       
       let mensagem = 'Erro interno do servidor';
       
-      if (error.response?.data?.message) {
-        mensagem = error.response.data.message;
-      } else if (error.response?.status === 400) {
-        mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
+      // Extrair mensagem de erro do backend (pode estar em diferentes lugares)
+      const errorMsg = error.response?.data?.message || 
+                      error.response?.data?.error || 
+                      error.message || 
+                      '';
+      
+      console.log('Mensagem de erro capturada:', errorMsg); // Debug
+      
+      // Verificar se é erro de duplicação (pode vir em erro 500, 409 ou 400)
+      if (errorMsg.toLowerCase().includes('duplicate entry') || 
+          errorMsg.toLowerCase().includes('duplicat')) {
+        
+        // Extrair o email da mensagem de erro se possível
+        const emailMatch = errorMsg.match(/'([^']*@[^']*)'/);
+        const emailDuplicado = emailMatch ? emailMatch[1] : '';
+        
+        if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('e-mail') || emailDuplicado) {
+          mensagem = emailDuplicado 
+            ? `O e-mail "${emailDuplicado}" já está cadastrado no sistema.`
+            : 'Este e-mail já está cadastrado no sistema.';
+        } else if (errorMsg.toLowerCase().includes('cpf')) {
+          mensagem = 'Este CPF já está cadastrado no sistema.';
+        } else {
+          mensagem = 'Já existe um cadastro com estes dados no sistema.';
+        }
+      } 
+      // Tratamento específico por status HTTP
+      else if (error.response?.status === 400) {
+        if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('e-mail')) {
+          mensagem = 'Este e-mail já está cadastrado no sistema.';
+        } else if (errorMsg.toLowerCase().includes('cpf')) {
+          mensagem = 'Este CPF já está cadastrado no sistema.';
+        } else if (errorMsg) {
+          mensagem = errorMsg;
+        } else {
+          mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
+        }
       } else if (error.response?.status === 409) {
-        mensagem = 'Este e-mail ou CPF já está cadastrado.';
+        // Status 409 = Conflict (recurso já existe)
+        if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('e-mail')) {
+          mensagem = 'Este e-mail já está cadastrado no sistema.';
+        } else if (errorMsg.toLowerCase().includes('cpf')) {
+          mensagem = 'Este CPF já está cadastrado no sistema.';
+        } else {
+          mensagem = 'Este e-mail ou CPF já está cadastrado no sistema.';
+        }
+      } else if (error.response?.status === 500) {
+        // Se não foi duplicação e é erro 500, mensagem genérica
+        mensagem = 'Erro interno do servidor. Tente novamente mais tarde.';
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
+      } else if (errorMsg) {
+        // Usar mensagem do backend se disponível
+        mensagem = errorMsg;
       }
       
       return { success: false, error: mensagem };
