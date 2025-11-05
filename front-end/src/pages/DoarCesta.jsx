@@ -244,13 +244,49 @@ export default function DoarCesta() {
       if (resultado.success) {
         console.log("✅ Entrega registrada com sucesso no banco!");
         
-        // ⚠️ IMPORTANTE: Não atualizamos o estoque automaticamente aqui
-        // Motivo: Existe uma constraint de FK entre entrega e cesta
-        // A cesta NÃO PODE ser deletada se houver entregas referenciando ela
-        // O backend deve gerenciar o estoque separadamente ou usar soft delete
+        // ✅ DECREMENTAR ESTOQUE
+        const cestaId = cestaDisponivel.idCesta || cestaDisponivel.id;
+        const quantidadeAtual = cestaDisponivel.quantidadeCestas || cestaDisponivel.quantidade;
         
-        console.log("ℹ️ Estoque não foi decrementado automaticamente (evita erro de FK constraint)");
-        console.log("� Cesta utilizada na entrega:", cestaDisponivel.tipo, "- ID:", cestaDisponivel.idCesta || cestaDisponivel.id);
+        console.log("📦 Decrementando estoque da cesta ID:", cestaId);
+        console.log("📦 Quantidade atual:", quantidadeAtual);
+        console.log("📦 Nova quantidade:", quantidadeAtual - 1);
+        
+        // Validar se temos a quantidade
+        if (quantidadeAtual === undefined || quantidadeAtual === null) {
+          console.error("❌ Quantidade atual não encontrada, buscando dados completos da cesta...");
+          
+          // Buscar dados completos da cesta
+          const dadosCesta = await cestaService.buscarPorId(cestaId);
+          if (dadosCesta.success && dadosCesta.data) {
+            const novaQuantidade = dadosCesta.data.quantidadeCestas - 1;
+            console.log("📦 Quantidade obtida do banco:", dadosCesta.data.quantidadeCestas);
+            console.log("📦 Nova quantidade calculada:", novaQuantidade);
+            
+            const atualizacaoEstoque = await cestaService.atualizarCesta(cestaId, {
+              quantidadeCestas: novaQuantidade
+            });
+            
+            if (atualizacaoEstoque.success) {
+              console.log("✅ Estoque atualizado com sucesso!");
+            } else {
+              console.warn("⚠️ Entrega registrada mas falha ao atualizar estoque:", atualizacaoEstoque.error);
+            }
+          } else {
+            console.error("❌ Não foi possível buscar dados da cesta para atualizar estoque");
+          }
+        } else {
+          // Temos a quantidade, atualizar diretamente
+          const atualizacaoEstoque = await cestaService.atualizarCesta(cestaId, {
+            quantidadeCestas: quantidadeAtual - 1
+          });
+          
+          if (atualizacaoEstoque.success) {
+            console.log("✅ Estoque atualizado com sucesso!");
+          } else {
+            console.warn("⚠️ Entrega registrada mas falha ao atualizar estoque:", atualizacaoEstoque.error);
+          }
+        }
         
         setModalSucesso(true);
       } else {
