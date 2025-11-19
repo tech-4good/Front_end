@@ -1,5 +1,29 @@
 import api from "../provider/api";
 
+// Função auxiliar para converter data do backend (array ou string) para Date
+const converterDataBackend = (data) => {
+  if (!data) return null;
+  
+  // Se é array [ano, mes, dia]
+  if (Array.isArray(data)) {
+    const [ano, mes, dia] = data;
+    // Mês no JavaScript é 0-indexed, mas backend envia 1-indexed
+    return new Date(ano, mes - 1, dia);
+  }
+  
+  // Se é string ISO
+  if (typeof data === 'string') {
+    return new Date(data);
+  }
+  
+  // Se já é Date
+  if (data instanceof Date) {
+    return data;
+  }
+  
+  return null;
+};
+
 const dashboardService = {
   // Buscar métricas gerais do dashboard
   async buscarMetricas() {
@@ -72,9 +96,10 @@ const dashboardService = {
   },
 
   // Buscar estatísticas gerais usando endpoints existentes
-  async buscarEstatisticasGerais(filtro = "Última Semana") {
+  async buscarEstatisticasGerais(filtro = "Última Semana", dataInicioCustom = null, dataFimCustom = null) {
     try {
       console.log("📊 Buscando estatísticas com filtro:", filtro);
+      console.log("📅 Datas customizadas:", { dataInicioCustom, dataFimCustom });
       
       // Adicionar timestamp para evitar cache
       const timestamp = new Date().getTime();
@@ -107,37 +132,77 @@ const dashboardService = {
       amanha.setDate(amanha.getDate() + 1);
       
       let dataInicio = new Date(hoje);
+      let dataFim = amanha;
       
-      switch(filtro) {
-        case "Última Semana":
-          dataInicio.setDate(hoje.getDate() - 7);
-          break;
-        case "Último Mês":
-          dataInicio.setMonth(hoje.getMonth() - 1);
-          break;
-        case "Último Ano":
-          dataInicio.setFullYear(hoje.getFullYear() - 1);
-          break;
-        case "Todos":
-          // Pegar desde o início dos tempos (ano 2000)
-          dataInicio = new Date(2000, 0, 1);
-          break;
-        default:
-          dataInicio.setDate(hoje.getDate() - 7);
+      // Se for período customizado, usar as datas fornecidas
+      if (filtro === "Período Customizado" && dataInicioCustom && dataFimCustom) {
+        dataInicio = new Date(dataInicioCustom);
+        dataInicio.setHours(0, 0, 0, 0);
+        
+        dataFim = new Date(dataFimCustom);
+        dataFim.setHours(23, 59, 59, 999);
+        
+        console.log("📅 Usando período customizado:", {
+          inicio: dataInicio.toLocaleDateString('pt-BR'),
+          fim: dataFim.toLocaleDateString('pt-BR')
+        });
+      } else {
+        // Usar lógica padrão de filtros
+        switch(filtro) {
+          case "Última Semana":
+            dataInicio.setDate(hoje.getDate() - 7);
+            break;
+          case "Último Mês":
+            dataInicio.setMonth(hoje.getMonth() - 1);
+            break;
+          case "Último Ano":
+            dataInicio.setFullYear(hoje.getFullYear() - 1);
+            break;
+          case "Todos":
+            // Pegar desde o início dos tempos (ano 2000)
+            dataInicio = new Date(2000, 0, 1);
+            break;
+          default:
+            dataInicio.setDate(hoje.getDate() - 7);
+        }
+        
+        dataInicio.setHours(0, 0, 0, 0); // Início do dia
       }
-      
-      dataInicio.setHours(0, 0, 0, 0); // Início do dia
 
       console.log("📅 Período de análise:", {
         dataInicio: dataInicio.toLocaleDateString('pt-BR'),
-        dataFim: amanha.toLocaleDateString('pt-BR'),
+        dataFim: dataFim.toLocaleDateString('pt-BR'),
         filtro
       });
 
-      // Filtrar entregas do período (incluindo até amanhã para pegar registros de hoje)
+      // DEBUG: Mostrar TODAS as entregas ANTES do filtro
+      console.log("📦 Todas as entregas (antes do filtro):");
+      todasEntregas.forEach((entrega, index) => {
+        const dataArray = entrega.dataRetirada || entrega.data_retirada;
+        const dataConvertida = converterDataBackend(dataArray);
+        console.log(`  ${index + 1}. Data Array: ${JSON.stringify(dataArray)} → Date: ${dataConvertida?.toLocaleDateString('pt-BR')} → Timestamp: ${dataConvertida?.getTime()}`);
+      });
+      
+      console.log("📅 Range de busca:", {
+        inicioTimestamp: dataInicio.getTime(),
+        fimTimestamp: dataFim.getTime()
+      });
+
+      // Filtrar entregas do período
       const entregasPeriodo = todasEntregas.filter(e => {
-        const dataEntrega = new Date(e.dataRetirada || e.data_retirada);
-        const estaNoPerido = dataEntrega >= dataInicio && dataEntrega <= amanha;
+        const dataArray = e.dataRetirada || e.data_retirada;
+        const dataEntrega = converterDataBackend(dataArray);
+        
+        if (!dataEntrega) {
+          console.warn("⚠️ Data inválida:", dataArray);
+          return false;
+        }
+        
+        const estaNoPerido = dataEntrega >= dataInicio && dataEntrega <= dataFim;
+        
+        // DEBUG detalhado
+        console.log(`Comparando: ${dataEntrega.toLocaleDateString('pt-BR')} (${dataEntrega.getTime()}) está entre ${dataInicio.toLocaleDateString('pt-BR')} e ${dataFim.toLocaleDateString('pt-BR')}? ${estaNoPerido}`);
+        
         return estaNoPerido;
       });
 
@@ -146,9 +211,10 @@ const dashboardService = {
       // DEBUG: Mostrar TODAS as entregas do período com suas datas
       console.log("📋 Lista de entregas no período:");
       entregasPeriodo.forEach((entrega, index) => {
-        const dataEntrega = new Date(entrega.dataRetirada || entrega.data_retirada);
+        const dataArray = entrega.dataRetirada || entrega.data_retirada;
+        const dataEntrega = converterDataBackend(dataArray);
         const tipo = entrega.tipo || entrega.cesta?.tipo || "Desconhecido";
-        console.log(`  ${index + 1}. Data: ${dataEntrega.toLocaleDateString('pt-BR')} - Tipo: ${tipo} - ID: ${entrega.idEntrega}`);
+        console.log(`  ${index + 1}. Data: ${dataEntrega?.toLocaleDateString('pt-BR')} - Tipo: ${tipo} - ID: ${entrega.idEntrega || entrega.id}`);
       });
 
       // DEBUG: Mostrar estrutura das entregas
@@ -187,7 +253,9 @@ const dashboardService = {
       dataInicioAnterior.setDate(dataInicioAnterior.getDate() - diasPeriodo);
 
       const entregasPeriodoAnterior = todasEntregas.filter(e => {
-        const dataEntrega = new Date(e.dataRetirada || e.data_retirada);
+        const dataArray = e.dataRetirada || e.data_retirada;
+        const dataEntrega = converterDataBackend(dataArray);
+        if (!dataEntrega) return false;
         return dataEntrega >= dataInicioAnterior && dataEntrega < dataInicio;
       });
 

@@ -153,6 +153,9 @@ export default function Dashboard() {
   const location = useLocation();
   const [tipoUsuario, setTipoUsuario] = useState("2");
   const [filtroTempo, setFiltroTempo] = useState("Última Semana");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [mostrarFiltroCustomizado, setMostrarFiltroCustomizado] = useState(false);
   const [dadosAtuais, setDadosAtuais] = useState({
     cestasDistribuidas: { valor: 0, percentual: "0%" },
     kitsDistribuidos: { valor: 0, percentual: "0%" },
@@ -221,17 +224,54 @@ export default function Dashboard() {
     // Não carregar no mount inicial (já foi carregado acima)
     if (filtroTempo && !loading) {
       console.log("🔄 Filtro mudou para:", filtroTempo);
-      carregarDadosDashboard();
+      
+      // Se mudou para filtro customizado, não recarregar ainda
+      if (filtroTempo === "Período Customizado") {
+        setMostrarFiltroCustomizado(true);
+      } else {
+        setMostrarFiltroCustomizado(false);
+        setDataInicio("");
+        setDataFim("");
+        carregarDadosDashboard();
+      }
     }
   }, [filtroTempo]);
+  
+  // Função para aplicar filtro customizado
+  const aplicarFiltroCustomizado = () => {
+    if (!dataInicio || !dataFim) {
+      alert("Por favor, preencha ambas as datas");
+      return;
+    }
+    
+    if (new Date(dataInicio) > new Date(dataFim)) {
+      alert("A data inicial não pode ser maior que a data final");
+      return;
+    }
+    
+    console.log("📅 Aplicando filtro customizado:", { dataInicio, dataFim });
+    carregarDadosDashboard();
+  };
+  
+  const limparFiltroCustomizado = () => {
+    setDataInicio("");
+    setDataFim("");
+    setFiltroTempo("Última Semana");
+    setMostrarFiltroCustomizado(false);
+  };
 
   async function carregarDadosDashboard() {
     try {
       setLoading(true);
       console.log("📊 Carregando dados do dashboard com filtro:", filtroTempo);
+      console.log("📅 Datas customizadas:", { dataInicio, dataFim });
 
       // Buscar estatísticas gerais com filtro
-      const estatisticas = await dashboardService.buscarEstatisticasGerais(filtroTempo);
+      const estatisticas = await dashboardService.buscarEstatisticasGerais(
+        filtroTempo, 
+        dataInicio, 
+        dataFim
+      );
       if (estatisticas.success) {
         console.log("✅ Estatísticas carregadas:", estatisticas.data);
         setDadosAtuais(estatisticas.data);
@@ -358,17 +398,61 @@ export default function Dashboard() {
           <div className="dashboard-voltar">
             <Voltar onClick={() => navigate('/painel-menu')} />
           </div>
-          <div className="dashboard-filtro">
-            <label>Filtrar por</label>
-            <select 
-              value={filtroTempo} 
-              onChange={(e) => setFiltroTempo(e.target.value)}
-              className="dashboard-select"
-            >
-              <option value="Última Semana">Última Semana</option>
-              <option value="Último Mês">Último Mês</option>
-              <option value="Último Ano">Último Ano</option>
-            </select>
+          <div className="dashboard-filtro-container">
+            <div className="dashboard-filtro">
+              <label>Filtrar por:</label>
+              <select 
+                value={filtroTempo} 
+                onChange={(e) => setFiltroTempo(e.target.value)}
+                className="dashboard-select"
+              >
+                <option value="Última Semana">Última Semana</option>
+                <option value="Último Mês">Último Mês</option>
+                <option value="Último Ano">Último Ano</option>
+                <option value="Período Customizado">Período Customizado</option>
+              </select>
+            </div>
+            
+            {mostrarFiltroCustomizado && (
+              <div className="dashboard-filtro-customizado">
+                <div className="dashboard-filtro-data-grupo">
+                  <label>Data Início:</label>
+                  <input
+                    type="date"
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                    className="dashboard-input-data"
+                    max={dataFim || undefined}
+                  />
+                </div>
+                
+                <div className="dashboard-filtro-data-grupo">
+                  <label>Data Fim:</label>
+                  <input
+                    type="date"
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                    className="dashboard-input-data"
+                    min={dataInicio || undefined}
+                  />
+                </div>
+                
+                <button 
+                  onClick={aplicarFiltroCustomizado}
+                  className="dashboard-btn-aplicar"
+                  disabled={!dataInicio || !dataFim}
+                >
+                  Aplicar
+                </button>
+                
+                <button 
+                  onClick={limparFiltroCustomizado}
+                  className="dashboard-btn-limpar"
+                >
+                  Limpar
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
