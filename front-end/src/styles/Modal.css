@@ -13,14 +13,14 @@
 }
 
 .modal-content {
-	background: #fff;
+	background: #D9C27E;
 	border-radius: 20px;
 	box-shadow: 0 4px 24px rgba(0,0,0,0.18);
 	padding: 48px 32px 36px 32px;
 	min-width: 380px;
 	max-width: 95vw;
 	position: relative;
-	border: 3px solid #111;
+	border: 3px solid #264040;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -40,10 +40,11 @@
 .modal-texto {
 	font-size: 32px;
 	font-weight: 600;
-	color: #111;
+	color: #264040;
 	text-align: center;
 	margin-bottom: 32px;
 	white-space: pre-line;
+	font-family: 'Noto Sans', sans-serif;
 }
 
 .modal-botoes {

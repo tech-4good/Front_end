@@ -16,7 +16,7 @@ export default function PainelMenu() {
 
   const handleBaixarPDF = async () => {
     try {
-      const { jsPDF } = await import('jspdf');
+      // const { jsPDF } = await import('jspdf');
       const doc = new jsPDF();
       
       doc.setFontSize(16);

@@ -21,10 +21,10 @@ apiClient.interceptors.request.use(
       '/voluntarios/solicitar-redefinicao-senha',
       '/voluntarios/redefinir-senha',
     ];
-    
+
     // Verifica se a URL da requisição é uma rota pública
     const isRotaPublica = rotasPublicas.some(rota => config.url.includes(rota));
-    
+
     // 🔐 Apenas adiciona token se NÃO for rota pública
     if (!isRotaPublica) {
       const authToken = sessionStorage.getItem('authToken');
@@ -32,13 +32,13 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${authToken}`;
       }
     }
-    
+
     // ✅ Se não for FormData, definir Content-Type como JSON
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
     // ✅ Se for FormData, deixar o axios definir automaticamente (multipart/form-data)
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -50,10 +50,10 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 400) {
       // Erro de validação/dados incorretos
-      const mensagem = error.response?.data?.message || 
-                      error.response?.data?.error || 
-                      'Dados inválidos. Verifique as informações preenchidas.';
-      
+      const mensagem = error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Dados inválidos. Verifique as informações preenchidas.';
+
       window.dispatchEvent(new CustomEvent('apiError', {
         detail: {
           type: 'validation',
@@ -62,19 +62,24 @@ apiClient.interceptors.response.use(
         }
       }));
     } else if (error.response?.status === 401) {
-      // Disparar evento customizado em vez de alert
-      window.dispatchEvent(new CustomEvent('apiError', {
-        detail: {
-          type: 'auth',
-          title: 'Sessão Expirada',
-          message: 'Sua sessão expirou. Faça login novamente.',
-          redirectTo: '/'
+      // Não mostrar "Sessão Expirada" se for erro na rota de login
+      const isLoginRoute = error.config?.url?.includes('/voluntarios/login');
+
+      if (!isLoginRoute) {
+        // Disparar evento customizado em vez de alert
+        window.dispatchEvent(new CustomEvent('apiError', {
+          detail: {
+            type: 'auth',
+            title: 'Sessão Expirada',
+            message: 'Sua sessão expirou. Faça login novamente.',
+            redirectTo: '/'
+          }
+        }));
+        sessionStorage.clear();
+        // Redireciona apenas se não estiver na página de login
+        if (window.location.pathname !== '/') {
+          setTimeout(() => window.location.href = '/', 2000);
         }
-      }));
-      sessionStorage.clear();
-      // Redireciona apenas se não estiver na página de login
-      if (window.location.pathname !== '/') {
-        setTimeout(() => window.location.href = '/', 2000);
       }
     } else if (error.response?.status === 403) {
       window.dispatchEvent(new CustomEvent('apiError', {

@@ -25,6 +25,23 @@ const Cadastro = () => {
     TipoUsuario: 1,
   });
 
+  const mostrarModalErro = (mensagem) => {
+    setModalErro({ open: true, mensagem });
+    if (modalTimeout) clearTimeout(modalTimeout);
+    const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 3000);
+    setModalTimeout(timeout);
+  };
+
+  const mostrarModalSucesso = (mensagem) => {
+    setModalSucesso({ open: true, mensagem });
+    if (modalTimeout) clearTimeout(modalTimeout);
+    const timeout = setTimeout(() => {
+      setModalSucesso({ open: false, mensagem: "" });
+      navigate("/");
+    }, 3000);
+    setModalTimeout(timeout);
+  };
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -117,13 +134,7 @@ const Cadastro = () => {
     if (senhaMsg) erros.push(senhaMsg);
     
     if (erros.length > 0) {
-      setModalErro({ open: true, mensagem: erros.join("\n") });
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(
-        () => setModalErro({ open: false, mensagem: "" }),
-        10000
-      );
-      setModalTimeout(timeout);
+      mostrarModalErro(erros.join("\n"));
       return;
     }
 
@@ -142,43 +153,13 @@ const Cadastro = () => {
       const resultado = await voluntarioService.cadastrar(dadosParaEnviar);
       
       if (resultado.success) {
-        setModalSucesso({
-          open: true,
-          mensagem: "Cadastro realizado com sucesso!",
-        });
-        
-        if (modalTimeout) clearTimeout(modalTimeout);
-        const timeout = setTimeout(() => {
-          setModalSucesso({ open: false, mensagem: "" });
-          navigate("/");
-        }, 3000);
-        setModalTimeout(timeout);
+        mostrarModalSucesso("Cadastro realizado com sucesso!");
       } else {
-        setModalErro({ 
-          open: true, 
-          mensagem: resultado.error || "Erro ao realizar cadastro" 
-        });
-        
-        if (modalTimeout) clearTimeout(modalTimeout);
-        const timeout = setTimeout(
-          () => setModalErro({ open: false, mensagem: "" }),
-          8000
-        );
-        setModalTimeout(timeout);
+        mostrarModalErro(resultado.error || "Erro ao realizar cadastro");
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
-      setModalErro({ 
-        open: true, 
-        mensagem: "Erro inesperado. Tente novamente." 
-      });
-      
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(
-        () => setModalErro({ open: false, mensagem: "" }),
-        8000
-      );
-      setModalTimeout(timeout);
+      mostrarModalErro("Erro inesperado. Tente novamente.");
     } finally {
       setCarregando(false);
     }
@@ -200,7 +181,7 @@ const Cadastro = () => {
           isOpen={modalErro.open}
           onClose={() => setModalErro({ open: false, mensagem: "" })}
           texto={modalErro.mensagem}
-          showClose={true}
+          showClose={false}
         />
       </div>
       {/* Modal de sucesso no centro */}
@@ -278,7 +259,7 @@ const Cadastro = () => {
             <div className="input-group">
               <label className="input-label">Senha:</label>
               <Input
-                placeholder="******************"
+                placeholder="***************"
                 value={formData.senha}
                 onChange={(e) => handleInputChange("senha", e.target.value)}
                 type="password"
