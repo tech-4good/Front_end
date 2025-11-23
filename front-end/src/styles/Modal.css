@@ -20,7 +20,7 @@
 	min-width: 380px;
 	max-width: 95vw;
 	position: relative;
-	border: 3px solid #264040;
+	border: none;
 	display: flex;
 	flex-direction: column;
 	align-items: center;

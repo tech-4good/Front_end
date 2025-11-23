@@ -8,7 +8,7 @@ import brandAsa from "../assets/brand-asa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeSair from "../assets/icone-sair.png";
 
-const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario }) => {
+const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false }) => {
   const navigate = useNavigate();
   
   const allMenuItems = [
@@ -42,10 +42,10 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
         </div>
         <div className="navbar-direita">
           <Botao
-            className="navbar-botao"
+            className={`navbar-botao ${isPerfilPage ? 'navbar-botao-active' : ''}`}
             style={{
-              background: "none",
-              color: "#F2F2F2",
+              background: isPerfilPage ? "rgba(217, 194, 126, 0.2)" : "none",
+              color: isPerfilPage ? "#BF7E04" : "#F2F2F2",
               fontSize: 18,
               fontWeight: 500,
               boxShadow: "none",
@@ -53,7 +53,8 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
               minWidth: 0,
               display: "flex",
               alignItems: "center",
-              gap: 8
+              gap: 8,
+              transform: isPerfilPage ? "translateY(-1px)" : "none"
             }}
             onClick={() => navigate("/perfil")}
             texto={null}

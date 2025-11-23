@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
 import "../styles/Perfil.css";
-import Voltar from "../components/Voltar";
 import Navbar from "../components/Navbar";
+import iconeVoltar from "../assets/icone-voltar.png";
 import Input from "../components/Input";
 import iconeOlhoAberto from "../assets/icone-olho-aberto.png";
 import iconeOlhoFechado from "../assets/icone-olho-fechado.png";
@@ -53,6 +53,9 @@ export default function Perfil() {
 	const [nomeUsuario, setNomeUsuario] = useState(sessionStorage.getItem("nomeUsuario") || "Usuário");
 	const [carregando, setCarregando] = useState(true);
 	const [erro, setErro] = useState("");
+	
+	// 📝 Variável para guardar o email original (quando entra na tela)
+	const [emailOriginal, setEmailOriginal] = useState('');
 
 	// Recupera tipoUsuario do sessionStorage 
 	const [tipoUsuario, setTipoUsuario] = useState("2");
@@ -91,15 +94,21 @@ export default function Perfil() {
 				setNomeUsuario(nomeUsuarioAtual);
 				setEmail(dados.email || "");
 				
+				// 🔒 GUARDAR EMAIL ORIGINAL (só na primeira vez que entra na tela)
+				setEmailOriginal(dados.email || "");
+				console.log('🔒 Email original capturado:', dados.email || "");
+				
 				// Formatar CPF e telefone (já podem vir formatados ou não)
 				if (dados.cpf) {
 					const cpfFormatado = formatCPF(dados.cpf);
 					setCpf(cpfFormatado);
+					sessionStorage.setItem("cpfUsuario", cpfFormatado);
 					console.log('📋 CPF carregado:', cpfFormatado);
 				}
 				if (dados.telefone) {
 					const telefoneFormatado = formatPhone(dados.telefone);
 					setTelefone(telefoneFormatado);
+					sessionStorage.setItem("telefoneUsuario", telefoneFormatado);
 					console.log('📱 Telefone carregado:', telefoneFormatado);
 				}
 				
@@ -107,15 +116,45 @@ export default function Perfil() {
 				sessionStorage.setItem("nomeUsuario", nomeUsuarioAtual);
 				sessionStorage.setItem("emailUsuario", dados.email || "");
 			} else {
-				console.error('Erro ao carregar dados:', response.error);
-				setErro(response.error || "Erro ao carregar dados do perfil");
+				console.error('Erro ao carregar dados da API, usando dados do sessionStorage');
+				// Se a API falhar, usar dados do sessionStorage como fallback
+				carregarDadosDoSessionStorage();
 			}
 		} catch (error) {
-			console.error('Erro inesperado:', error);
-			setErro("Erro inesperado ao carregar dados");
+			console.error('Erro inesperado ao carregar dados da API, usando sessionStorage como fallback');
+			// Se houver erro, usar dados do sessionStorage como fallback
+			carregarDadosDoSessionStorage();
 		} finally {
 			setCarregando(false);
 		}
+	};
+
+	const carregarDadosDoSessionStorage = () => {
+		console.log('📦 Carregando dados do sessionStorage como fallback');
+		const nomeUsuarioAtual = sessionStorage.getItem("nomeUsuario") || "Usuário";
+		const emailUsuario = sessionStorage.getItem("emailUsuario") || "";
+		const telefoneUsuario = sessionStorage.getItem("telefoneUsuario") || "";
+		const cpfUsuario = sessionStorage.getItem("cpfUsuario") || "";
+		
+		setNome(nomeUsuarioAtual);
+		setNomeUsuario(nomeUsuarioAtual);
+		setEmail(emailUsuario);
+		
+		// 🔒 GUARDAR EMAIL ORIGINAL (do sessionStorage também)
+		setEmailOriginal(emailUsuario);
+		console.log('🔒 Email original capturado do sessionStorage:', emailUsuario);
+		
+		// Carregar telefone e CPF do sessionStorage se disponíveis
+		if (telefoneUsuario) {
+			setTelefone(telefoneUsuario);
+			console.log('📱 Telefone carregado do sessionStorage:', telefoneUsuario);
+		}
+		if (cpfUsuario) {
+			setCpf(cpfUsuario);
+			console.log('📋 CPF carregado do sessionStorage:', cpfUsuario);
+		}
+		
+		console.log('✅ Dados carregados do sessionStorage');
 	};
 
 	const botoesNavbar = [
@@ -141,21 +180,37 @@ export default function Perfil() {
 
 	const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const regexCPF = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-	const regexTelefone = /^\(\d{2}\) \d{4,5}-\d{4}$/;
+	const regexTelefone = /^\(\d{2}\) \d{5}-\d{4}$/;
 
 	const [erros, setErros] = useState({});
 
 
-	const [modalOpen, setModalOpen] = useState(false);
-	const [modalMsg, setModalMsg] = useState("");
+	const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
+	const [modalTimeout, setModalTimeout] = useState(null);
+
+	const mostrarModal = (mensagem) => {
+		setModalErro({ open: true, mensagem });
+		if (modalTimeout) clearTimeout(modalTimeout);
+		const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 3000);
+		setModalTimeout(timeout);
+	};
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		let newErros = {};
 		
 		// ⚠️ Validações apenas para telefone e email (campos que o backend aceita)
-		if (!regexTelefone.test(telefone)) newErros.telefone = "Telefone inválido";
-		if (!regexEmail.test(email)) newErros.email = "E-mail inválido";
+		let newErros = {};
+		
+		// Validações apenas para telefone e email (campos que o backend aceita)
+		const telefoneLimpoValidacao = telefone.replace(/\D/g, '');
+		if (!regexTelefone.test(telefone) || telefoneLimpoValidacao.length !== 11) {
+			mostrarModal("Telefone deve ter exatamente 11 dígitos no formato: (XX) XXXXX-XXXX");
+			return;
+		}
+		if (!regexEmail.test(email)) {
+			mostrarModal("E-mail deve ter o formato correto: exemplo@dominio.com (deve conter @ e .)");
+			return;
+		}
 		
 		// Campos abaixo são apenas para exibição (não serão atualizados)
 		if (!nome || nome.length > 200) {
@@ -168,60 +223,123 @@ export default function Perfil() {
 			console.warn('⚠️ Senha não será atualizada (backend não suporta)');
 		}
 		
-		setErros(newErros);
+		const id = sessionStorage.getItem('userId');
+		console.log('🔍 Verificando ID do usuário:', id);
+		console.log('🔍 Todos os dados do sessionStorage:', {
+			userId: sessionStorage.getItem('userId'),
+			nomeUsuario: sessionStorage.getItem('nomeUsuario'),
+			emailUsuario: sessionStorage.getItem('emailUsuario'),
+			tipoUsuario: sessionStorage.getItem('tipoUsuario')
+		});
 		
-		if (Object.keys(newErros).length === 0) {
-			const id = sessionStorage.getItem('userId');
-			if (!id) {
-				setModalMsg('ID do usuário não encontrado. Faça login novamente.');
-				setModalOpen(true);
+		if (!id) {
+			mostrarModal('ID do usuário não encontrado. Faça login novamente.');
+			return;
+		}
+		
+		// Remover formatação do telefone
+		const telefoneLimpo = telefone.replace(/\D/g, '');
+		
+		// Montar payload (APENAS telefone e email)
+		const dados = {
+			telefone: telefoneLimpo,  // sem formatação
+			email: email.toLowerCase().trim()
+		};
+		
+		console.log('📤 Dados que serão enviados para a API:', dados);
+		console.log('📤 Email original para identificar usuário:', emailOriginal);
+		console.log('📤 Novo email (se diferente):', email);
+		
+		// 🚨 VERIFICAÇÃO: Email original não pode estar vazio
+		if (!emailOriginal || emailOriginal.trim() === '') {
+			console.error('❌ Email original está vazio! Usando email atual como fallback');
+			console.error('❌ Isso pode indicar um problema no carregamento inicial');
+			// Usar email atual como fallback
+			const emailParaUsar = email || sessionStorage.getItem('emailUsuario') || '';
+			if (!emailParaUsar) {
+				mostrarModal('Erro: não foi possível identificar seu email. Faça login novamente.');
 				return;
 			}
+			console.log('🔄 Usando email atual como fallback:', emailParaUsar);
+		}
+		
+		try {
+			// 🔒 Determinar qual email usar para identificação
+			const emailParaIdentificacao = emailOriginal && emailOriginal.trim() !== '' 
+				? emailOriginal 
+				: email || sessionStorage.getItem('emailUsuario') || '';
 			
-			// ⚠️ IMPORTANTE: Backend atual só aceita TELEFONE e EMAIL
-			// Nome, CPF e senha NÃO são atualizados pelo endpoint PATCH /voluntarios/{id}
+			console.log('🎯 Email final usado para identificação:', emailParaIdentificacao);
 			
-			// Remover formatação do telefone
-			const telefoneLimpo = telefone.replace(/\D/g, '');
+			// 🔒 USANDO EMAIL ORIGINAL (ou fallback) como identificador
+			const resultado = await voluntarioService.atualizarPorEmailOriginal(emailParaIdentificacao, dados);
+			console.log('📥 Resultado da API:', resultado);
 			
-			// Montar payload (APENAS telefone e email)
-			const dados = {
-				telefone: telefoneLimpo,  // sem formatação
-				email: email.toLowerCase().trim()
-			};
-			
-			console.log('📝 Dados para atualização (telefone e email apenas):', dados);
-			console.log('⚠️ Aviso: Nome, CPF e senha não serão atualizados (backend não suporta)');
-			
-			try {
-				const result = await voluntarioService.atualizar(id, dados);
+			if (resultado.success) {
+				console.log('✅ API confirmou sucesso');
 				
-				if (result.success) {
-					setModalMsg('Informações alteradas com sucesso!');
-					sessionStorage.setItem("emailUsuario", email);
+				// 🚨 Verificar se email foi alterado (limitação do backend)
+				const emailTentouMudar = email.toLowerCase().trim() !== emailOriginal.toLowerCase();
+				
+				if (emailTentouMudar) {
+					console.warn('⚠️ Email não pôde ser alterado devido a limitações do backend');
+					mostrarModal('Telefone atualizado com sucesso! Nota: O email não pôde ser alterado devido a limitações do sistema.');
 					
-					// Limpar senha após tentativa de atualização
-					setSenha('');
-					
-					// Recarregar dados atualizados do backend
-					await carregarDadosVoluntario();
+					// Reverter email para o original
+					setEmail(emailOriginal);
+					sessionStorage.setItem("emailUsuario", emailOriginal);
 				} else {
-					setModalMsg(result.error || 'Erro ao atualizar informações.');
+					mostrarModal('Informações alteradas com sucesso!');
+					// Atualizar sessionStorage com os novos dados
+					sessionStorage.setItem("emailUsuario", email);
 				}
-			} catch (error) {
-				console.error('Erro ao atualizar:', error);
-				setModalMsg('Erro inesperado ao atualizar informações.');
+				
+				// Sempre atualizar telefone
+				sessionStorage.setItem("telefoneUsuario", telefone);
+				setTelefone(telefone);
+			} else {
+				console.error('❌ API retornou erro:', resultado.error);
+				mostrarModal(resultado.error || 'Erro ao salvar as informações');
 			}
+		} catch (error) {
+			console.error('❌ Erro inesperado na chamada da API:', error);
+			mostrarModal('Erro inesperado. Tente novamente.');
+		}
+		
+		// Limpar senha
+		setSenha('');
+		
+		// Tentar atualizar no backend de forma mais robusta
+		try {
+			console.log('🔄 Enviando dados para o backend:', dados);
+			console.log('🔄 ID do usuário:', id);
 			
-			setModalOpen(true);
+			const result = await voluntarioService.atualizar(id, dados);
+			
+			console.log('📋 Resultado da atualização:', result);
+			
+			if (result.success) {
+				console.log('✅ Dados atualizados no backend com sucesso');
+			} else {
+				console.warn('⚠️ Backend retornou erro:', result.error);
+			}
+		} catch (error) {
+			console.error('❌ Erro ao atualizar no backend:', error);
+			console.error('❌ Status:', error.response?.status);
+			console.error('❌ Dados do erro:', error.response?.data);
 		}
 	};
 
 	return (
 		<div>
-			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isPerfilPage={true} />
 			<div className="perfil-container">
-				<Voltar onClick={() => navigate("/home")} />
+				<img 
+					src={iconeVoltar} 
+					alt="Voltar" 
+					className="perfil-icone-voltar"
+					onClick={() => navigate("/home")}
+				/>
 				<h1 className="perfil-title">Perfil</h1>
 				
 				{carregando && (
@@ -241,92 +359,99 @@ export default function Perfil() {
 				
 				{!carregando && !erro && (
 					<form className="perfil-form" onSubmit={handleSubmit}>
-					<div className="perfil-row">
-						<div className="perfil-field">
-							<Input
-								label="Nome Completo:"
-								type="text"
-								name="nome"
-								value={nome}
-								onChange={handleNomeChange}
-								autoComplete="off"
-								maxLength={200}
-								disabled={true}
-								style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed', opacity: 0.7 }}
-								placeholder="Nome Completo"
-							/>
-							{erros.nome && <span style={{ color: '#e74c3c', fontSize: 13 }}>{erros.nome}</span>}
+						{/* Primeira linha - Nome Completo e Telefone */}
+						<div className="perfil-row">
+							<div className="perfil-field">
+								<label className="perfil-label">Nome Completo:</label>
+								<input
+									type="text"
+									name="nome"
+									value={nome}
+									onChange={handleNomeChange}
+									placeholder="Insira o seu nome completo"
+									autoComplete="off"
+									maxLength={200}
+									disabled={true}
+									className="perfil-input perfil-input-disabled"
+								/>
+							</div>
+							<div className="perfil-field">
+								<label className="perfil-label">Telefone:</label>
+								<input
+									type="text"
+									name="telefone"
+									value={telefone}
+									onChange={handleTelefoneChange}
+									placeholder="(00) 00000-0000"
+									autoComplete="off"
+									maxLength={15}
+									className="perfil-input"
+								/>
+							</div>
 						</div>
-						<div className="perfil-field">
-							<Input
-								label="Telefone:"
-								type="text"
-								name="telefone"
-								value={telefone}
-								onChange={handleTelefoneChange}
-								autoComplete="off"
-								maxLength={15}
-								style={erros.telefone ? { border: '2px solid #e74c3c' } : {}}
-								placeholder="(00) 00000-0000"
-							/>
-							{erros.telefone && <span style={{ color: '#e74c3c', fontSize: 13 }}>{erros.telefone}</span>}
+
+						{/* Segunda linha - E-mail e Senha */}
+						<div className="perfil-row">
+							<div className="perfil-field">
+								<label className="perfil-label">E-mail:</label>
+								<input
+									type="text"
+									name="email"
+									value={email}
+									onChange={handleEmailChange}
+									placeholder="email@dominio.com"
+									autoComplete="off"
+									className="perfil-input"
+								/>
+							</div>
+							<div className="perfil-field">
+								<label className="perfil-label">Senha:</label>
+								<input
+									type="password"
+									name="senha"
+									value={senha}
+									onChange={handleSenhaChange}
+									placeholder="***************"
+									autoComplete="off"
+									minLength={5}
+									maxLength={12}
+									disabled={true}
+									className="perfil-input perfil-input-disabled"
+								/>
+							</div>
 						</div>
-					</div>
-					<div className="perfil-row">
-						<div className="perfil-field">
-							<Input
-								label="E-mail:"
-								type="email"
-								name="email"
-								value={email}
-								onChange={handleEmailChange}
-								autoComplete="off"
-								style={erros.email ? { border: '2px solid #e74c3c' } : {}}
-								placeholder="E-mail"
-							/>
-							{erros.email && <span style={{ color: '#e74c3c', fontSize: 13 }}>{erros.email}</span>}
+
+						{/* Terceira linha - CPF */}
+						<div className="perfil-row perfil-row-single">
+							<div className="perfil-field">
+								<label className="perfil-label">CPF:</label>
+								<input
+									type="text"
+									name="cpf"
+									value={cpf}
+									onChange={handleCpfChange}
+									placeholder="000.000.000-00"
+									autoComplete="off"
+									maxLength={14}
+									disabled={true}
+									className="perfil-input perfil-input-disabled"
+								/>
+							</div>
 						</div>
-						<div className="perfil-field perfil-senha-field">
-							<Input
-								label="Senha:"
-								type="password"
-								name="senha"
-								value={senha}
-								onChange={handleSenhaChange}
-								autoComplete="off"
-								minLength={5}
-								maxLength={12}
-								disabled={true}
-								style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed', opacity: 0.7 }}
-								placeholder="Senha"
-								isPassword={true}
-							/>
-							{erros.senha && <span style={{ color: '#e74c3c', fontSize: 13 }}>{erros.senha}</span>}
-						</div>
-					</div>
-					<div className="perfil-row">
-						<div className="perfil-field">
-							<Input
-								label="CPF:"
-								type="text"
-								name="cpf"
-								value={cpf}
-								onChange={handleCpfChange}
-								autoComplete="off"
-								maxLength={14}
-								disabled={true}
-								style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed', opacity: 0.7 }}
-								placeholder="CPF"
-							/>
-							{erros.cpf && <span style={{ color: '#e74c3c', fontSize: 13 }}>{erros.cpf}</span>}
-						</div>
-					</div>
-					<button className="perfil-btn" type="submit">
-						Alterar Informações
-					</button>
-				</form>
+
+						<button className="perfil-btn" type="submit">
+							Alterar Informações
+						</button>
+					</form>
 				)}
-				<Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} texto={modalMsg} />
+				<div style={{ position: "fixed", top: 24, right: 24, zIndex: 2000 }}>
+					<Modal
+						isOpen={modalErro.open}
+						onClose={() => setModalErro({ open: false, mensagem: "" })}
+						texto={modalErro.mensagem}
+						showClose={false}
+					/>
+				</div>
 			</div>
 		</div>
 	);
