@@ -133,6 +133,12 @@ body {
 	border-bottom-color: #D9C27E;
 }
 
+.navbar-menu-item-active {
+	background: rgba(242, 242, 242, 0.1) !important;
+	color: #D9C27E !important;
+	border-bottom-color: #D9C27E !important;
+}
+
 @media (max-width: 768px) {
 	.navbar {
 		padding: 0 16px;

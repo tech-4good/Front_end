@@ -1,7 +1,18 @@
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
+}
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+}
+
 .fila-bg {
   min-height: 100vh;
   width: 100vw;
-  background: #6dbdc9;
+  background: #F2F2F2 !important;
   margin: 0;
   padding: 0;
 }
@@ -14,14 +25,28 @@
   align-items: flex-start;
   padding: 12px 0 0 36px;
   box-sizing: border-box;
+  position: relative;
+}
+
+.fila-icone-voltar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
 .fila-title {
-  width: 100%;
+  font-family: 'AdventSans-Logo', sans-serif !important;
   text-align: center;
-  font-size: 56px;
-  font-weight: 500;
-  margin: 10px 0 18px 0;
+  font-size: 64px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 50px 0 50px 0 !important;
+  line-height: 1.1;
+  width: 100%;
 }
 
 .fila-content {
@@ -35,10 +60,10 @@
 
 .fila-enderecos-lista,
 .fila-moradores-lista {
-  background: #fff;
-  border-radius: 28px;
-  border: 2px solid #222;
-  box-shadow: 2px 3px 3px #2222;
+  background: #264040 !important;
+  border-radius: 8px !important;
+  border: 2px solid #264040 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   width: 420px;
   min-height: 320px;
   max-height: 380px;
@@ -48,17 +73,33 @@
   height: 380px;
 }
 .fila-enderecos-titulo {
-  font-size: 28px;
-  font-weight: 600;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  color: #F2F2F2 !important;
+  background: #264040 !important;
   text-align: center;
   padding: 18px 0 10px 0;
   border-bottom: 1px solid #eee;
+  margin: 0;
+  border-radius: 8px 8px 0 0;
 }
 .fila-enderecos-scroll {
   flex: 1;
   overflow-y: auto;
   padding: 0 0 8px 0;
   max-height: 270px;
+  background: #264040 !important;
+}
+.fila-enderecos-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.fila-enderecos-scroll::-webkit-scrollbar-track {
+  background: #264040;
+}
+.fila-enderecos-scroll::-webkit-scrollbar-thumb {
+  background: #F2F2F2;
+  border-radius: 4px;
 }
 .fila-endereco-card {
   display: flex;
@@ -68,13 +109,31 @@
   border-bottom: 1px solid #eee;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
+  background: #264040 !important;
+  color: #F2F2F2 !important;
+}
+.fila-endereco-card:hover {
+  background: #D9C27E !important;
+  color: #264040 !important;
+}
+.fila-endereco-card:hover .fila-endereco-nome {
+  color: #264040 !important;
+}
+.fila-endereco-card:hover .fila-endereco-data {
+  color: #264040 !important;
 }
 .fila-endereco-card:last-child {
   border-bottom: none;
 }
 .fila-endereco-card.selecionado {
-  background: #6dbdc9;
-  color: #fff;
+  background: #D9C27E !important;
+  color: #264040 !important;
+}
+.fila-endereco-card.selecionado .fila-endereco-nome {
+  color: #264040 !important;
+}
+.fila-endereco-card.selecionado .fila-endereco-data {
+  color: #264040 !important;
 }
 .fila-endereco-info {
   display: flex;
@@ -83,27 +142,46 @@
   align-items: center;
 }
 .fila-endereco-nome {
-  font-size: 22px;
-  font-weight: 500;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  color: #F2F2F2 !important;
 }
 .fila-endereco-data {
-  font-size: 18px;
-  color: #666;
-  font-weight: 400;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 16px !important;
+  color: #F2F2F2 !important;
+  font-weight: 600 !important;
 }
 
 .fila-moradores-titulo {
-  font-size: 28px;
-  font-weight: 600;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  color: #F2F2F2 !important;
+  background: #264040 !important;
   text-align: center;
   padding: 18px 0 10px 0;
   border-bottom: 1px solid #eee;
+  margin: 0;
+  border-radius: 8px 8px 0 0;
 }
 .fila-moradores-scroll {
   flex: 1;
   overflow-y: auto;
   padding: 0 0 8px 0;
   max-height: 290px;
+  background: #264040 !important;
+}
+.fila-moradores-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.fila-moradores-scroll::-webkit-scrollbar-track {
+  background: #264040;
+}
+.fila-moradores-scroll::-webkit-scrollbar-thumb {
+  background: #F2F2F2;
+  border-radius: 4px;
 }
 .fila-morador-card {
   display: flex;
@@ -112,22 +190,28 @@
   align-items: center;
   padding: 18px 24px;
   border-bottom: 1px solid #eee;
+  background: #D9C27E !important;
 }
 .fila-morador-card:last-child {
   border-bottom: none;
 }
 .fila-morador-nome {
-  font-size: 22px;
-  font-weight: 500;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  color: #264040 !important;
 }
 .fila-morador-idade {
-  font-size: 18px;
-  color: #666;
-  font-weight: 400;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 16px !important;
+  color: #264040 !important;
+  font-weight: 600 !important;
 }
 .fila-morador-placeholder {
   padding: 32px 24px;
   text-align: center;
-  color: #888;
-  font-size: 20px;
+  color: #999999 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
 }

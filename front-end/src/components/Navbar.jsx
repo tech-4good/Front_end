@@ -5,10 +5,11 @@ import "../styles/Navbar.css";
 import Botao from "./Botao";
 
 import brandAsa from "../assets/brand-asa.png";
+import logoAsaEscuro from "../assets/logo-asa-escuro.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeSair from "../assets/icone-sair.png";
 
-const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false }) => {
+const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false, isCestasPage = false, isFilaEsperaPage = false, isCadastroEnderecoPage = false }) => {
   const navigate = useNavigate();
   
   const allMenuItems = [
@@ -33,7 +34,7 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
       <nav className="navbar">
         <div className="navbar-esquerda">
           <img
-            src={brandAsa}
+            src={logoAsaEscuro}
             alt="ASA - Ação Solidária Adventista"
             className="navbar-logo"
             style={{ cursor: "pointer" }}
@@ -89,7 +90,11 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
           {menuItems.map((item, idx) => (
             <button
               key={idx}
-              className="navbar-menu-item"
+              className={`navbar-menu-item ${
+                (isCestasPage && item.texto === "Cestas") || 
+                (isFilaEsperaPage && item.texto === "Fila de Espera") ||
+                (isCadastroEnderecoPage && item.texto === "Cadastrar Endereços") ? "navbar-menu-item-active" : ""
+              }`}
               onClick={item.onClick}
             >
               {item.texto}

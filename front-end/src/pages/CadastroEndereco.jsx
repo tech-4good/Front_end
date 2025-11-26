@@ -4,9 +4,9 @@ import { masks } from "../utils/masks";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import MenuEndereco from "../components/MenuEndereco";
-import SucessoEndereco from "../components/SucessoEndereco";
-import QuantidadePessoas from "../components/QuantidadePessoas";
-import SucessoFinal from "../components/SucessoFinal";
+
+
+
 import Input from "../components/Input";
 import Select from "../components/Select";
 import Botao from "../components/Botao";
@@ -17,6 +17,7 @@ import "../styles/CadastroEndereco.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 export default function CadastroEndereco() {
   const [page, setPage] = useState(1);
@@ -51,6 +52,17 @@ export default function CadastroEndereco() {
   const [loading, setCadastrando] = useState(false);
   const [enderecoId, setEnderecoId] = useState(null);
   
+  // Sistema de modal unificado com timeout (igual ao perfil)
+  const [modalGeral, setModalGeral] = useState({ open: false, mensagem: "" });
+  const [modalTimeout, setModalTimeout] = useState(null);
+  
+  const mostrarModal = (mensagem) => {
+    setModalGeral({ open: true, mensagem });
+    if (modalTimeout) clearTimeout(modalTimeout);
+    const timeout = setTimeout(() => setModalGeral({ open: false, mensagem: "" }), 5000);
+    setModalTimeout(timeout);
+  };
+  
   // Estados para controle da busca de CEP
   const [loadingCep, setLoadingCep] = useState(false);
   const [cepEncontrado, setCepEncontrado] = useState(false);
@@ -61,6 +73,23 @@ export default function CadastroEndereco() {
 
     if (maskType && masks[maskType]) {
       processedValue = masks[maskType](value);
+    }
+
+    // Validação específica para o campo número - apenas dígitos e máximo 5 caracteres
+    if (field === "numero") {
+      processedValue = value.replace(/\D/g, '').slice(0, 5);
+    }
+
+    // Validação para campos de texto - apenas letras e espaços únicos
+    if (["rua", "bairro", "cidade", "complemento", "moradia"].includes(field)) {
+      // Remove caracteres que não são letras ou espaços
+      processedValue = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+      // Remove espaços duplos ou múltiplos
+      processedValue = processedValue.replace(/\s+/g, ' ');
+      // Remove espaço no início
+      if (processedValue.startsWith(' ')) {
+        processedValue = processedValue.substring(1);
+      }
     }
 
     setFormData((prev) => ({
@@ -83,13 +112,10 @@ export default function CadastroEndereco() {
     setCepEncontrado(false);
     
     try {
-      console.log('🌐 Buscando CEP:', cepLimpo);
-      
       const resultado = await enderecoService.buscarCep(cepLimpo);
       
       if (resultado.success) {
         const dados = resultado.data;
-        console.log('✅ Endereço encontrado:', dados);
         
         // Extrai apenas a sigla do estado (ex: "SP - São Paulo" → "SP")
         const estadoSigla = dados.estado ? dados.estado.split(' - ')[0].trim() : '';
@@ -109,7 +135,6 @@ export default function CadastroEndereco() {
         // Se algum campo vier vazio, permite edição
         if (!dados.logradouro || !dados.bairro) {
           setCamposEditaveis(true);
-          console.log('⚠️ Alguns campos não encontrados, permitindo edição manual');
         } else {
           setCamposEditaveis(false);
         }
@@ -306,22 +331,42 @@ export default function CadastroEndereco() {
   };
 
   const validateStep1 = () => {
-    const requiredInputs = inputsFirstStep.filter(input => 
-      input.label !== "Complemento"
-    );
+    const camposObrigatorios = [
+      { key: "cep", name: "CEP" },
+      { key: "rua", name: "Rua/Avenida" },
+      { key: "numero", name: "Número" },
+      { key: "bairro", name: "Bairro" },
+      { key: "cidade", name: "Cidade" },
+      { key: "estado", name: "Estado" }
+    ];
     
-    for (let input of requiredInputs) {
-      const fieldKey = getFieldKey(input.label);
-      if (!formData[fieldKey] || formData[fieldKey].trim() === "") {
-        setMensagemErro(`O campo "${input.label}" é obrigatório.`);
-        setModalErro(true);
-        return false;
+    const camposVazios = [];
+    
+    // Verifica campos obrigatórios
+    for (let campo of camposObrigatorios) {
+      if (!formData[campo.key] || formData[campo.key].trim() === "") {
+        camposVazios.push(campo.name);
       }
     }
-
+    
+    // Verifica se estado não está na opção padrão
+    if (formData.estado === "Selecionar estado" || formData.estado === "") {
+      if (!camposVazios.includes("Estado")) {
+        camposVazios.push("Estado");
+      }
+    }
+    
+    // Valida formato do CEP
     if (formData.cep && !/^\d{5}-\d{3}$/.test(formData.cep)) {
-      setMensagemErro("CEP deve estar no formato 00000-000.");
-      setModalErro(true);
+      mostrarModal("CEP deve estar no formato 00000-000.");
+      return false;
+    }
+    
+    if (camposVazios.length > 0) {
+      const mensagem = camposVazios.length === 1 
+        ? `O campo ${camposVazios[0]} é obrigatório.`
+        : `Os seguintes campos são obrigatórios:\n\n• ${camposVazios.join("\n• ")}`;
+      mostrarModal(mensagem);
       return false;
     }
 
@@ -329,18 +374,48 @@ export default function CadastroEndereco() {
   };
 
   const validateStep2 = () => {
-    const requiredFields = [
+    const camposObrigatorios = [
       { key: "datadeentrada", name: "Data de Entrada" },
-      { key: "moradia", name: "Moradia" }
+      { key: "moradia", name: "Moradia" },
+      { key: "tipodemoradia", name: "Tipo de Moradia" },
+      { key: "tipodecesta", name: "Tipo de Cesta" },
+      { key: "status", name: "Status" }
     ];
     
-    // Data de Saída é opcional, não obrigatória
-    for (let field of requiredFields) {
-      if (!formData[field.key] || formData[field.key].trim() === "") {
-        setMensagemErro(`O campo "${field.name}" é obrigatório.`);
-        setModalErro(true);
-        return false;
+    const camposVazios = [];
+    
+    // Verifica campos obrigatórios (Data de Saída é opcional)
+    for (let campo of camposObrigatorios) {
+      if (!formData[campo.key] || formData[campo.key].trim() === "") {
+        camposVazios.push(campo.name);
       }
+    }
+    
+    // Verifica se selects não estão nas opções padrão
+    if (formData.tipodemoradia === "Selecione o tipo" || formData.tipodemoradia === "") {
+      if (!camposVazios.includes("Tipo de Moradia")) {
+        camposVazios.push("Tipo de Moradia");
+      }
+    }
+    
+    if (formData.tipodecesta === "Selecione o tipo" || formData.tipodecesta === "") {
+      if (!camposVazios.includes("Tipo de Cesta")) {
+        camposVazios.push("Tipo de Cesta");
+      }
+    }
+    
+    if (formData.status === "Selecione o status" || formData.status === "") {
+      if (!camposVazios.includes("Status")) {
+        camposVazios.push("Status");
+      }
+    }
+
+    if (camposVazios.length > 0) {
+      const mensagem = camposVazios.length === 1 
+        ? `O campo ${camposVazios[0]} é obrigatório.`
+        : `Os seguintes campos são obrigatórios:\n\n• ${camposVazios.join("\n• ")}`;
+      mostrarModal(mensagem);
+      return false;
     }
 
     const dateFields = [
@@ -352,8 +427,7 @@ export default function CadastroEndereco() {
       const dateValue = formData[field.key];
       // Validar formato apenas se o campo estiver preenchido
       if (dateValue && dateValue.trim() !== "" && !/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
-        setMensagemErro(`O campo "${field.name}" deve estar no formato DD/MM/AAAA.`);
-        setModalErro(true);
+        mostrarModal(`O campo "${field.name}" deve estar no formato DD/MM/AAAA.`);
         return false;
       }
       
@@ -362,8 +436,7 @@ export default function CadastroEndereco() {
         const date = new Date(year, month - 1, day);
         
         if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
-          setMensagemErro(`O campo "${field.name}" contém uma data inválida.`);
-          setModalErro(true);
+          mostrarModal(`O campo "${field.name}" contém uma data inválida.`);
           return false;
         }
       }
@@ -378,8 +451,7 @@ export default function CadastroEndereco() {
       const dataSaida = new Date(yearSaida, monthSaida - 1, daySaida);
       
       if (dataEntrada >= dataSaida) {
-        setMensagemErro("A Data de Entrada deve ser anterior à Data de Saída.");
-        setModalErro(true);
+        mostrarModal("A Data de Entrada deve ser anterior à Data de Saída.");
         return false;
       }
     }
@@ -390,53 +462,41 @@ export default function CadastroEndereco() {
   const validateStep4 = () => {
     const quantidadeFields = [
       { key: "quantidadedecriancas", name: "Quantidade de Crianças" },
+      { key: "quantidadedegestantes", name: "Quantidade de Gestantes" },
       { key: "quantidadedeadolescentes", name: "Quantidade de Adolescentes" },
+      { key: "quantidadededeficientes", name: "Quantidade de Deficientes" },
       { key: "quantidadedejovens", name: "Quantidade de Jovens" },
       { key: "quantidadedeidosos", name: "Quantidade de Idosos" },
-      { key: "quantidadedegestantes", name: "Quantidade de Gestantes" },
-      { key: "quantidadededeficientes", name: "Quantidade de Deficientes" },
       { key: "quantidadedeoutros", name: "Quantidade de Outros" }
     ];
     
+    // Verifica se pelo menos um campo está preenchido
     const hasQuantidade = quantidadeFields.some(field => {
       const value = formData[field.key];
-      return value && value !== "0" && value.trim() !== "";
+      return value && value.trim() !== "" && value !== "0";
     });
     
     if (!hasQuantidade) {
-      setMensagemErro("Preencha pelo menos uma quantidade de pessoas.");
-      setModalErro(true);
+      mostrarModal("Preencha pelo menos uma quantidade de pessoas.");
       return false;
     }
 
+    // Valida apenas os campos que estão preenchidos
     for (let field of quantidadeFields) {
       const value = formData[field.key];
-      if (value && value.trim() !== "") {
+      if (value && value.trim() !== "" && value !== "0") {
         const numValue = parseInt(value, 10);
         
-        if (isNaN(numValue) || numValue < 0) {
-          setMensagemErro(`O campo "${field.name}" deve conter um número válido (0 ou maior).`);
-          setModalErro(true);
+        if (isNaN(numValue) || numValue < 1) {
+          mostrarModal(`O campo "${field.name}" deve conter um número válido maior que 0.`);
           return false;
         }
         
-        if (numValue > 999) {
-          setMensagemErro(`O campo "${field.name}" não pode ser maior que 999.`);
-          setModalErro(true);
+        if (numValue > 99) {
+          mostrarModal(`O campo "${field.name}" não pode ser maior que 99.`);
           return false;
         }
       }
-    }
-
-    const total = quantidadeFields.reduce((sum, field) => {
-      const value = formData[field.key];
-      return sum + (value && value.trim() !== "" ? parseInt(value, 10) : 0);
-    }, 0);
-
-    if (total === 0) {
-      setMensagemErro("O total de pessoas deve ser maior que zero.");
-      setModalErro(true);
-      return false;
     }
 
     return true;
@@ -445,6 +505,10 @@ export default function CadastroEndereco() {
   const handleNextPage = () => {
     if (page === 1) {
       if (!validateStep1()) return;
+    }
+    
+    if (page === 2) {
+      if (!validateStep2()) return;
     }
     
     if (page < 5) {
@@ -458,17 +522,25 @@ export default function CadastroEndereco() {
   const handleRegister = async () => {
     if (page === 2) {
       if (!validateStep2()) return;
-      setPage(3);
+      // Mostrar modal de sucesso ao invés de ir para próxima page
+      mostrarModal("Indo para o cadastro de quantidade de pessoas!");
+      // Redirecionar para quantidade de pessoas após 3 segundos
+      setTimeout(() => {
+        setPage(4);
+      }, 3000);
     } else if (page === 4) {
       if (!validateStep4()) return;
       
       // Realizar cadastro no backend
       const sucesso = await realizarCadastroEndereco();
       if (sucesso) {
-        setPage(5);
+        // Mostrar modal de sucesso
+        mostrarModal("Quantidade de pessoas enviado com sucesso!");
+        // Redirecionar para home após 3 segundos
+        setTimeout(() => {
+          navigate("/home");
+        }, 3000);
       }
-    } else if (page === 5) {
-      navigate("/home");
     }
   };
 
@@ -507,244 +579,407 @@ export default function CadastroEndereco() {
 
   return (
     <div className="cadastro-endereco-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
-      <MenuEndereco onClick={handlePreviousPage} page={currentStep} showStep={page <= 2} />
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCadastroEnderecoPage={true} />
       
       {page === 1 && (
-        <div className="cadastro-container">
-          <form className="cadastro-form" onSubmit={(e) => { e.preventDefault(); handleNextPage(); }}>
-            {/* Linha do CEP - movida para o topo */}
-            <div className="cadastro-row">
-              <div className="cadastro-field"></div>
-              <div className="cadastro-field">
+        <div className="cadastro-endereco-container">
+          <img 
+            src={iconeVoltar} 
+            alt="Voltar" 
+            className="cadastro-endereco-icone-voltar"
+            onClick={handlePreviousPage}
+          />
+          
+          <h1 className="cadastro-endereco-title">Cadastro de Endereço</h1>
+          
+          <div className="cadastro-endereco-passo">Passo: 1/2</div>
+          
+          <form className="cadastro-endereco-form" onSubmit={(e) => { e.preventDefault(); handleNextPage(); }}>
+            {/* Campo CEP centralizado */}
+            <div className="cadastro-endereco-field-group">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">CEP:</label>
                 <Input
-                  label="CEP"
                   type="text"
                   value={formData.cep || ""}
                   onChange={(e) => handleInputChange("cep", e.target.value, "cep")}
                   placeholder="00000-000"
                   maxLength={9}
+                  className="cadastro-endereco-input"
                 />
-                {loadingCep && (
-                  <span style={{ color: '#ffc107', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    ⏳ Buscando CEP...
-                  </span>
-                )}
-                {cepEncontrado && !loadingCep && (
-                  <span style={{ color: '#28a745', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    ✅ Endereço encontrado!
-                  </span>
-                )}
               </div>
-              <div className="cadastro-field"></div>
             </div>
 
             {/* Rua e Número */}
-            <div className="cadastro-row">
-              {inputsFirstStep.slice(0, 2).map((input) => {
-                const fieldKey = getFieldKey(input.label);
-                const isAddressField = ['rua', 'bairro', 'cidade', 'estado'].includes(fieldKey);
-                
-                return (
-                  <div className="cadastro-field" key={input.label}>
-                    <Input
-                      label={input.label}
-                      type={input.inputType}
-                      value={formData[fieldKey] || ""}
-                      onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
-                      placeholder={input.placeholder}
-                      maxLength={input.mask === "cep" ? 9 : undefined}
-                      disabled={isAddressField && !camposEditaveis && cepEncontrado}
-                      style={isAddressField && !camposEditaveis && cepEncontrado ? {
-                        backgroundColor: '#f0f0f0',
-                        cursor: 'not-allowed'
-                      } : {}}
-                    />
-                  </div>
-                );
-              })}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Rua/Avenida:</label>
+                <Input
+                  type="text"
+                  value={formData.rua || ""}
+                  onChange={(e) => handleInputChange("rua", e.target.value)}
+                  placeholder="Insira o nome da rua"
+                  className="cadastro-endereco-input"
+                  disabled={!camposEditaveis && cepEncontrado}
+                />
+              </div>
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Número:</label>
+                <Input
+                  type="text"
+                  value={formData.numero || ""}
+                  onChange={(e) => handleInputChange("numero", e.target.value)}
+                  placeholder="Insira o número"
+                  className="cadastro-endereco-input cadastro-endereco-input-highlight"
+                />
+              </div>
             </div>
 
             {/* Complemento e Bairro */}
-            <div className="cadastro-row">
-              {inputsFirstStep.slice(2, 4).map((input) => {
-                const fieldKey = getFieldKey(input.label);
-                const isAddressField = ['rua', 'bairro', 'cidade', 'estado'].includes(fieldKey);
-                
-                return (
-                  <div className="cadastro-field" key={input.label}>
-                    <Input
-                      label={input.label}
-                      type={input.inputType}
-                      value={formData[fieldKey] || ""}
-                      onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
-                      placeholder={input.placeholder}
-                      disabled={isAddressField && !camposEditaveis && cepEncontrado}
-                      style={isAddressField && !camposEditaveis && cepEncontrado ? {
-                        backgroundColor: '#f0f0f0',
-                        cursor: 'not-allowed'
-                      } : {}}
-                    />
-                  </div>
-                );
-              })}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Complemento:</label>
+                <Input
+                  type="text"
+                  value={formData.complemento || ""}
+                  onChange={(e) => handleInputChange("complemento", e.target.value)}
+                  placeholder="Insira o complemento"
+                  className="cadastro-endereco-input"
+                />
+              </div>
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Bairro:</label>
+                <Input
+                  type="text"
+                  value={formData.bairro || ""}
+                  onChange={(e) => handleInputChange("bairro", e.target.value)}
+                  placeholder="Insira o bairro"
+                  className="cadastro-endereco-input"
+                  disabled={!camposEditaveis && cepEncontrado}
+                />
+              </div>
             </div>
 
             {/* Cidade e Estado */}
-            <div className="cadastro-row">
-              {inputsFirstStep.slice(4, 6).map((input) => {
-                const fieldKey = getFieldKey(input.label);
-                // Estado sempre editável, outros campos (rua, bairro, cidade) podem ser bloqueados
-                const isAddressField = ['rua', 'bairro', 'cidade'].includes(fieldKey);
-                const shouldDisable = isAddressField && !camposEditaveis && cepEncontrado;
-                
-                return (
-                  <div className="cadastro-field" key={input.label}>
-                    {input.inputType === "select" ? (
-                      <Select
-                        label={input.label}
-                        options={input.options.map(opt => ({ value: opt, label: opt }))}
-                        value={formData[fieldKey] || ""}
-                        onChange={(e) => handleInputChange(fieldKey, e.target.value)}
-                        placeholder={input.placeholder}
-                        disabled={shouldDisable}
-                        style={shouldDisable ? {
-                          backgroundColor: '#f0f0f0',
-                          cursor: 'not-allowed'
-                        } : {}}
-                      />
-                    ) : (
-                      <Input
-                        label={input.label}
-                        type={input.inputType}
-                        value={formData[fieldKey] || ""}
-                        onChange={(e) => handleInputChange(fieldKey, e.target.value, input.mask)}
-                        placeholder={input.placeholder}
-                        disabled={shouldDisable}
-                        style={shouldDisable ? {
-                          backgroundColor: '#f0f0f0',
-                          cursor: 'not-allowed'
-                        } : {}}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            
-            {!camposEditaveis && cepEncontrado && (
-              <div style={{ 
-                textAlign: 'center', 
-                color: '#6c757d', 
-                fontSize: '13px', 
-                marginTop: '10px',
-                marginBottom: '10px'
-              }}>
-                ℹ️ Rua, Bairro e Cidade foram preenchidos automaticamente. Estado, Número e Complemento podem ser editados.
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Cidade:</label>
+                <Input
+                  type="text"
+                  value={formData.cidade || ""}
+                  onChange={(e) => handleInputChange("cidade", e.target.value)}
+                  placeholder="Insira a cidade"
+                  className="cadastro-endereco-input"
+                  disabled={!camposEditaveis && cepEncontrado}
+                />
               </div>
-            )}
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Estado:</label>
+                <Select
+                  options={[
+                    { value: "AC", label: "AC" }, { value: "AL", label: "AL" }, { value: "AP", label: "AP" },
+                    { value: "AM", label: "AM" }, { value: "BA", label: "BA" }, { value: "CE", label: "CE" },
+                    { value: "DF", label: "DF" }, { value: "ES", label: "ES" }, { value: "GO", label: "GO" },
+                    { value: "MA", label: "MA" }, { value: "MT", label: "MT" }, { value: "MS", label: "MS" },
+                    { value: "MG", label: "MG" }, { value: "PA", label: "PA" }, { value: "PB", label: "PB" },
+                    { value: "PR", label: "PR" }, { value: "PE", label: "PE" }, { value: "PI", label: "PI" },
+                    { value: "RJ", label: "RJ" }, { value: "RN", label: "RN" }, { value: "RS", label: "RS" },
+                    { value: "RO", label: "RO" }, { value: "RR", label: "RR" }, { value: "SC", label: "SC" },
+                    { value: "SP", label: "SP" }, { value: "SE", label: "SE" }, { value: "TO", label: "TO" }
+                  ]}
+                  value={formData.estado || ""}
+                  onChange={(e) => handleInputChange("estado", e.target.value)}
+                  placeholder="Selecionar estado"
+                  className="cadastro-endereco-select"
+                />
+              </div>
+            </div>
 
-            <Botao texto="Próximo" type="submit" className="cadastro-btn" />
+            <Botao texto="Próximo" type="submit" className="cadastro-endereco-btn" />
           </form>
         </div>
       )}
 
       {page === 2 && (
-        <div className="cadastro-container">
-          <form className="cadastro-form" onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
-            <div className="cadastro-row">
-              {inputsSecondStep.slice(0, 2).map((input) => {
-                const fieldKey = getFieldKey(input.label);
-                return (
-                  <div className="cadastro-field" key={input.label}>
-                    <Input
-                      label={input.label}
-                      type="text"
-                      value={formData[fieldKey] || ""}
-                      onChange={(e) => handleInputChange(fieldKey, e.target.value, "date")}
-                      placeholder="DD/MM/AAAA"
-                      maxLength={10}
-                    />
-                  </div>
-                );
-              })}
+        <div className="cadastro-endereco-container">
+          <img 
+            src={iconeVoltar} 
+            alt="Voltar" 
+            className="cadastro-endereco-icone-voltar"
+            onClick={handlePreviousPage}
+          />
+          
+          <h1 className="cadastro-endereco-title">Cadastro de Endereço</h1>
+          
+          <div className="cadastro-endereco-passo">Passo: 2/2</div>
+          
+          <form className="cadastro-endereco-form" onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
+            {/* Data de Entrada e Data de Saída */}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Data de Entrada:</label>
+                <Input
+                  type="text"
+                  value={formData.datadeentrada || ""}
+                  onChange={(e) => handleInputChange("datadeentrada", e.target.value, "date")}
+                  placeholder="DD/MM/AAAA"
+                  maxLength={10}
+                  className="cadastro-endereco-input"
+                />
+              </div>
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Data de Saída:</label>
+                <Input
+                  type="text"
+                  value={formData.datadesada || ""}
+                  onChange={(e) => handleInputChange("datadesada", e.target.value, "date")}
+                  placeholder="DD/MM/AAAA"
+                  maxLength={10}
+                  className="cadastro-endereco-input cadastro-endereco-input-highlight"
+                />
+              </div>
             </div>
 
-            <div className="cadastro-row">
-              <div className="cadastro-field">
+            {/* Moradia e Tipo de Moradia */}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Moradia:</label>
                 <Input
-                  label="Moradia"
-                  type="number"
+                  type="text"
                   value={formData.moradia || ""}
                   onChange={(e) => handleInputChange("moradia", e.target.value)}
-                  placeholder="Número da moradia"
+                  placeholder="Quitada"
+                  className="cadastro-endereco-input"
                 />
               </div>
-              <div className="cadastro-field">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Tipo de Moradia:</label>
                 <Select
-                  label="Tipo de Moradia"
-                  options={inputsSecondStep[3].options.map(opt => ({ value: opt, label: opt }))}
-                  value={formData.tipodemoradia}
+                  options={[
+                    { value: "Apartamento", label: "Apartamento" },
+                    { value: "Casa", label: "Casa" },
+                    { value: "Sobrado", label: "Sobrado" },
+                    { value: "Kitnet", label: "Kitnet" },
+                    { value: "Outros", label: "Outros" }
+                  ]}
+                  value={formData.tipodemoradia || ""}
                   onChange={(e) => handleInputChange("tipodemoradia", e.target.value)}
                   placeholder="Selecione o tipo"
+                  className="cadastro-endereco-select"
                 />
               </div>
             </div>
 
-            <div className="cadastro-row">
-              <div className="cadastro-field">
+            {/* Tipo de Cesta e Status */}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Tipo de Cesta:</label>
                 <Select
-                  label={inputsSecondStep[4].label}
-                  options={inputsSecondStep[4].options.map(opt => ({ value: opt, label: opt }))}
-                  value={formData.tipodecesta}
+                  options={[
+                    { value: "Kit", label: "Kit" },
+                    { value: "Cesta Básica", label: "Cesta Básica" }
+                  ]}
+                  value={formData.tipodecesta || ""}
                   onChange={(e) => handleInputChange("tipodecesta", e.target.value)}
+                  placeholder="Selecione o tipo"
+                  className="cadastro-endereco-select"
                 />
               </div>
-              <div className="cadastro-field">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Status:</label>
                 <Select
-                  label={inputsSecondStep[5].label}
-                  options={inputsSecondStep[5].options.map(opt => ({ value: opt, label: opt }))}
-                  value={formData.status}
+                  options={[
+                    { value: "Disponível", label: "Disponível" },
+                    { value: "Ocupado", label: "Ocupado" },
+                    { value: "Indisponível", label: "Indisponível" }
+                  ]}
+                  value={formData.status || ""}
                   onChange={(e) => handleInputChange("status", e.target.value)}
+                  placeholder="Selecione o status"
+                  className="cadastro-endereco-select"
                 />
               </div>
             </div>
 
-            <Botao 
-              texto={loading ? "Cadastrando..." : "Cadastrar"} 
-              type="submit" 
-              className="cadastro-btn" 
-              disabled={loading}
-            />
+            <div className="cadastro-endereco-botoes">
+              <Botao 
+                texto="Voltar" 
+                onClick={handlePreviousPage}
+                className="cadastro-endereco-btn-voltar"
+              />
+              <Botao 
+                texto={loading ? "Cadastrando..." : "Próximo"} 
+                type="submit" 
+                className="cadastro-endereco-btn" 
+                disabled={loading}
+              />
+            </div>
           </form>
         </div>
       )}
 
-      {page === 3 && <SucessoEndereco onNext={handleNextPage} />}
+
 
       {page === 4 && (
-        <div className="cadastro-container">
-          <QuantidadePessoas 
-            formData={formData} 
-            onInputChange={handleInputChange}
-          >
-            <Botao 
-              texto={loading ? "Cadastrando..." : "Enviar"} 
-              onClick={handleRegister} 
-              className="cadastro-btn" 
-              disabled={loading}
-            />
-          </QuantidadePessoas>
+        <div className="cadastro-endereco-container">
+          <h1 className="cadastro-endereco-title">Cadastro de Endereço</h1>
+          
+          <form className="cadastro-endereco-form" onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
+            {/* Quantidade de Crianças sozinho */}
+            <div className="cadastro-endereco-field-group">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Quantidade de Crianças:</label>
+                <Input
+                  type="text"
+                  value={formData.quantidadedecriancas || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove não números
+                    if (value.length <= 2) {
+                      handleInputChange("quantidadedecriancas", value);
+                    }
+                  }}
+                  placeholder="Insira um número"
+                  className="cadastro-endereco-input"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+
+            {/* Quantidade de Gestantes e Adolescentes */}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Quantidade de Gestantes:</label>
+                <Input
+                  type="text"
+                  value={formData.quantidadedegestantes || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove não números
+                    if (value.length <= 2) {
+                      handleInputChange("quantidadedegestantes", value);
+                    }
+                  }}
+                  placeholder="Insira um número"
+                  className="cadastro-endereco-input"
+                  maxLength={2}
+                />
+              </div>
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Quantidade de Adolescentes:</label>
+                <Input
+                  type="text"
+                  value={formData.quantidadedeadolescentes || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove não números
+                    if (value.length <= 2) {
+                      handleInputChange("quantidadedeadolescentes", value);
+                    }
+                  }}
+                  placeholder="Insira um número"
+                  className="cadastro-endereco-input"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+
+            {/* Quantidade de Deficientes e Jovens */}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Quantidade de Deficientes:</label>
+                <Input
+                  type="text"
+                  value={formData.quantidadededeficientes || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove não números
+                    if (value.length <= 2) {
+                      handleInputChange("quantidadededeficientes", value);
+                    }
+                  }}
+                  placeholder="Insira um número"
+                  className="cadastro-endereco-input"
+                  maxLength={2}
+                />
+              </div>
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Quantidade de Jovens:</label>
+                <Input
+                  type="text"
+                  value={formData.quantidadedejovens || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove não números
+                    if (value.length <= 2) {
+                      handleInputChange("quantidadedejovens", value);
+                    }
+                  }}
+                  placeholder="Insira um número"
+                  className="cadastro-endereco-input"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+
+            {/* Quantidade de Idosos e Outros */}
+            <div className="cadastro-endereco-row">
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Quantidade de Idosos:</label>
+                <Input
+                  type="text"
+                  value={formData.quantidadedeidosos || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove não números
+                    if (value.length <= 2) {
+                      handleInputChange("quantidadedeidosos", value);
+                    }
+                  }}
+                  placeholder="Insira um número"
+                  className="cadastro-endereco-input"
+                  maxLength={2}
+                />
+              </div>
+              <div className="cadastro-endereco-field">
+                <label className="cadastro-endereco-label">Quantidade de Outros:</label>
+                <Input
+                  type="text"
+                  value={formData.quantidadedeoutros || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove não números
+                    if (value.length <= 2) {
+                      handleInputChange("quantidadedeoutros", value);
+                    }
+                  }}
+                  placeholder="Insira um número"
+                  className="cadastro-endereco-input"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+
+            <div className="cadastro-endereco-botoes" style={{ justifyContent: 'center', marginTop: '10px' }}>
+              <Botao 
+                texto={loading ? "Cadastrando..." : "Enviar"} 
+                type="submit" 
+                className="cadastro-endereco-btn" 
+                disabled={loading}
+                style={{ margin: '0' }}
+              />
+            </div>
+          </form>
         </div>
       )}
 
-      {page === 5 && <SucessoFinal onHome={handleRegister} />}
+
 
       <Modal
         isOpen={modalErro}
         onClose={() => setModalErro(false)}
         texto={mensagemErro}
         showClose={true}
+      />
+      
+      {/* Modal unificado com timeout de 3 segundos */}
+      <Modal
+        isOpen={modalGeral.open}
+        texto={modalGeral.mensagem}
+        showClose={false}
       />
     </div>
   );

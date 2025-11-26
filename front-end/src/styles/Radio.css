@@ -9,10 +9,11 @@
 	display: flex;
 	align-items: center;
 	cursor: pointer;
-	font-size: 28px;
-	font-weight: 600;
-	color: #000;
-	gap: 10px;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 22px !important;
+	font-weight: 300 !important;
+	color: #264040 !important;
+	gap: 5px;
 }
 
 .radio-input {
@@ -20,28 +21,28 @@
 }
 
 .custom-radio {
-	width: 32px;
-	height: 32px;
+	width: 24px;
+	height: 24px;
 	border-radius: 50%;
-	border: 3px solid #000;
-	background: #D9D9D9;
+	border: 3px solid #264040 !important;
+	background: #f2f2f2 !important;
 	display: inline-block;
 	position: relative;
-	margin-right: 4px;
+	margin-right: 0;
+	transition: all 0.2s ease;
 }
 
 .radio-input:checked + .custom-radio {
-	background: #000;
-	border-color: #000;
+	background: #D9C27E !important;
 }
 
 .radio-input:checked + .custom-radio::after {
 	content: "";
 	display: block;
-	width: 18px;
-	height: 18px;
+	width: 12px;
+	height: 12px;
 	border-radius: 50%;
-	background: #000;
+	background: #D9C27E !important;
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -49,5 +50,5 @@
 }
 
 .radio-text {
-	margin-left: 4px;
+	margin-left: 0;
 }
