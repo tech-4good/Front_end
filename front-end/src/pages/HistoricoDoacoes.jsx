@@ -224,7 +224,7 @@ export default function HistoricoDoacoes() {
 	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 	return (
 		<div>
-			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isHistoricoCestasPage={true} />
 			<div className="historico-doacoes-container">
 				<img 
 					src={iconeVoltar} 
