@@ -48,20 +48,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 400) {
-      // Erro de validação/dados incorretos
-      const mensagem = error.response?.data?.message ||
-        error.response?.data?.error ||
-        'Dados inválidos. Verifique as informações preenchidas.';
-
-      window.dispatchEvent(new CustomEvent('apiError', {
-        detail: {
-          type: 'validation',
-          title: 'Dados Incorretos',
-          message: mensagem
-        }
-      }));
-    } else if (error.response?.status === 401) {
+    // Removi o tratamento automático de erro 400 para evitar modais técnicos
+    // Os serviços individuais devem tratar seus próprios erros
+    if (error.response?.status === 401) {
       // Não mostrar "Sessão Expirada" se for erro na rota de login
       const isLoginRoute = error.config?.url?.includes('/voluntarios/login');
 

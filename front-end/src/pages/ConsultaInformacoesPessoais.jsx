@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
 import Modal from "../components/Modal";
 import { beneficiadoService } from "../services/beneficiadoService";
 import { getFotoBlobUrl } from "../services/fileService";
-import "../styles/Home.css";
 import "../styles/ConsultaInformacoesPessoais.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 export default function ConsultaInformacoesPessoais() {
   const [carregando, setCarregando] = useState(true);
@@ -111,7 +110,7 @@ export default function ConsultaInformacoesPessoais() {
     try {
       const cpfSelecionado = sessionStorage.getItem("cpfSelecionado");
       if (!cpfSelecionado) {
-        setErro("Nenhum beneficiado selecionado");
+        navigate("/consulta-beneficiados");
         return;
       }
 
@@ -235,6 +234,17 @@ export default function ConsultaInformacoesPessoais() {
       }
     }
   }, [beneficiado]);
+
+  // Auto-close modal without buttons after 3 seconds
+  useEffect(() => {
+    if (modalExcluidoSucesso) {
+      const timer = setTimeout(() => {
+        setModalExcluidoSucesso(false);
+        navigate("/consulta-beneficiados");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalExcluidoSucesso, navigate]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -394,12 +404,15 @@ export default function ConsultaInformacoesPessoais() {
   }
 
   return (
-    <div className="consulta-info-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+    <div>
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isConsultaBeneficiadosPage={true} />
       <div className="consulta-info-container">
-        <div className="consulta-info-voltar">
-          <Voltar onClick={() => navigate("/consulta-beneficiados-menu")} />
-        </div>
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="consulta-info-icone-voltar"
+          onClick={() => navigate("/consulta-beneficiados-menu")}
+        />
         <h1 className="consulta-info-title">Informações Pessoais</h1>
 
         {carregando && (
@@ -424,185 +437,284 @@ export default function ConsultaInformacoesPessoais() {
 
         {!carregando && !erro && beneficiado && (
           <>
-            <div className="consulta-info-form">
-              <div className="consulta-info-col">
-                <label>Nome Completo:</label>
-                <input name="nome" value={dados.nome} onChange={handleChange} />
-                <label>RG:</label>
-                <input
-                  name="rg"
-                  value={dados.rg}
-                  onChange={handleChange}
-                  maxLength={12}
-                />
-                <label>Telefone:</label>
-                <input
-                  name="telefone"
-                  value={dados.telefone}
-                  onChange={handleChange}
-                  maxLength={15}
-                />
-                <label>Escolaridade:</label>
-                <input
-                  name="escolaridade"
-                  value={dados.escolaridade}
-                  onChange={handleChange}
-                />
-                <label>Profissão:</label>
-                <input
-                  name="profissao"
-                  value={dados.profissao}
-                  onChange={handleChange}
-                />
-                <label>Empresa:</label>
-                <input
-                  name="empresa"
-                  value={dados.empresa}
-                  onChange={handleChange}
-                />
-                <label>Quantidade de Dependentes:</label>
-                <input
-                  name="dependentes"
-                  value={dados.dependentes}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="consulta-info-col">
-                <label>CPF:</label>
-
-                <input
-                  name="cpf"
-                  value={dados.cpf}
-                  onChange={handleChange}
-                  maxLength={14}
-                />
-                <label>Data de Nascimento:</label>
-
-                <input
-                  name="nascimento"
-                  value={dados.nascimento}
-                  onChange={handleChange}
-                  maxLength={10}
-                />
-                <label>Estado Civil:</label>
-                <input
-                  name="estadoCivil"
-                  value={dados.estadoCivil}
-                  onChange={handleChange}
-                />
-                <label>Religião:</label>
-                <input
-                  name="religiao"
-                  value={dados.religiao}
-                  onChange={handleChange}
-                />
-                <label>Renda Mensal:</label>
-                <input
-                  name="renda"
-                  value={dados.renda}
-                  onChange={handleChange}
-                  maxLength={15}
-                />
-                <label>Cargo:</label>
-                <input
-                  name="cargo"
-                  value={dados.cargo}
-                  onChange={handleChange}
-                />
-                <label>Foto do Beneficiado:</label>
-                <div className="consulta-info-foto">
-                  {carregandoFoto ? (
-                    <div
-                      style={{
-                        width: "200px",
-                        height: "200px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "1px solid #ddd",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      <span>Carregando foto...</span>
-                    </div>
-                  ) : fotoBlobUrl ? (
-                    <img
-                      src={fotoBlobUrl}
-                      alt="Foto do Beneficiado"
-                      style={{
-                        width: "200px",
-                        height: "200px",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                      }}
-                      onError={(e) => {
-                        console.log(
-                          "❌ Erro ao exibir foto - Usando placeholder"
-                        );
-                        e.target.src = foto3x4;
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "200px",
-                        height: "200px",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "2px dashed #ddd",
-                        borderRadius: "10px",
-                        backgroundColor: "#f9f9f9",
-                        color: "#999",
-                        textAlign: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <span style={{ fontSize: "40px", marginBottom: "10px" }}>
-                        📷
-                      </span>
-                      <span style={{ fontSize: "20px" }}>
-                        Sem foto cadastrada
-                      </span>
-                    </div>
-                  )}
+            <form className="consulta-info-form" onSubmit={(e) => { e.preventDefault(); handleAlterarClick(); }}>
+              {/* Primeira linha - Foto (centralizada) */}
+              <div className="consulta-info-row consulta-info-row-single">
+                <div className="consulta-info-field" style={{ alignItems: 'center' }}>
+                  <label className="consulta-info-label" style={{ textAlign: 'center' }}>Foto do Beneficiado:</label>
+                  <div className="consulta-info-foto" style={{ margin: '0 auto' }}>
+                    {carregandoFoto ? (
+                      <div className="consulta-info-foto-loading">
+                        <span>Carregando foto...</span>
+                      </div>
+                    ) : fotoBlobUrl ? (
+                      <img
+                        src={fotoBlobUrl}
+                        alt="Foto do Beneficiado"
+                        className="consulta-info-foto-img"
+                        onError={(e) => {
+                          console.log("❌ Erro ao exibir foto - Usando placeholder");
+                          e.target.parentElement.innerHTML = '<div class="consulta-info-foto-placeholder"><span>📷</span><span>Erro ao carregar foto</span></div>';
+                        }}
+                      />
+                    ) : (
+                      <div className="consulta-info-foto-placeholder">
+                        <span>📷</span>
+                        <span>Sem foto cadastrada</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <hr className="consulta-info-divisor" />
+
+              {/* Segunda linha - Nome, CPF, RG */}
+              <div className="consulta-info-row consulta-info-row-triple">
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Nome Completo:</label>
+                  <input
+                    type="text"
+                    name="nome"
+                    value={dados.nome}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                      value = value.replace(/\s{2,}/g, ' ');
+                      setDados(prev => ({ ...prev, nome: value }));
+                    }}
+                    className="consulta-info-input"
+                    placeholder="Insira o nome completo"
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">CPF:</label>
+                  <input
+                    type="text"
+                    name="cpf"
+                    value={dados.cpf}
+                    onChange={handleChange}
+                    maxLength={14}
+                    className="consulta-info-input"
+                    placeholder="000.000.000-00"
+                    onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">RG:</label>
+                  <input
+                    type="text"
+                    name="rg"
+                    value={dados.rg}
+                    onChange={handleChange}
+                    maxLength={12}
+                    className="consulta-info-input"
+                    placeholder="00.000.000-0"
+                    onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}
+                  />
+                </div>
+              </div>
+
+              {/* Terceira linha - Data Nascimento, Telefone, Estado Civil */}
+              <div className="consulta-info-row consulta-info-row-triple">
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Data de Nascimento:</label>
+                  <input
+                    type="text"
+                    name="dataNascimento"
+                    value={dados.dataNascimento}
+                    onChange={(e) => {
+                      const formatDate = (value) => {
+                        let numbers = value.replace(/\D/g, "");
+                        if (numbers.length > 8) numbers = numbers.slice(0, 8);
+                        if (numbers.length <= 2) return numbers;
+                        if (numbers.length <= 4) return numbers.replace(/(\d{2})(\d{0,2})/, "$1/$2");
+                        return numbers.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3");
+                      };
+                      const formattedValue = formatDate(e.target.value);
+                      setDados(prev => ({ ...prev, dataNascimento: formattedValue }));
+                    }}
+                    maxLength={10}
+                    className="consulta-info-input"
+                    placeholder="dd/mm/aaaa"
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Telefone:</label>
+                  <input
+                    type="text"
+                    name="telefone"
+                    value={dados.telefone}
+                    onChange={handleChange}
+                    maxLength={15}
+                    className="consulta-info-input"
+                    placeholder="(11) 99999-9999"
+                    onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Estado Civil:</label>
+                  <input
+                    type="text"
+                    name="estadoCivil"
+                    value={dados.estadoCivil}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                      value = value.replace(/\s{2,}/g, ' ');
+                      setDados(prev => ({ ...prev, estadoCivil: value }));
+                    }}
+                    className="consulta-info-input"
+                    placeholder="Ex: Solteiro, Casado, etc."
+                  />
+                </div>
+              </div>
+
+              {/* Quarta linha - Religião, Escolaridade, Profissão */}
+              <div className="consulta-info-row consulta-info-row-triple">
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Religião:</label>
+                  <input
+                    type="text"
+                    name="religiao"
+                    value={dados.religiao}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                      value = value.replace(/\s{2,}/g, ' ');
+                      setDados(prev => ({ ...prev, religiao: value }));
+                    }}
+                    className="consulta-info-input"
+                    placeholder="Ex: Católica, Evangélica, etc."
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Escolaridade:</label>
+                  <input
+                    type="text"
+                    name="escolaridade"
+                    value={dados.escolaridade}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                      value = value.replace(/\s{2,}/g, ' ');
+                      setDados(prev => ({ ...prev, escolaridade: value }));
+                    }}
+                    className="consulta-info-input"
+                    placeholder="Escolaridade"
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Profissão:</label>
+                  <input
+                    type="text"
+                    name="profissao"
+                    value={dados.profissao}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                      value = value.replace(/\s{2,}/g, ' ');
+                      setDados(prev => ({ ...prev, profissao: value }));
+                    }}
+                    className="consulta-info-input"
+                    placeholder="Ex: Vendedor, Autônomo, etc."
+                  />
+                </div>
+              </div>
+
+              {/* Quinta linha - Quantidade de Dependentes, Cargo, Renda */}
+              <div className="consulta-info-row consulta-info-row-triple">
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Quantidade de Dependentes:</label>
+                  <input
+                    type="text"
+                    name="dependentes"
+                    value={dados.dependentes}
+                    onChange={handleChange}
+                    className="consulta-info-input"
+                    placeholder="0"
+                    maxLength={2}
+                    pattern="[0-9]*"
+                    onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Cargo:</label>
+                  <input
+                    type="text"
+                    name="cargo"
+                    value={dados.cargo}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                      value = value.replace(/\s{2,}/g, ' ');
+                      setDados(prev => ({ ...prev, cargo: value }));
+                    }}
+                    className="consulta-info-input"
+                    placeholder="Cargo na empresa"
+                  />
+                </div>
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Renda Mensal:</label>
+                  <input
+                    type="text"
+                    name="renda"
+                    value={dados.renda}
+                    onChange={handleChange}
+                    maxLength={15}
+                    className="consulta-info-input"
+                    placeholder="R$ 0,00"
+                    onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}
+                  />
+                </div>
+              </div>
+
+              {/* Sexta linha - Empresa (largura total) */}
+              <div className="consulta-info-row consulta-info-row-single">
+                <div className="consulta-info-field">
+                  <label className="consulta-info-label">Empresa:</label>
+                  <input
+                    type="text"
+                    name="empresa"
+                    value={dados.empresa}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                      value = value.replace(/\s{2,}/g, ' ');
+                      setDados(prev => ({ ...prev, empresa: value }));
+                    }}
+                    className="consulta-info-input"
+                    placeholder="Nome da empresa"
+                  />
+                </div>
+              </div>
+
+              <div className="consulta-info-botoes-principais">
+                <button className="consulta-info-btn" type="submit">
+                  Alterar Informações
+                </button>
+                <button
+                  type="button"
+                  className="consulta-info-botao-danger"
+                  onClick={() => setModalExcluirBeneficiado(true)}
+                >
+                  Excluir Beneficiado
+                </button>
+              </div>
+            </form>
+            <div className="consulta-info-divisor"></div>
             <h2 className="consulta-info-subtitle">Auxílios Governamentais</h2>
             <div className="consulta-info-auxilios">
-              {auxilios.map((a, i) => (
-                <input
-                  key={i}
-                  value={a}
-                  readOnly
-                  className="consulta-info-auxilio"
-                />
-              ))}
+              {auxilios.length > 0 ? auxilios.map((a, i) => (
+                <div key={i} className="consulta-info-auxilio">
+                  {a}
+                </div>
+              )) : (
+                <div className="consulta-info-no-auxilios">
+                  Nenhum auxílio governamental cadastrado
+                </div>
+              )}
             </div>
             <div className="consulta-info-botoes">
               <button
-                className="consulta-info-botao"
-                onClick={handleAlterarClick}
-              >
-                Alterar Informações
-              </button>
-              <button
-                className="consulta-info-botao"
+                className="consulta-info-botao-secundario"
                 onClick={() => navigate("/cadastro-auxilios")}
               >
-                Cadastrar outro Auxílio
+                Cadastrar Auxílio
               </button>
               <button
-                className="consulta-info-botao"
-                onClick={() => setModalExcluirBeneficiado(true)}
-              >
-                Excluir Beneficiado
-              </button>
-              <button
-                className="consulta-info-botao"
+                className="consulta-info-botao-secundario"
                 onClick={() => setModalEscolherAuxilio(true)}
               >
                 Excluir Auxílio
@@ -616,11 +728,11 @@ export default function ConsultaInformacoesPessoais() {
               showClose={false}
               botoes={[
                 {
-                  texto: "SIM",
+                  texto: "Sim",
                   onClick: handleConfirmarSim,
                 },
                 {
-                  texto: "NÃO",
+                  texto: "Não",
                   onClick: handleConfirmarNao,
                 },
               ]}
@@ -634,7 +746,7 @@ export default function ConsultaInformacoesPessoais() {
               showClose={false}
               botoes={[
                 {
-                  texto: "SIM",
+                  texto: "Sim",
                   onClick: handleExcluirBeneficiado,
                   style: {
                     background: "#fff",
@@ -643,7 +755,7 @@ export default function ConsultaInformacoesPessoais() {
                   },
                 },
                 {
-                  texto: "NÃO",
+                  texto: "Não",
                   onClick: () => setModalExcluirBeneficiado(false),
                   style: {
                     background: "#111",
@@ -670,7 +782,7 @@ export default function ConsultaInformacoesPessoais() {
               isOpen={modalEscolherAuxilio}
               onClose={() => setModalEscolherAuxilio(false)}
               texto={"Selecione o auxílio que deseja excluir:"}
-              showClose={true}
+              showClose={false}
               botoes={auxilios.map((a) => ({
                 texto: a,
                 onClick: () => {
@@ -689,7 +801,7 @@ export default function ConsultaInformacoesPessoais() {
               showClose={false}
               botoes={[
                 {
-                  texto: "SIM",
+                  texto: "Sim",
                   onClick: () => {
                     setAuxilios(
                       auxilios.filter((a) => a !== auxilioParaExcluir)
@@ -699,7 +811,7 @@ export default function ConsultaInformacoesPessoais() {
                   },
                 },
                 {
-                  texto: "NÃO",
+                  texto: "Não",
                   onClick: () => {
                     setModalConfirmarExclusao(false);
                     setAuxilioParaExcluir(null);
@@ -716,6 +828,16 @@ export default function ConsultaInformacoesPessoais() {
             />
           </>
         )}
+        
+        {/* Modal de feedback de alteração confirmada */}
+        <div style={{ position: "fixed", top: 24, right: 24, zIndex: 2000 }}>
+          <Modal
+            isOpen={alteracaoConfirmada}
+            onClose={() => setAlteracaoConfirmada(false)}
+            texto={"Informações alteradas com sucesso!"}
+            showClose={false}
+          />
+        </div>
       </div>
     </div>
   );

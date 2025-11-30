@@ -2,12 +2,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
 import "../styles/VoluntariosMenu.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
+import iconeFechar from "../assets/icone-fechar.png";
 
 export default function VoluntariosMenu() {
   const navigate = useNavigate();
@@ -24,14 +25,29 @@ export default function VoluntariosMenu() {
   ];
 
   return (
-    <div className="voluntarios-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
-      <div className="voluntarios-container">
-        <Voltar onClick={() => navigate("/home")} />
-        <h1 className="voluntarios-title">Voluntários</h1>
-        <div className="voluntarios-botoes-row">
-          <button className="voluntarios-botao" onClick={() => navigate("/voluntarios-cadastro")}>Cadastrar</button>
-          <button className="voluntarios-botao" onClick={() => navigate("/voluntarios-excluir")}>Excluir</button>
+    <div className="voluntarios-container">
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isVoluntariosPage={true} />
+      <img 
+        src={iconeVoltar} 
+        alt="Voltar" 
+        className="voluntarios-voltar"
+        onClick={() => navigate("/home")}
+      />
+      <div className="voluntarios-content">
+        <div className="voluntarios-title">Voluntários</div>
+        <div className="voluntarios-grid">
+          <div className="voluntarios-card-item" onClick={() => navigate("/voluntarios-cadastro")}>
+            <h3 className="voluntarios-card-title">Cadastrar</h3>
+            <div className="voluntarios-card-icon">
+              <img src={iconeUsuario} alt="Cadastrar Voluntário" />
+            </div>
+          </div>
+          <div className="voluntarios-card-item" onClick={() => navigate("/voluntarios-excluir")}>
+            <h3 className="voluntarios-card-title">Excluir</h3>
+            <div className="voluntarios-card-icon">
+              <img src={iconeFechar} alt="Excluir Voluntário" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

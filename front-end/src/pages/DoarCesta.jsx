@@ -6,6 +6,7 @@ import Voltar from "../components/Voltar";
 import Input from "../components/Input";
 import Botao from "../components/Botao";
 import Radio from "../components/Radio";
+import iconeVoltar from "../assets/icone-voltar.png";
 import { beneficiadoService } from "../services/beneficiadoService";
 import { entregaService } from "../services/entregaService";
 import { cestaService } from "../services/cestaService";
@@ -40,9 +41,72 @@ export default function DoarCesta() {
   const [modalLimiteMes, setModalLimiteMes] = useState({ open: false, data: null });
   const [modalLimiteKit, setModalLimiteKit] = useState({ open: false, data: null });
 
+  // Timeouts automáticos para todos os modais (5 segundos)
+  React.useEffect(() => {
+    if (modalNaoEncontrado) {
+      const timeout = setTimeout(() => setModalNaoEncontrado(false), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalNaoEncontrado]);
+
+  React.useEffect(() => {
+    if (modalErro) {
+      const timeout = setTimeout(() => setModalErro(false), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalErro]);
+
+  React.useEffect(() => {
+    if (modalSucesso) {
+      const timeout = setTimeout(() => { setModalSucesso(false); window.location.reload(); }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalSucesso]);
+
+  React.useEffect(() => {
+    if (modalEstoqueVazio) {
+      const timeout = setTimeout(() => setModalEstoqueVazio(false), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalEstoqueVazio]);
+
+  React.useEffect(() => {
+    if (modalRestricao.open) {
+      const timeout = setTimeout(() => setModalRestricao({ open: false, tipo: "" }), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalRestricao.open]);
+
+  React.useEffect(() => {
+    if (modalLimiteMes.open) {
+      const timeout = setTimeout(() => setModalLimiteMes({ open: false, data: null }), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalLimiteMes.open]);
+
+  React.useEffect(() => {
+    if (modalLimiteKit.open) {
+      const timeout = setTimeout(() => setModalLimiteKit({ open: false, data: null }), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalLimiteKit.open]);
+
   function handleCpfChange(e) {
     const valor = e.target.value.replace(/\D/g, "");
-    setCpf(valor);
+    
+    // Aplicar máscara CPF: 000.000.000-00
+    let cpfFormatado = valor;
+    if (valor.length >= 4) {
+      cpfFormatado = valor.slice(0, 3) + '.' + valor.slice(3);
+    }
+    if (valor.length >= 7) {
+      cpfFormatado = cpfFormatado.slice(0, 7) + '.' + cpfFormatado.slice(7);
+    }
+    if (valor.length >= 10) {
+      cpfFormatado = cpfFormatado.slice(0, 11) + '-' + cpfFormatado.slice(11);
+    }
+    
+    setCpf(cpfFormatado);
     
     // Limpar resultados se CPF estiver vazio ou completo
     if (valor.length === 0 || valor.length === 11) {
@@ -302,36 +366,47 @@ export default function DoarCesta() {
 
   return (
     <div className="doar-cesta-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isEntregarCestaPage={true} />
       <div className="doar-cesta-container">
-        <div className="doar-cesta-voltar">
-          <Voltar onClick={() => navigate("/home")} />
-        </div>
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="doar-cesta-icone-voltar"
+          onClick={() => navigate("/home")}
+        />
         <h1 className="doar-cesta-title">Entregar Cesta</h1>
         <form className="doar-cesta-form" autoComplete="off" onSubmit={handleSubmit}>
-          <Input
-            placeholder="Insira o CPF"
-            value={cpf}
-            onChange={handleCpfChange}
-            className="doar-cesta-input"
-            maxLength={11}
-          />
-          {cpf && cpf.length < 11 && resultados.length > 0 && (
+          <div className="doar-cesta-field">
+            <label className="doar-cesta-label">CPF:</label>
+            <Input
+              type="text"
+              placeholder="000.000.000-00"
+              value={cpf}
+              onChange={handleCpfChange}
+              className="doar-cesta-input"
+              maxLength={14}
+            />
+          </div>
+          {cpf && cpf.replace(/\D/g, '').length < 11 && resultados.length > 0 && (
             <div className="doar-cesta-resultados">
               {resultados.map((beneficiado, idx) => (
                 <div
                   className="doar-cesta-resultado"
                   key={idx}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setCpf(beneficiado.cpf.replace(/\D/g, ""))}
+                  onClick={() => {
+                    const cpfLimpo = beneficiado.cpf.replace(/\D/g, "");
+                    const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                    setCpf(cpfFormatado);
+                    setResultados([]); // Limpar resultados após seleção
+                  }}
                 >
                   {beneficiado.nome}
                 </div>
               ))}
             </div>
           )}
-          <div className="doar-cesta-radio-row">
-            <span className="doar-cesta-radio-label">Tipo:</span>
+          <div className="doar-cesta-field doar-cesta-tipo-field">
+            <label className="doar-cesta-label">Tipo:</label>
             <Radio
               name="tipoCesta"
               options={[
@@ -340,10 +415,11 @@ export default function DoarCesta() {
               ]}
               value={tipoCesta}
               onChange={e => setTipoCesta(e.target.value)}
+              className="doar-cesta-radio"
             />
           </div>
-          <div className="doar-cesta-btn-row">
-            <Botao texto="Doar" type="submit" />
+          <div className="doar-cesta-btn-container">
+            <Botao texto="Doar" type="submit" className="doar-cesta-btn" />
           </div>
           
           <Modal
@@ -354,7 +430,7 @@ export default function DoarCesta() {
               <strong>Kit pode ser retirado de 14 em 14 dias (2x por mês)</strong><br/>
               Próxima retirada permitida a partir de: {modalLimiteKit.data && modalLimiteKit.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </>}
-            showClose={true}
+            showClose={false}
           />
           
           <Modal
@@ -365,7 +441,7 @@ export default function DoarCesta() {
               <strong>Cesta Básica pode ser retirada de 30 em 30 dias (1x por mês)</strong><br/>
               Próxima retirada permitida a partir de: {modalLimiteMes.data && modalLimiteMes.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </>}
-            showClose={true}
+            showClose={false}
           />
           
           <Modal
@@ -376,28 +452,28 @@ export default function DoarCesta() {
               : modalRestricao.tipo === "basica"
                 ? "Este beneficiado só pode retirar a Cesta Básica."
                 : "Tipo de retirada não permitido."}
-            showClose={true}
+            showClose={false}
           />
           
           <Modal
             isOpen={modalSucesso}
             onClose={() => { setModalSucesso(false); window.location.reload(); }}
             texto={"Cesta doada com sucesso!"}
-            showClose={true}
+            showClose={false}
           />
           
           <Modal
             isOpen={modalErro}
             onClose={() => setModalErro(false)}
             texto={"Todas as informações devem ser preenchidas."}
-            showClose={true}
+            showClose={false}
           />
           
           <Modal
             isOpen={modalEstoqueVazio}
             onClose={() => setModalEstoqueVazio(false)}
             texto={"Nenhuma cesta disponível no estoque. Entre em contato com o administrador."}
-            showClose={true}
+            showClose={false}
           />
           
           <Modal
@@ -409,7 +485,7 @@ export default function DoarCesta() {
                 Clique aqui para cadastrar beneficiado
               </span>
             </>}
-            showClose={true}
+            showClose={false}
           />
         </form>
       </div>

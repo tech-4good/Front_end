@@ -2,14 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
+import Modal from "../components/Modal";
 import { entregaService } from "../services/entregaService";
-import "../styles/Home.css";
 import "../styles/HistoricoDoacoes.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 // Função auxiliar para formatar data de array [ano, mes, dia] para DD/MM/YYYY
 const formatarData = (dataArray) => {
@@ -27,10 +27,14 @@ const dataParaTimestamp = (dataString) => {
 export default function HistoricoDoacoes() {
 	const navigate = useNavigate();
 	const [tipoUsuario, setTipoUsuario] = useState("2");
-	const [ordem, setOrdem] = useState('desc');
 	const [entregas, setEntregas] = useState([]);
+	const [entregasOriginais, setEntregasOriginais] = useState([]); // Para manter dados originais
+	const [filtroAtivo, setFiltroAtivo] = useState('todos');
 	const [carregando, setCarregando] = useState(true);
 	const [erro, setErro] = useState(null);
+	const [modalPeriodo, setModalPeriodo] = useState(false);
+	const [dataInicio, setDataInicio] = useState('');
+	const [dataFim, setDataFim] = useState('');
 	const [paginaAtual, setPaginaAtual] = useState(1);
 	const itensPorPagina = 5;
 
@@ -39,6 +43,11 @@ export default function HistoricoDoacoes() {
 		setTipoUsuario(tipo);
 		carregarEntregas();
 	}, []);
+
+	// Aplicar filtros quando filtroAtivo ou entregasOriginais mudarem
+	useEffect(() => {
+		aplicarFiltro();
+	}, [filtroAtivo, entregasOriginais]);
 
 	const carregarEntregas = async () => {
 		setCarregando(true);
@@ -67,7 +76,7 @@ export default function HistoricoDoacoes() {
 				}));
 				
 				console.log("✅ Entregas processadas:", entregasProcessadas.length, "entregas");
-				setEntregas(entregasProcessadas);
+				setEntregasOriginais(entregasProcessadas);
 			} else {
 				setErro(result.error || "Erro ao carregar histórico");
 				console.error("❌ Erro ao carregar entregas:", result.error);
@@ -80,17 +89,97 @@ export default function HistoricoDoacoes() {
 		}
 	};
 
-	// Aplicar ordenação
-	const entregasOrdenadas = [...entregas].sort((a, b) => {
-		const timestampA = dataParaTimestamp(a.data);
-		const timestampB = dataParaTimestamp(b.data);
-		return ordem === 'desc' ? timestampB - timestampA : timestampA - timestampB;
-	});
+	const aplicarFiltro = () => {
+		if (entregasOriginais.length === 0) return;
 
-	// Resetar página quando mudar a ordem
+		let dadosFiltrados = [...entregasOriginais];
+
+		// Filtrar por tipo
+		if (filtroAtivo === 'kit') {
+			dadosFiltrados = dadosFiltrados.filter(e => {
+				const tipo = (e.tipo || '').toLowerCase();
+				return tipo.includes('kit');
+			});
+		} else if (filtroAtivo === 'cesta') {
+			dadosFiltrados = dadosFiltrados.filter(e => {
+				const tipo = (e.tipo || '').toLowerCase();
+				return tipo.includes('cesta') || tipo.includes('basica');
+			});
+		}
+
+		// Filtrar por período customizado
+		if (filtroAtivo === 'periodo-customizado' && dataInicio && dataFim) {
+			const timestampInicio = new Date(dataInicio).getTime();
+			const timestampFim = new Date(dataFim).getTime();
+			
+			dadosFiltrados = dadosFiltrados.filter(e => {
+				const timestamp = getTimestamp(e);
+				return timestamp >= timestampInicio && timestamp <= timestampFim;
+			});
+		}
+
+		// Ordenar por data
+		if (filtroAtivo === 'mais-novo' || filtroAtivo === 'todos') {
+			dadosFiltrados.sort((a, b) => {
+				const timestampA = getTimestamp(a);
+				const timestampB = getTimestamp(b);
+				return timestampB - timestampA; // Mais novo primeiro
+			});
+		} else if (filtroAtivo === 'mais-antigo') {
+			dadosFiltrados.sort((a, b) => {
+				const timestampA = getTimestamp(a);
+				const timestampB = getTimestamp(b);
+				return timestampA - timestampB; // Mais antigo primeiro
+			});
+		} else if (filtroAtivo === 'periodo-customizado') {
+			dadosFiltrados.sort((a, b) => {
+				const timestampA = getTimestamp(a);
+				const timestampB = getTimestamp(b);
+				return timestampB - timestampA; // Mais novo primeiro por padrão
+			});
+		}
+
+		setEntregas(dadosFiltrados);
+	};
+
+	const handleFiltroChange = (e) => {
+		const novoFiltro = e.target.value;
+		if (novoFiltro === 'periodo-customizado') {
+			setModalPeriodo(true);
+		} else {
+			setFiltroAtivo(novoFiltro);
+		}
+	};
+
+	const aplicarPeriodoCustomizado = () => {
+		if (dataInicio && dataFim) {
+			setFiltroAtivo('periodo-customizado');
+			setModalPeriodo(false);
+		}
+	};
+
+	const getTimestamp = (entrega) => {
+		if (entrega.dataOriginal && Array.isArray(entrega.dataOriginal)) {
+			return new Date(entrega.dataOriginal[0], entrega.dataOriginal[1] - 1, entrega.dataOriginal[2]).getTime();
+		}
+		return dataParaTimestamp(entrega.data);
+	};
+
+	const formatarTipo = (tipo) => {
+		if (!tipo) return 'N/A';
+		const tipoLower = tipo.toLowerCase();
+		if (tipoLower.includes('kit')) return 'Kit';
+		if (tipoLower.includes('cesta') || tipoLower.includes('basica')) return 'Cesta Básica';
+		return tipo;
+	};
+
+	// Aplicar paginação nos dados filtrados
+	const entregasOrdenadas = entregas;
+
+	// Resetar página quando mudar o filtro
 	useEffect(() => {
 		setPaginaAtual(1);
-	}, [ordem]);
+	}, [filtroAtivo]);
 
 	// Cálculos da paginação
 	const totalPaginas = Math.ceil(entregasOrdenadas.length / itensPorPagina);
@@ -104,6 +193,27 @@ export default function HistoricoDoacoes() {
 		}
 	};
 
+	// Gerar páginas visíveis para navegação
+	const gerarPaginasVisiveis = () => {
+		const paginas = [];
+		const maxPaginasVisiveis = 5;
+		
+		// A página atual sempre fica na primeira posição e mostra as próximas 4
+		let inicio = paginaAtual;
+		let fim = Math.min(totalPaginas, inicio + maxPaginasVisiveis - 1);
+		
+		// Se não temos páginas suficientes à direita, ajustar para trás
+		if (fim - inicio < maxPaginasVisiveis - 1 && inicio > 1) {
+			inicio = Math.max(1, fim - maxPaginasVisiveis + 1);
+		}
+		
+		for (let i = inicio; i <= fim; i++) {
+			paginas.push(i);
+		}
+		
+		return paginas;
+	};
+
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
 		{ texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
@@ -113,33 +223,44 @@ export default function HistoricoDoacoes() {
 
 	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 	return (
-		<div className="historico-doacoes-bg">
+		<div>
 			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
 			<div className="historico-doacoes-container">
-				<div className="historico-doacoes-voltar">
-					<Voltar onClick={() => navigate('/home')}/>
-				</div>
-				<div className="historico-doacoes-filtro">
-					<label className="historico-doacoes-filtro-label">Filtrar por data:</label>
-					<select className="historico-doacoes-filtro-select" value={ordem} onChange={e => setOrdem(e.target.value)}>
-						<option value="desc">Mais recente</option>
-						<option value="asc">Mais antigo</option>
-					</select>
-				</div>
-				<h1 className="historico-doacoes-title">Histórico de Atendimentos</h1>
-				<div className="historico-doacoes-lista">
+				<img 
+					src={iconeVoltar} 
+					alt="Voltar" 
+					className="historico-doacoes-icone-voltar"
+					onClick={() => navigate('/home')}
+				/>
+				
+			<div className="historico-doacoes-filtro">
+				<label className="historico-doacoes-filtro-label">Filtrar por:</label>
+				<select 
+					className="historico-doacoes-filtro-select" 
+					value={filtroAtivo} 
+					onChange={handleFiltroChange}
+				>
+					<option value="todos">Todos</option>
+					<option value="kit">Kit</option>
+					<option value="cesta">Cesta Básica</option>
+					<option value="mais-novo">Mais novo primeiro</option>
+					<option value="mais-antigo">Mais antigo primeiro</option>
+					<option value="periodo-customizado">Período Customizado</option>
+				</select>
+			</div>			<div className="historico-doacoes-title-container">
+				<h1 className="historico-doacoes-title">
+					Clique no nome do beneficiado para ver suas informações!
+				</h1>
+			</div>				<div className="historico-doacoes-lista">
 					{carregando ? (
-						<p className="historico-doacoes-nao-encontrado">Carregando histórico...</p>
+						<div className="historico-doacoes-loading">Carregando histórico...</div>
 					) : erro ? (
-						<p className="historico-doacoes-nao-encontrado" style={{ color: '#e74c3c' }}>
-							{erro}
-						</p>
+						<div className="historico-doacoes-erro">{erro}</div>
 					) : entregasPaginadas.length > 0 ? (
 						entregasPaginadas.map((entrega) => (
 							<div className="historico-doacoes-card" key={entrega.id}>
 								<div
 									className="historico-doacoes-nome"
-									style={{ cursor: 'pointer', textDecoration: 'underline' }}
 									onClick={() => {
 										sessionStorage.setItem('cpfSelecionado', entrega.cpf);
 										navigate('/consulta-beneficiados-menu', { state: { cpf: entrega.cpf } });
@@ -147,12 +268,12 @@ export default function HistoricoDoacoes() {
 								>
 									{entrega.nome}
 								</div>
-								<span className="historico-doacoes-tipo-badge">{entrega.tipo}</span>
-								<span className="historico-doacoes-data">{entrega.data}</span>
+								<div className="historico-doacoes-tipo-badge">{formatarTipo(entrega.tipo)}</div>
+								<div className="historico-doacoes-data">{entrega.data}</div>
 							</div>
 						))
 					) : (
-						<p className="historico-doacoes-nao-encontrado">Nenhum atendimento encontrado.</p>
+						<div className="historico-doacoes-nao-encontrado">Nenhum atendimento encontrado.</div>
 					)}
 				</div>
 				
@@ -167,11 +288,31 @@ export default function HistoricoDoacoes() {
 							‹
 						</button>
 						
-						<div className="historico-doacoes-info-pagina">
-							<span className="historico-doacoes-pagina-atual">{paginaAtual}</span>
-							<span className="historico-doacoes-pontos">• • •</span>
-							<span className="historico-doacoes-total-paginas">{totalPaginas}</span>
-						</div>
+						{/* Páginas clicáveis */}
+						{gerarPaginasVisiveis().map(numeroPagina => (
+							<button
+								key={numeroPagina}
+								className={`historico-doacoes-numero-pagina ${
+									numeroPagina === paginaAtual ? 'ativo' : ''
+								}`}
+								onClick={() => irParaPagina(numeroPagina)}
+							>
+								{numeroPagina}
+							</button>
+						))}
+						
+						{/* Mostrar ... e última página se necessário */}
+						{gerarPaginasVisiveis()[gerarPaginasVisiveis().length - 1] < totalPaginas && (
+							<>
+								<span className="historico-doacoes-pontos">...</span>
+								<button
+									className="historico-doacoes-numero-pagina"
+									onClick={() => irParaPagina(totalPaginas)}
+								>
+									{totalPaginas}
+								</button>
+							</>
+						)}
 						
 						<button 
 							className="historico-doacoes-btn-pagina"
@@ -181,8 +322,68 @@ export default function HistoricoDoacoes() {
 							›
 						</button>
 					</div>
-				)}
+					)}
 			</div>
+			
+			{/* Modal para período customizado */}
+			<Modal
+				isOpen={modalPeriodo}
+				onClose={() => {
+					setModalPeriodo(false);
+					setDataInicio('');
+					setDataFim('');
+				}}
+				texto={
+					<div style={{ textAlign: 'left' }}>
+						<h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Selecione o Período</h3>
+						<div style={{ marginBottom: '15px' }}>
+							<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Data Início:</label>
+							<input
+								type="date"
+								value={dataInicio}
+								onChange={(e) => setDataInicio(e.target.value)}
+								style={{
+									width: '100%',
+									padding: '10px',
+									border: '2px solid #ddd',
+									borderRadius: '6px',
+									fontSize: '16px'
+								}}
+							/>
+						</div>
+						<div style={{ marginBottom: '20px' }}>
+							<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Data Fim:</label>
+							<input
+								type="date"
+								value={dataFim}
+								onChange={(e) => setDataFim(e.target.value)}
+								style={{
+									width: '100%',
+									padding: '10px',
+									border: '2px solid #ddd',
+									borderRadius: '6px',
+									fontSize: '16px'
+								}}
+							/>
+						</div>
+				</div>
+				}
+				showClose={false}
+				botoes={[
+					{
+						texto: "Cancelar",
+						onClick: () => {
+							setModalPeriodo(false);
+							setDataInicio('');
+							setDataFim('');
+						}
+					},
+					{
+						texto: "Aplicar",
+						onClick: aplicarPeriodoCustomizado
+					}
+				]}
+			/>
 		</div>
 	);
 }

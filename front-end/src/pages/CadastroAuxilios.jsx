@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
+
 import Modal from "../components/Modal";
 import Input from "../components/Input";
 import "../styles/CadastroAuxilios.css";
@@ -22,6 +22,7 @@ export default function CadastroAuxilios() {
     auxilio: null,
   });
   const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
+  const [modalCpfNaoEncontrado, setModalCpfNaoEncontrado] = useState(false);
   const [modalSucesso, setModalSucesso] = useState(false);
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
   const [erros, setErros] = useState({});
@@ -36,6 +37,51 @@ export default function CadastroAuxilios() {
     const tipo = sessionStorage.getItem("tipoUsuario") || "2";
     setTipoUsuario(tipo);
   }, []);
+
+  // Auto-close modal de campos após 3 segundos
+  useEffect(() => {
+    if (modalCampos) {
+      const timer = setTimeout(() => {
+        setModalCampos(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalCampos]);
+
+  // Auto-close modal de erro após 3 segundos
+  useEffect(() => {
+    if (modalErro.open) {
+      const timer = setTimeout(() => {
+        setModalErro({ open: false, mensagem: "" });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalErro.open]);
+
+  // Auto-close modal de CPF não encontrado após 3 segundos
+  useEffect(() => {
+    if (modalCpfNaoEncontrado) {
+      console.log("⏰ Modal CPF não encontrado ativado, fechando em 3s");
+      const timer = setTimeout(() => {
+        console.log("⏰ Fechando modal CPF não encontrado");
+        setModalCpfNaoEncontrado(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalCpfNaoEncontrado]);
+
+  // Auto-close modal de sucesso e redirecionar após 2 segundos
+  useEffect(() => {
+    if (modalSucesso) {
+      console.log("🎉 Modal de sucesso ativado, redirecionando em 2s");
+      const timer = setTimeout(() => {
+        console.log("🏠 Redirecionando para home");
+        setModalSucesso(false);
+        navigate("/home");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalSucesso, navigate]);
 
   const botoesNavbar = [
     { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -72,8 +118,26 @@ export default function CadastroAuxilios() {
     return numbers;
   }
 
+  function formatNomeAuxilio(value) {
+    // Remover caracteres que não são letras ou espaços
+    let texto = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+    
+    // Não permitir dois espaços seguidos
+    texto = texto.replace(/\s{2,}/g, " ");
+    
+    // Não permitir espaço no início
+    if (texto.startsWith(" ")) {
+      texto = texto.substring(1);
+    }
+    
+    return texto;
+  }
+
   async function handleSalvar(e) {
     e.preventDefault();
+    console.log("🚀 Iniciando handleSalvar");
+    console.log("📝 CPF informado:", cpfBeneficiado);
+    console.log("📝 Auxílio informado:", nomeAuxilio);
     let newErros = {};
 
     if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpfBeneficiado)) {
@@ -91,21 +155,20 @@ export default function CadastroAuxilios() {
 
     setCarregando(true);
     try {
-      // Buscar beneficiário pelo CPF
+      // Buscar beneficiário pelo CPF diretamente no backend
       const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
-      const respostaBeneficiados = await beneficiadoService.listar();
+      console.log("🔍 Buscando CPF:", cpfLimpo);
+      const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpfLimpo);
+      console.log("📋 Resposta da busca:", respostaBeneficiado);
 
-      if (respostaBeneficiados.success) {
-        const beneficiado = respostaBeneficiados.data.find(
-          (b) => b.cpf === cpfLimpo
-        );
-        if (!beneficiado) {
-          setModalErro({
-            open: true,
-            mensagem: "Beneficiário não encontrado com este CPF.",
-          });
-          return;
-        }
+      if (!respostaBeneficiado.success) {
+        console.log("❌ CPF não encontrado, mostrando modal");
+        setModalCpfNaoEncontrado(true);
+        setCarregando(false);
+        return;
+      }
+
+      const beneficiado = respostaBeneficiado.data;
 
         // Verificar se o auxílio existe ou criar um novo
         let auxilioId = null;
@@ -146,13 +209,7 @@ export default function CadastroAuxilios() {
             mensagem: "Erro ao associar auxílio: " + associacao.error,
           });
         }
-      } else {
-        setModalErro({
-          open: true,
-          mensagem:
-            "Erro ao buscar beneficiários: " + respostaBeneficiados.error,
-        });
-      }
+
     } catch (error) {
       setModalErro({
         open: true,
@@ -165,21 +222,68 @@ export default function CadastroAuxilios() {
 
   async function handleBuscarAuxilio(e) {
     e.preventDefault();
+    
+    // Validar campos
+    if (!cpfBeneficiado || !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpfBeneficiado)) {
+      setModalErro({ open: true, mensagem: "Informe um CPF válido" });
+      return;
+    }
     if (!nomeAuxilio || nomeAuxilio.trim() === "") {
-      setModalCampos(true);
+      setModalErro({ open: true, mensagem: "Informe o nome do auxílio" });
       return;
     }
 
     setCarregando(true);
     try {
-      const resposta = await auxilioService.buscarPorNome(nomeAuxilio.trim());
-      if (resposta.success && resposta.data.length > 0) {
-        setModalEncontrado({ open: true, auxilio: resposta.data[0] });
+      // PASSO 1: Buscar auxílio
+      console.log("🔍 Buscando auxílio:", nomeAuxilio.trim());
+      const respostaAuxilio = await auxilioService.buscarPorNome(nomeAuxilio.trim());
+      
+      if (respostaAuxilio.success && respostaAuxilio.data.length > 0) {
+        // AUXÍLIO ENCONTRADO - agora verificar CPF
+        const auxilioEncontrado = respostaAuxilio.data[0];
+        console.log("✅ Auxílio encontrado:", auxilioEncontrado.nome);
+        
+        // PASSO 2: Verificar se CPF existe
+        const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
+        console.log("🔍 Verificando CPF:", cpfLimpo);
+        const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpfLimpo);
+        
+        if (!respostaBeneficiado.success) {
+          // CPF NÃO ENCONTRADO
+          console.log("❌ CPF não encontrado");
+          setModalCpfNaoEncontrado(true);
+          return;
+        }
+        
+        // CPF ENCONTRADO - associar auxílio ao beneficiário
+        const beneficiado = respostaBeneficiado.data;
+        console.log("✅ Beneficiado encontrado:", beneficiado.nome);
+        
+        // PASSO 3: Associar auxílio ao beneficiário
+        const associacao = await auxilioService.associarBeneficiario(
+          beneficiado.id,
+          auxilioEncontrado.id
+        );
+        
+        if (associacao.success) {
+          console.log("✅ Auxílio associado com sucesso!");
+          setModalSucesso(true);
+        } else {
+          setModalErro({
+            open: true,
+            mensagem: "Erro ao associar auxílio: " + associacao.error,
+          });
+        }
+        
       } else {
+        // AUXÍLIO NÃO ENCONTRADO
+        console.log("❌ Auxílio não encontrado");
         setModalNaoEncontrado(true);
       }
     } catch (error) {
-      setModalErro({ open: true, mensagem: "Erro ao buscar auxílio" });
+      console.error("Erro na busca:", error);
+      setModalErro({ open: true, mensagem: "Erro ao processar busca" });
     } finally {
       setCarregando(false);
     }
@@ -189,73 +293,119 @@ export default function CadastroAuxilios() {
     setModalEncontrado({ open: false, auxilio: null });
     setModalNaoEncontrado(false);
 
-    // Simular o processo de salvamento automático após confirmação
-    const event = { preventDefault: () => {} };
-    await handleSalvar(event);
+    if (criarNovo) {
+      // Criar novo auxílio e depois associar
+      await criarEAssociarAuxilio();
+    } else {
+      // Auxílio já existe, só associar
+      await associarAuxilioExistente();
+    }
+  };
+
+  const criarEAssociarAuxilio = async () => {
+    if (!cpfBeneficiado || !nomeAuxilio) return;
+    
+    setCarregando(true);
+    try {
+      // Verificar CPF primeiro
+      const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
+      const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpfLimpo);
+      
+      if (!respostaBeneficiado.success) {
+        setModalCpfNaoEncontrado(true);
+        return;
+      }
+      
+      const beneficiado = respostaBeneficiado.data;
+      
+      // Criar novo auxílio
+      const novoAuxilio = await auxilioService.cadastrar({
+        nome: nomeAuxilio.trim(),
+      });
+      
+      if (novoAuxilio.success) {
+        // Associar ao beneficiário
+        const associacao = await auxilioService.associarBeneficiario(
+          beneficiado.id,
+          novoAuxilio.data.id
+        );
+        
+        if (associacao.success) {
+          setModalSucesso(true);
+        } else {
+          setModalErro({
+            open: true,
+            mensagem: "Erro ao associar auxílio: " + associacao.error,
+          });
+        }
+      } else {
+        setModalErro({
+          open: true,
+          mensagem: "Erro ao criar auxílio: " + novoAuxilio.error,
+        });
+      }
+    } catch (error) {
+      setModalErro({
+        open: true,
+        mensagem: "Erro ao processar criação de auxílio",
+      });
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const associarAuxilioExistente = async () => {
+    // Esta função não é mais necessária pois a lógica já está no handleBuscarAuxilio
+    console.log("Associação já foi feita no handleBuscarAuxilio");
   };
 
   return (
-    <div className="cadastro-filhos-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
-      <div className="cadastro-filhos-container">
-        <div className="cadastro-filhos-voltar">
-          <Voltar onClick={() => navigate("/home")} />
-        </div>
+    <div className="cadastro-auxilios-bg">
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCadastrarBeneficiadosPage={true} />
+      <div className="cadastro-auxilios-container">
+        <h1 className="cadastro-auxilios-title">Cadastro de Auxílios</h1>
 
-        <h1 className="cadastro-filhos-title">Cadastro de Auxílios</h1>
-
-        <form className="cadastro-filhos-form" onSubmit={handleSalvar}>
-          {/* CPF */}
-          <Input
-            label="CPF do Beneficiado:"
-            type="text"
-            name="cpfBeneficiado"
-            placeholder="000.000.000-00"
-            value={cpfBeneficiado}
-            onChange={(e) => setCpfBeneficiado(formatCPF(e.target.value))}
-            maxLength={14}
-            style={erros.cpf ? { border: "2px solid #e74c3c" } : {}}
-          />
-          {erros.cpf && (
-            <span style={{ color: "#e74c3c", fontSize: 13 }}>{erros.cpf}</span>
-          )}
-
-          {/* Nome do Auxílio + Buscar */}
-          <div className="cadastro-auxilios-search-row">
-            <div className="cadastro-auxilios-search-input-wrapper">
-              <Input
-                label="Nome do Auxílio:"
+        <form className="cadastro-auxilios-form" onSubmit={handleSalvar}>
+          {/* Linha única - CPF e Nome do Auxílio lado a lado */}
+          <div className="cadastro-auxilios-row">
+            <div className="cadastro-auxilios-field">
+              <label className="cadastro-auxilios-label">CPF:</label>
+              <input
                 type="text"
-                name="nomeAuxilio"
-                placeholder="Digite o nome do auxílio"
-                value={nomeAuxilio}
-                onChange={(e) => setNomeAuxilio(e.target.value)}
-                style={erros.nomeAuxilio ? { border: "2px solid #e74c3c" } : {}}
+                name="cpfBeneficiado"
+                placeholder="000.000.000-00"
+                value={cpfBeneficiado}
+                onChange={(e) => setCpfBeneficiado(formatCPF(e.target.value))}
+                maxLength={14}
+                className="cadastro-auxilios-input"
               />
-              {erros.nomeAuxilio && (
-                <span style={{ color: "#e74c3c", fontSize: 13 }}>
-                  {erros.nomeAuxilio}
-                </span>
-              )}
             </div>
 
-            <button
-              type="button"
-              className="consulta-beneficiados-buscar cadastro-auxilios-search-button"
-              onClick={handleBuscarAuxilio}
-            >
-              <FaSearch className="consulta-beneficiados-search-icon" /> Buscar
-            </button>
+            <div className="cadastro-auxilios-field">
+              <div className="cadastro-auxilios-input-button-wrapper">
+                <div className="cadastro-auxilios-input-wrapper">
+                  <label className="cadastro-auxilios-label">Nome do Auxílio:</label>
+                  <input
+                    type="text"
+                    name="nomeAuxilio"
+                    placeholder="Digite o nome do auxílio"
+                    value={nomeAuxilio}
+                    onChange={(e) => setNomeAuxilio(formatNomeAuxilio(e.target.value))}
+                    className="cadastro-auxilios-input"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="cadastro-auxilios-search-button"
+                  onClick={handleBuscarAuxilio}
+                >
+                  Buscar
+                </button>
+              </div>
+            </div>
           </div>
 
-          <button
-            className="cadastro-filhos-btn-row"
-            type="submit"
-            style={{ marginTop: 16 }}
-            disabled={carregando}
-          >
-            {carregando ? "Processando..." : "Salvar"}
-          </button>
+
         </form>
 
         {carregando && (
@@ -267,8 +417,8 @@ export default function CadastroAuxilios() {
         <Modal
           isOpen={modalCampos}
           onClose={() => setModalCampos(false)}
-          texto="Preencha todos os campos antes de salvar."
-          showClose={true}
+          texto="Preencha todos os campos"
+          showClose={false}
         />
         <Modal
           isOpen={modalEncontrado.open}
@@ -290,9 +440,9 @@ export default function CadastroAuxilios() {
           isOpen={modalNaoEncontrado}
           onClose={() => setModalNaoEncontrado(false)}
           texto={
-            "Auxílio não encontrado!\nDeseja criar e adicionar este novo auxílio?"
+            "Auxílio não encontrado!\nDeseja criar e adicionar este novo auxílio ao beneficiário?"
           }
-          showClose={true}
+          showClose={false}
           botoes={[
             {
               texto: "Sim",
@@ -306,16 +456,31 @@ export default function CadastroAuxilios() {
         />
         <Modal
           isOpen={modalSucesso}
-          onClose={() => setModalSucesso(false)}
+          onClose={() => {
+            setModalSucesso(false);
+            navigate("/home");
+          }}
           texto={"Auxílio cadastrado com sucesso!"}
-          showClose={true}
-          botoes={[{ texto: "OK", onClick: () => setModalSucesso(false) }]}
+          showClose={false}
+          botoes={[{ 
+            texto: "OK", 
+            onClick: () => {
+              setModalSucesso(false);
+              navigate("/home");
+            }
+          }]}
         />
         <Modal
           isOpen={modalErro.open}
           onClose={() => setModalErro({ open: false, mensagem: "" })}
-          texto={modalErro.mensagem}
-          showClose={true}
+          texto="Erro ao processar solicitação"
+          showClose={false}
+        />
+        <Modal
+          isOpen={modalCpfNaoEncontrado}
+          onClose={() => setModalCpfNaoEncontrado(false)}
+          texto="CPF não encontrado na base de dados"
+          showClose={false}
         />
       </div>
     </div>

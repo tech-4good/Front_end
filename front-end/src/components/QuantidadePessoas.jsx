@@ -6,7 +6,7 @@ export default function QuantidadePessoas({ formData, onInputChange, children })
   return (
     <div className="quantidade-pessoas-container">
       <h2 className="quantidade-pessoas-titulo">
-        Quantidade de Pessoas no Endereço
+        Pessoas no Endereço
       </h2>
       
       <form className="quantidade-pessoas-form">

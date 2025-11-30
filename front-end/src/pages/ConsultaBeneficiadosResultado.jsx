@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
-import "../styles/Home.css"; 
+import Modal from "../components/Modal";
 import "../styles/ConsultaBeneficiadosResultado.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 import { beneficiadoService } from "../services/beneficiadoService";
 import { entregaService } from "../services/entregaService";
 
@@ -17,9 +17,13 @@ export default function ConsultaBeneficiadosResultado() {
   const [tipoUsuario, setTipoUsuario] = useState("2");
   const [beneficiado, setBeneficiado] = useState(null);
   const [retiradas, setRetiradas] = useState([]);
-  const [ordem, setOrdem] = useState('desc');
+  const [retiradasOriginais, setRetiradasOriginais] = useState([]); // Para manter dados originais
+  const [filtroAtivo, setFiltroAtivo] = useState('todos');
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  const [modalPeriodo, setModalPeriodo] = useState(false);
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
 
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "2";
@@ -46,17 +50,87 @@ export default function ConsultaBeneficiadosResultado() {
     }
   }, [location]);
 
+  // Aplicar filtros quando filtroAtivo ou retiradasOriginais mudarem
   useEffect(() => {
-    // Reordenar quando a ordem mudar
-    if (retiradas.length > 0) {
-      const retiradasOrdenadas = [...retiradas].sort((a, b) => {
-        const dataA = new Date(a.data);
-        const dataB = new Date(b.data);
-        return ordem === 'desc' ? dataB - dataA : dataA - dataB;
+    aplicarFiltro();
+  }, [filtroAtivo, retiradasOriginais]);
+
+  const aplicarFiltro = () => {
+    if (retiradasOriginais.length === 0) return;
+
+    let dadosFiltrados = [...retiradasOriginais];
+
+    // Filtrar por tipo
+    if (filtroAtivo === 'kit') {
+      dadosFiltrados = dadosFiltrados.filter(r => {
+        const tipo = (r.cesta?.tipo || r.tipo || '').toLowerCase();
+        return tipo.includes('kit');
       });
-      setRetiradas(retiradasOrdenadas);
+    } else if (filtroAtivo === 'cesta') {
+      dadosFiltrados = dadosFiltrados.filter(r => {
+        const tipo = (r.cesta?.tipo || r.tipo || '').toLowerCase();
+        return tipo.includes('cesta') || tipo.includes('basica');
+      });
     }
-  }, [ordem]);
+
+    // Filtrar por período customizado
+    if (filtroAtivo === 'periodo-customizado' && dataInicio && dataFim) {
+      const timestampInicio = new Date(dataInicio).getTime();
+      const timestampFim = new Date(dataFim).getTime();
+      
+      dadosFiltrados = dadosFiltrados.filter(r => {
+        const timestamp = getTimestamp(r);
+        return timestamp >= timestampInicio && timestamp <= timestampFim;
+      });
+    }
+
+    // Ordenar por data
+    if (filtroAtivo === 'mais-novo' || filtroAtivo === 'todos') {
+      dadosFiltrados.sort((a, b) => {
+        const timestampA = getTimestamp(a);
+        const timestampB = getTimestamp(b);
+        return timestampB - timestampA; // Mais novo primeiro
+      });
+    } else if (filtroAtivo === 'mais-antigo') {
+      dadosFiltrados.sort((a, b) => {
+        const timestampA = getTimestamp(a);
+        const timestampB = getTimestamp(b);
+        return timestampA - timestampB; // Mais antigo primeiro
+      });
+    } else if (filtroAtivo === 'periodo-customizado') {
+      dadosFiltrados.sort((a, b) => {
+        const timestampA = getTimestamp(a);
+        const timestampB = getTimestamp(b);
+        return timestampB - timestampA; // Mais novo primeiro por padrão
+      });
+    }
+
+    setRetiradas(dadosFiltrados);
+  };
+
+  const handleFiltroChange = (e) => {
+    const novoFiltro = e.target.value;
+    if (novoFiltro === 'periodo-customizado') {
+      setModalPeriodo(true);
+    } else {
+      setFiltroAtivo(novoFiltro);
+    }
+  };
+
+  const aplicarPeriodoCustomizado = () => {
+    if (dataInicio && dataFim) {
+      setFiltroAtivo('periodo-customizado');
+      setModalPeriodo(false);
+    }
+  };
+
+  const getTimestamp = (entrega) => {
+    const dataArray = entrega.dataRetirada || entrega.dataEntrega || entrega.data;
+    if (Array.isArray(dataArray)) {
+      return new Date(dataArray[0], dataArray[1] - 1, dataArray[2]).getTime();
+    }
+    return new Date(dataArray).getTime();
+  };
 
   const carregarBeneficiado = async (cpf) => {
     setCarregando(true);
@@ -112,23 +186,8 @@ export default function ConsultaBeneficiadosResultado() {
         return;
       }
       
-      // Ordenar por data
-      const entregasOrdenadas = entregasDoBeneficiado.sort((a, b) => {
-        // Converter array [ano, mes, dia] para timestamp
-        const getTimestamp = (entrega) => {
-          const dataArray = entrega.dataRetirada || entrega.dataEntrega;
-          if (Array.isArray(dataArray)) {
-            return new Date(dataArray[0], dataArray[1] - 1, dataArray[2]).getTime();
-          }
-          return new Date(dataArray).getTime();
-        };
-        
-        const timestampA = getTimestamp(a);
-        const timestampB = getTimestamp(b);
-        return ordem === 'desc' ? timestampB - timestampA : timestampA - timestampB;
-      });
-      
-      setRetiradas(entregasOrdenadas);
+      // Salvar dados originais para filtragem
+      setRetiradasOriginais(entregasDoBeneficiado);
     } catch (error) {
       console.error('Erro ao carregar histórico do beneficiário:', error);
       setRetiradas([]);
@@ -169,52 +228,66 @@ export default function ConsultaBeneficiadosResultado() {
   };
 
   return (
-    <div className="consulta-beneficiados-resultado-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+    <div>
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isConsultaBeneficiadosPage={true} />
       <div className="consulta-beneficiados-resultado-container">
-        <div className="consulta-beneficiados-resultado-voltar">
-          <Voltar onClick={() => navigate('/consulta-beneficiados')}/>
-        </div>
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="consulta-beneficiados-resultado-icone-voltar"
+          onClick={() => navigate('/consulta-beneficiados')}
+        />
+        
         <div className="consulta-beneficiados-resultado-filtro">
-          <label className="consulta-beneficiados-resultado-filtro-label">Filtrar por data:</label>
-          <select className="consulta-beneficiados-resultado-filtro-select" value={ordem} onChange={e => setOrdem(e.target.value)}>
-            <option value="desc">Mais recente</option>
-            <option value="asc">Mais antigo</option>
+          <label className="consulta-beneficiados-resultado-filtro-label">Filtrar por:</label>
+          <select 
+            className="consulta-beneficiados-resultado-filtro-select" 
+            value={filtroAtivo} 
+            onChange={handleFiltroChange}
+          >
+            <option value="todos">Todos</option>
+            <option value="kit">Kit</option>
+            <option value="cesta">Cesta Básica</option>
+            <option value="mais-novo">Mais novo primeiro</option>
+            <option value="mais-antigo">Mais antigo primeiro</option>
+            <option value="periodo-customizado">Período Customizado</option>
           </select>
         </div>
-        <h1 className="consulta-beneficiados-resultado-title">Clique no nome do beneficiado para ver suas informações!</h1>
+        
+        <div className="consulta-beneficiados-resultado-title-container">
+          <h1 className="consulta-beneficiados-resultado-title">
+            Clique no nome do beneficiado para ver suas informações!
+          </h1>
+        </div>
         
         {carregando && (
-          <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <div className="consulta-beneficiados-resultado-loading">
             Carregando dados...
           </div>
         )}
 
         {erro && (
-          <div style={{ textAlign: 'center', marginTop: 20, color: '#e74c3c' }}>
+          <div className="consulta-beneficiados-resultado-erro">
             {erro}
           </div>
         )}
 
         {beneficiado && !carregando && !erro ? (
-          <div className="consulta-beneficiados-resultado-lista-scroll">
+          <div className="consulta-beneficiados-resultado-lista">
             {retiradas.length > 0 ? (
               retiradas.map((r, idx) => (
                 <div className="consulta-beneficiados-resultado-card" key={r.idEntrega || idx}>
-                    <div
-                      className="consulta-beneficiados-resultado-nome"
-                      style={{ cursor: 'pointer', textDecoration: 'underline' }}
-                      onClick={() => {
-                        sessionStorage.setItem('cpfSelecionado', beneficiado.cpf);
-                        navigate('/consulta-beneficiados-menu', { state: { cpf: beneficiado.cpf } });
-                      }}
-                    >
-                      {beneficiado.nome}
-                    </div>
-                  <div className="consulta-beneficiados-resultado-tipo">
-                    <span className="consulta-beneficiados-resultado-tipo-badge">
-                      {formatarTipo(r.cesta?.tipo || r.tipo || 'N/A')}
-                    </span>
+                  <div
+                    className="consulta-beneficiados-resultado-nome"
+                    onClick={() => {
+                      sessionStorage.setItem('cpfSelecionado', beneficiado.cpf);
+                      navigate('/consulta-beneficiados-menu', { state: { cpf: beneficiado.cpf } });
+                    }}
+                  >
+                    {beneficiado.nome}
+                  </div>
+                  <div className="consulta-beneficiados-resultado-tipo-badge">
+                    {formatarTipo(r.cesta?.tipo || r.tipo || 'Kit')}
                   </div>
                   <div className="consulta-beneficiados-resultado-data">
                     {formatarData(r.dataRetirada || r.dataEntrega || r.data)}
@@ -222,12 +295,76 @@ export default function ConsultaBeneficiadosResultado() {
                 </div>
               ))
             ) : (
-              <p className="consulta-beneficiados-resultado-nao-encontrado">Nenhuma retirada encontrada para este beneficiado.</p>
+              <div className="consulta-beneficiados-resultado-nao-encontrado">
+                Nenhuma retirada encontrada para este beneficiado.
+              </div>
             )}
           </div>
         ) : !carregando && !erro ? (
-          <p className="consulta-beneficiados-resultado-nao-encontrado">Beneficiado não encontrado.</p>
+          <div className="consulta-beneficiados-resultado-nao-encontrado">
+            Beneficiado não encontrado.
+          </div>
         ) : null}
+        
+        {/* Modal para período customizado */}
+        <Modal
+          isOpen={modalPeriodo}
+          onClose={() => {
+            setModalPeriodo(false);
+            setDataInicio('');
+            setDataFim('');
+          }}
+          texto={
+            <div style={{ textAlign: 'left' }}>
+              <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Selecione o Período</h3>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Data Início:</label>
+                <input
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '2px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Data Fim:</label>
+                <input
+                  type="date"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '2px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+            </div>
+          }
+          showClose={false}
+          botoes={[
+            {
+              texto: "Cancelar",
+              onClick: () => {
+                setModalPeriodo(false);
+                setDataInicio('');
+                setDataFim('');
+              }
+            },
+            {
+              texto: "Aplicar",
+              onClick: aplicarPeriodoCustomizado
+            }
+          ]}
+        />
       </div>
     </div>
   );

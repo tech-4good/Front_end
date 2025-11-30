@@ -15,7 +15,9 @@ import CadastroBeneficiadoSimples2 from "./pages/CadastroBeneficiadoSimples2";
 import CadastroBeneficiadoCompleto1 from "./pages/CadastroBeneficiadoCompleto1";
 import CadastroBeneficiadoCompleto2 from "./pages/CadastroBeneficiadoCompleto2";
 import CadastroBeneficiadoCompleto3 from "./pages/CadastroBeneficiadoCompleto3";
-import CadastroEndereco from "./pages/CadastroEndereco";
+import CadastroEndereco1 from "./pages/CadastroEndereco1";
+import CadastroEndereco2 from "./pages/CadastroEndereco2";
+import CadastroQuantidadePessoasPage from "./pages/CadastroQuantidadePessoasPage";
 import FilaEspera from "./pages/FilaEspera";
 import DoarCesta from "./pages/DoarCesta";
 import ConsultaBeneficiados from "./pages/ConsultaBeneficiados";
@@ -127,7 +129,22 @@ export const router = createBrowserRouter([
   },
   {
     path: "/cadastro-endereco",
-    element: <ProtectedRoute><CadastroEndereco /></ProtectedRoute>,
+    element: <ProtectedRoute><CadastroEndereco1 /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-endereco-1",
+    element: <ProtectedRoute><CadastroEndereco1 /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-endereco-2",
+    element: <ProtectedRoute><CadastroEndereco2 /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/cadastro-quantidade-pessoas",
+    element: <ProtectedRoute><CadastroQuantidadePessoasPage /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {
@@ -152,6 +169,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/consulta-informacoes-pessoais",
+    element: <ProtectedRoute><ConsultaInformacoesPessoais /></ProtectedRoute>,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/consulta-informacoes-pessoais/:id",
     element: <ProtectedRoute><ConsultaInformacoesPessoais /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },

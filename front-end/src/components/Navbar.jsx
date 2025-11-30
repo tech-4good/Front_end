@@ -8,13 +8,14 @@ import brandAsa from "../assets/brand-asa.png";
 import logoAsaEscuro from "../assets/logo-asa-escuro.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeRelogio from "../assets/icone-relogio.png";
 
-const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false, isCestasPage = false, isFilaEsperaPage = false, isCadastroEnderecoPage = false }) => {
+const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false, isCestasPage = false, isFilaEsperaPage = false, isCadastroEnderecoPage = false, isEntregarCestaPage = false, isCadastrarBeneficiadosPage = false, isConsultaBeneficiadosPage = false, isVoluntariosPage = false, isHomePage = false }) => {
   const navigate = useNavigate();
   
   const allMenuItems = [
     { texto: "Entregar Cesta", onClick: () => navigate("/doar-cesta"), admin: true, comum: true },
-    { texto: "Cadastrar Endereços", onClick: () => navigate("/cadastro-endereco"), admin: true, comum: true },
+    { texto: "Cadastrar Endereços", onClick: () => navigate("/cadastro-endereco-1"), admin: true, comum: true },
     { texto: "Cadastrar Beneficiados", onClick: () => navigate("/cadastro-beneficiado-menu"), admin: true, comum: true },
     { texto: "Histórico de Cestas", onClick: () => navigate("/historico-doacoes"), admin: true, comum: true },
     { texto: "Consultar Beneficiados", onClick: () => navigate("/consulta-beneficiados"), admin: true, comum: true },
@@ -31,7 +32,7 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
   
   return (
     <>
-      <nav className="navbar">
+      <nav className={`navbar ${isHomePage ? 'navbar-home' : ''}`}>
         <div className="navbar-esquerda">
           <img
             src={logoAsaEscuro}
@@ -40,6 +41,30 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
             style={{ cursor: "pointer" }}
             onClick={() => navigate("/home")}
           />
+          {isHomePage && tipoUsuario === "2" && (
+            <Botao
+              className={`navbar-botao ${isFilaEsperaPage ? 'navbar-botao-active' : ''}`}
+              style={{
+                background: isFilaEsperaPage ? "rgba(217, 194, 126, 0.2)" : "none",
+                color: isFilaEsperaPage ? "#BF7E04" : "#264040",
+                fontSize: 18,
+                fontWeight: 500,
+                boxShadow: "none",
+                padding: "0 18px",
+                minWidth: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginLeft: 20,
+                transform: isFilaEsperaPage ? "translateY(-1px)" : "none"
+              }}
+              onClick={() => navigate("/fila-espera")}
+              texto={null}
+            >
+              <img src={iconeRelogio} alt="Fila de Espera" className="navbar-icone" />
+              Fila de Espera
+            </Botao>
+          )}
         </div>
         <div className="navbar-direita">
           <Botao
@@ -87,13 +112,17 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
       </nav>
       {showMenuBar && (
         <div className="navbar-menu-bar">
-          {menuItems.map((item, idx) => (
+          {!isHomePage && menuItems.map((item, idx) => (
             <button
               key={idx}
               className={`navbar-menu-item ${
                 (isCestasPage && item.texto === "Cestas") || 
                 (isFilaEsperaPage && item.texto === "Fila de Espera") ||
-                (isCadastroEnderecoPage && item.texto === "Cadastrar Endereços") ? "navbar-menu-item-active" : ""
+                (isCadastroEnderecoPage && item.texto === "Cadastrar Endereços") ||
+                (isEntregarCestaPage && item.texto === "Entregar Cesta") ||
+                (isCadastrarBeneficiadosPage && item.texto === "Cadastrar Beneficiados") ||
+                (isConsultaBeneficiadosPage && item.texto === "Consultar Beneficiados") ||
+                (isVoluntariosPage && item.texto === "Voluntários") ? "navbar-menu-item-active" : ""
               }`}
               onClick={item.onClick}
             >

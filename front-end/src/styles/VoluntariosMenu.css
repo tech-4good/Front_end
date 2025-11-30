@@ -1,72 +1,133 @@
-.voluntarios-bg {
+/* VoluntariosMenu - Design System */
+.voluntarios-container {
   min-height: 100vh;
   width: 100vw;
-  background: #6dbdc9;
-  margin: 0;
-  padding: 0;
-}
-
-.voluntarios-container {
-  width: 100%;
-  min-height: calc(100vh - 60px);
+  background: #F2F2F2 !important;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: 32px 0 0 36px;
-  box-sizing: border-box;
+  align-items: stretch;
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+  font-family: 'Noto Sans', sans-serif !important;
+  position: relative;
+}
+
+.voluntarios-voltar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.voluntarios-content {
+  padding: 0px 40px 60px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  margin-top: 20px;
 }
 
 .voluntarios-title {
-  width: 100%;
+  font-family: 'AdventSans-Logo', sans-serif !important;
   text-align: center;
-  font-size: 56px;
-  font-weight: 500;
-  margin: 32px 0 48px 0;
+  font-size: 48px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 50px 0 50px 0 !important;
+  line-height: 1.1;
+  background: #D9C27E !important;
+  padding: 20px 40px !important;
+  border-radius: 20px !important;
+  max-width: 725px !important;
+  width: 90% !important;
 }
 
-.voluntarios-botoes-row {
+.voluntarios-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 48px;
-  margin-top: 0;
+  max-width: 600px;
+  margin-top: 40px;
 }
 
-.voluntarios-botao {
-  font-size: 28px;
-  font-weight: 500;
-  padding: 16px 38px;
-  background: #e5e5e5;
-  border: 2px solid #222;
+.voluntarios-card-item {
+  background: #D9C27E;
   border-radius: 12px;
-  box-shadow: 2px 3px 3px #2222;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
 }
 
-.voluntarios-botao:hover {
-  background-color: #bfbfbf;
+.voluntarios-card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.45);
 }
 
-.voltar-btn {
-  background: none;
-  border: none;
-  color: #111;
-  font-size: 28px;
+.voluntarios-card-title {
+  background: #264040;
+  font-family: 'AdventSans-Logo', sans-serif;
+  color: #F2F2F2;
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0;
+  padding: 20px 20px 25px 20px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  line-height: 2;
+  position: relative;
+}
+
+.voluntarios-card-title::after {
+  content: '';
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #F2F2F2;
+}
+
+.voluntarios-card-icon {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  margin-bottom: 18px;
-  margin-left: 0;
+  justify-content: center;
+  padding: 30px;
 }
 
-.voltar-btn .voltar-icone {
-  width: 32px;
-  height: 32px;
+.voluntarios-card-icon img {
+  width: 100px;
+  height: 80px;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(15%) sepia(8%) saturate(2308%) hue-rotate(144deg) brightness(96%) contrast(93%);
 }
 
-.voltar-btn .voltar-texto {
-  text-decoration: underline;
-  font-size: 28px;
+/* Responsividade */
+@media (max-width: 768px) {
+  .voluntarios-title {
+    font-size: 40px !important;
+    padding: 16px 32px !important;
+  }
+  
+  .voluntarios-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    max-width: 350px;
+  }
+  
+  .voluntarios-content {
+    padding: 0px 20px 60px 20px;
+  }
 }

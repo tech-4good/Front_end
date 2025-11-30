@@ -24,7 +24,7 @@ const allCards = [
 	{
 		titulo: "Cadastrar Endereço",
 		icone: <img src={iconeCasa} alt="Cadastrar Endereço" />,
-		rota: "/cadastro-endereco",
+		rota: "/cadastro-endereco-1",
 		admin: true,
 		comum: true,
 	},
@@ -92,7 +92,7 @@ const Home = () => {
 	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 	return (
 		<div className="home-page">
-			<Navbar nomeUsuario={nomeUsuario} showMenuBar={true} tipoUsuario={tipoUsuario} />
+			<Navbar nomeUsuario={nomeUsuario} showMenuBar={true} tipoUsuario={tipoUsuario} isHomePage={true} />
 			<div className="home-content">
 				<h1 className="home-title">Central de Acesso</h1>
 				<div className="home-grid">

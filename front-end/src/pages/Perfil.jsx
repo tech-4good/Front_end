@@ -359,8 +359,8 @@ export default function Perfil() {
 				
 				{!carregando && !erro && (
 					<form className="perfil-form" onSubmit={handleSubmit}>
-						{/* Primeira linha - Nome Completo e Telefone */}
-						<div className="perfil-row">
+						{/* Primeira linha - Nome Completo */}
+						<div className="perfil-row perfil-row-single">
 							<div className="perfil-field">
 								<label className="perfil-label">Nome Completo:</label>
 								<input
@@ -371,6 +371,40 @@ export default function Perfil() {
 									placeholder="Insira o seu nome completo"
 									autoComplete="off"
 									maxLength={200}
+									disabled={true}
+									className="perfil-input perfil-input-disabled"
+								/>
+							</div>
+						</div>
+
+						{/* Segunda linha - E-mail */}
+						<div className="perfil-row perfil-row-single">
+							<div className="perfil-field">
+								<label className="perfil-label">E-mail:</label>
+								<input
+									type="text"
+									name="email"
+									value={email}
+									onChange={handleEmailChange}
+									placeholder="email@dominio.com"
+									autoComplete="off"
+									className="perfil-input"
+								/>
+							</div>
+						</div>
+
+						{/* Terceira linha - CPF, Telefone e Senha */}
+						<div className="perfil-row perfil-row-triple">
+							<div className="perfil-field">
+								<label className="perfil-label">CPF:</label>
+								<input
+									type="text"
+									name="cpf"
+									value={cpf}
+									onChange={handleCpfChange}
+									placeholder="000.000.000-00"
+									autoComplete="off"
+									maxLength={14}
 									disabled={true}
 									className="perfil-input perfil-input-disabled"
 								/>
@@ -388,22 +422,6 @@ export default function Perfil() {
 									className="perfil-input"
 								/>
 							</div>
-						</div>
-
-						{/* Segunda linha - E-mail e Senha */}
-						<div className="perfil-row">
-							<div className="perfil-field">
-								<label className="perfil-label">E-mail:</label>
-								<input
-									type="text"
-									name="email"
-									value={email}
-									onChange={handleEmailChange}
-									placeholder="email@dominio.com"
-									autoComplete="off"
-									className="perfil-input"
-								/>
-							</div>
 							<div className="perfil-field">
 								<label className="perfil-label">Senha:</label>
 								<input
@@ -415,24 +433,6 @@ export default function Perfil() {
 									autoComplete="off"
 									minLength={5}
 									maxLength={12}
-									disabled={true}
-									className="perfil-input perfil-input-disabled"
-								/>
-							</div>
-						</div>
-
-						{/* Terceira linha - CPF */}
-						<div className="perfil-row perfil-row-single">
-							<div className="perfil-field">
-								<label className="perfil-label">CPF:</label>
-								<input
-									type="text"
-									name="cpf"
-									value={cpf}
-									onChange={handleCpfChange}
-									placeholder="000.000.000-00"
-									autoComplete="off"
-									maxLength={14}
 									disabled={true}
 									className="perfil-input perfil-input-disabled"
 								/>

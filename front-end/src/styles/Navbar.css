@@ -19,6 +19,10 @@
 	font-family: 'Noto Sans', sans-serif;
 }
 
+.navbar-home {
+	height: 48px;
+}
+
 body {
 	margin: 0;
 	padding: 0;
@@ -92,6 +96,7 @@ body {
 	z-index: 9;
 	overflow-x: auto;
 	white-space: nowrap;
+	min-height: 45px;
 }
 
 .navbar-menu-item {

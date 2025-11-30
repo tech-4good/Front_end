@@ -24,7 +24,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 32px;
+  padding: 32px 40px 0 40px;
   box-sizing: border-box;
   position: relative;
 }
@@ -42,20 +42,29 @@ body {
 .controle-cestas-title {
   font-family: 'AdventSans-Logo', sans-serif !important;
   text-align: center;
-  font-size: 64px !important;
+  font-size: 48px !important;
   font-weight: 400 !important;
   color: #264040 !important;
-  margin: 50px 0 50px 0 !important;
+  margin: 50px auto 30px auto !important;
   margin-top: 25px !important;
   line-height: 1.1;
+  background: #D9C27E !important;
+  padding: 20px 40px !important;
+  border-radius: 20px !important;
+  max-width: 675px !important;
+  width: 100% !important;
 }
 
 .controle-cestas-cards {
   display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin-bottom: 50px;
+  justify-content: space-between;
+  gap: 60px;
+  margin-bottom: 30px;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .controle-cestas-card {
@@ -68,8 +77,8 @@ body {
 
 .controle-cestas-card-titulo {
   font-family: 'Noto Sans', sans-serif !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
   color: #264040 !important;
   margin: 0 0 20px 0;
   line-height: 1.2;
@@ -93,10 +102,11 @@ body {
 .controle-cestas-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0;
+  padding: 0;
 }
 
 .controle-cestas-radio-row {
@@ -119,11 +129,11 @@ body {
 
 .controle-cestas-input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   flex-direction: row;
-  gap: 0.5rem;
+  gap: 1rem;
   width: 100%;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: nowrap;
 }
 
@@ -137,18 +147,19 @@ body {
 
 .controle-cestas-input-label {
   font-family: 'Noto Sans', sans-serif !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
   color: #264040 !important;
-  margin-bottom: 0 !important;
+  margin-bottom: 4px !important;
+  margin-left: 30px !important;
 }
 
 .controle-cestas-input {
   width: 100% !important;
-  max-width: 550px;
+  max-width: 450px !important;
   height: 60px !important;
   padding: 18px 24px !important;
-  border: 2px solid #264040 !important;
+  border: 4px solid #D9D9D9 !important;
   border-radius: 8px !important;
   background: #FFFFFF !important;
   font-family: 'Noto Sans', sans-serif !important;
@@ -160,6 +171,7 @@ body {
   transition: all 0.2s ease !important;
   margin: 0;
   display: block;
+  margin-left: 30px !important;
 }
 
 .controle-cestas-input:focus {
@@ -185,20 +197,22 @@ body {
   cursor: pointer !important;
   transition: all 0.8s ease !important;
   margin: 0;
-  padding: 18px 48px;
+  padding: 18px 24px;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-right: 30px !important;
 }
 
 .controle-cestas-input-row .botao-personalizado:hover {
   color: #264040 !important;
   background-color: #D9C27E !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-7px) !important;
 }
 
 /* Margem específica do botão apenas nesta tela */
 .controle-cestas-input-row .botao-personalizado {
-  margin-top: 29px !important;
+  margin-top: 19px !important;
+  transform: translateY(-7px) !important;
 }
 
 .controle-cestas-sucesso-modal {
@@ -246,4 +260,60 @@ body {
 
 .controle-cestas-sucesso-fechar:hover {
   background: #F2F2F2 !important;
+}
+
+/* Toggle Switch Styles */
+.controle-cestas-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 19px !important;
+  transform: translateY(-20px) !important;
+}
+
+.controle-cestas-toggle-option {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  color: #999999 !important;
+  transition: all 0.3s ease !important;
+  user-select: none;
+}
+
+.controle-cestas-toggle-option.active {
+  color: #264040 !important;
+  font-weight: 600 !important;
+}
+
+.controle-cestas-toggle-switch {
+  position: relative;
+  width: 60px;
+  height: 30px;
+  background: #D9D9D9;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.controle-cestas-toggle-switch:hover {
+  background: #CCCCCC;
+}
+
+.controle-cestas-toggle-slider {
+  position: absolute;
+  top: 3px;
+  width: 24px;
+  height: 24px;
+  background: #264040;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.controle-cestas-toggle-slider.left {
+  left: 3px;
+}
+
+.controle-cestas-toggle-slider.right {
+  left: 33px;
 }

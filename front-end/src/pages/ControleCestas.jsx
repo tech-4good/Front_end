@@ -186,21 +186,21 @@ export default function ControleCestas() {
         
         <div className="controle-cestas-cards">
           <div className="controle-cestas-card">
-            <h3 className="controle-cestas-card-titulo">Quantidade de<br/>Cestas Básicas</h3>
+            <h3 className="controle-cestas-card-titulo"><br/>Cestas Básicas</h3>
             <div className="controle-cestas-card-numero">
               {carregando ? "..." : quantidadeCestaBasica}
             </div>
           </div>
           
           <div className="controle-cestas-card">
-            <h3 className="controle-cestas-card-titulo">Quantidade<br/>Total de Cestas</h3>
+            <h3 className="controle-cestas-card-titulo"><br/>Total no Estoque</h3>
             <div className="controle-cestas-card-numero">
               {carregando ? "..." : quantidadeTotal}
             </div>
           </div>
           
           <div className="controle-cestas-card">
-            <h3 className="controle-cestas-card-titulo">Quantidade de<br/>Kits</h3>
+            <h3 className="controle-cestas-card-titulo"><br/>Kits</h3>
             <div className="controle-cestas-card-numero">
               {carregando ? "..." : quantidadeKits}
             </div>
@@ -208,22 +208,9 @@ export default function ControleCestas() {
         </div>
 
         <form className="controle-cestas-form" onSubmit={handleSubmit}>
-          <div className="controle-cestas-radio-row">
-            <span className="controle-cestas-radio-label">Tipo:</span>
-            <Radio
-              name="tipoCesta"
-              options={[
-                { label: "Kit", value: "kit" },
-                { label: "Cesta Básica", value: "basica" },
-              ]}
-              value={tipoCesta}
-              onChange={e => setTipoCesta(e.target.value)}
-            />
-          </div>
-
           <div className="controle-cestas-input-row">
             <div className="controle-cestas-input-container">
-              <label className="controle-cestas-input-label">Insira a quantidade de novas cestas:</label>
+              <label className="controle-cestas-input-label">Quantidade de novas cestas:</label>
               <Input
                 placeholder="0"
                 value={quantidadeInput}
@@ -233,6 +220,13 @@ export default function ControleCestas() {
                 maxLength="3"
                 className="controle-cestas-input"
               />
+            </div>
+            <div className="controle-cestas-toggle-container">
+              <span className={`controle-cestas-toggle-option ${tipoCesta === 'kit' ? 'active' : ''}`}>Kit</span>
+              <div className="controle-cestas-toggle-switch" onClick={() => setTipoCesta(tipoCesta === 'kit' ? 'basica' : 'kit')}>
+                <div className={`controle-cestas-toggle-slider ${tipoCesta === 'basica' ? 'right' : 'left'}`}></div>
+              </div>
+              <span className={`controle-cestas-toggle-option ${tipoCesta === 'basica' ? 'active' : ''}`}>Cesta Básica</span>
             </div>
             <Botao texto="Adicionar" type="submit" />
           </div>

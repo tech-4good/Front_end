@@ -1,36 +1,19 @@
-/* Resultados da busca de CPF */
-.doar-cesta-resultados {
-	width: 100%;
-	max-width: 550px;
-	background: #fff;
-	border-radius: 0 0 18px 18px;
-	border: 2px solid #222;
-	border-top: none;
-	box-shadow: 2px 3px 3px #2222;
-	font-size: 22px;
-	font-weight: 500;
-	color: #222;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	margin-left: -15px;
-	margin-top: -45px;
-	overflow: hidden;
-	margin-bottom: 18px;
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
 }
-.doar-cesta-resultado {
-	padding: 16px 24px;
-	border-bottom: 1px solid #eee;
-	width: 100%;
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
 }
-.doar-cesta-resultado:last-child {
-	border-bottom: none;
-}
+
 /* Fundo e container principal */
 .doar-cesta-bg {
 	min-height: 100vh;
 	width: 100vw;
-	background: #6dbdc9;
+	background: #F2F2F2 !important;
 	margin: 0;
 	padding: 0;
 }
@@ -41,88 +24,169 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: flex-start;
-	padding-top: 32px;
+	padding: 12px 0 0 0;
 	box-sizing: border-box;
 	position: relative;
 }
-.doar-cesta-voltar {
+
+.doar-cesta-icone-voltar {
 	position: absolute;
-	top: 0;
-	left: 0;
-	margin-top: 12px;
-	margin-left: 18px;
-	z-index: 10;
+	top: 30px;
+	left: 30px;
+	width: 40px;
+	height: 40px;
+	cursor: pointer;
 }
 
 .doar-cesta-title {
-	font-size: 56px;
-	font-weight: 500;
-	margin: 32px 0 32px 0;
-    margin-top: 100px;
+	font-family: 'AdventSans-Logo', sans-serif !important;
 	text-align: center;
+	font-size: 64px !important;
+	font-weight: 400 !important;
+	color: #264040 !important;
+	margin: 100px 0 50px 0 !important;
+	line-height: 1.1;
+	width: 100%;
 }
 
 .doar-cesta-form {
+	max-width: 790px;
+	width: 100%;
+	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+	gap: 25px;
+	padding: 0 20px;
+}
+
+.doar-cesta-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
 	width: 100%;
-	max-width: 700px;
-	margin: 0 auto;
+}
+
+.doar-cesta-label {
+	font-family: 'Noto Sans', sans-serif !important;
+	font-weight: 600 !important;
+	font-size: 22px !important;
+	color: #264040 !important;
+	margin-bottom: 4px !important;
 }
 
 .doar-cesta-input {
-	width: 100%;
-	max-width: 600px;
-	background: #fff;
-	border: none;
-	border-radius: 22px;
-	padding: 20px 24px;
-	font-size: 24px;
-	color: #222;
-	box-shadow: 2px 3px 8px #2222;
-	margin: 0 -500px 40px 40px;
-	display: block;
-	box-sizing: border-box;
-	align-self: center;
+	background: #F2F2F2 !important;
+	border: 2px solid #264040 !important;
+	border-radius: 8px !important;
+	padding: 14px 16px !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 20px !important;
+	color: #264040 !important;
+	outline: none !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	transition: all 0.8s ease !important;
 }
+
 .doar-cesta-input:focus {
-	background: #f5f5f5;
-	outline: 2px solid #222;
+	background: #F2F2F2 !important;
+	border-color: #D9C27E !important;
+	outline: none !important;
 }
 
-.doar-cesta-radio-row {
+.doar-cesta-input::placeholder {
+	color: #999999 !important;
+	font-size: 20px !important;
+	opacity: 1 !important;
+}
+
+/* Layout especial para o campo Tipo com label na lateral */
+.doar-cesta-field.doar-cesta-tipo-field {
 	display: flex;
+	flex-direction: row;
 	align-items: center;
-	gap: 18px;
-	margin: 0 0 38px 0;
-	font-size: 28px;
-	font-weight: 500;
-}
-.doar-cesta-radio-label {
-	font-size: 28px;
-	font-weight: 500;
-	margin-right: 8px;
+	justify-content: center;
+	gap: 20px;
 }
 
-.doar-cesta-btn-row {
+.doar-cesta-field.doar-cesta-tipo-field .doar-cesta-label {
+	text-align: left;
+	margin-bottom: 0 !important;
+	white-space: nowrap;
+}
+
+.doar-cesta-radio {
+	display: flex;
+	gap: 20px;
+}
+
+.doar-cesta-btn-container {
 	display: flex;
 	justify-content: center;
-	width: 100%;
+	margin-top: 20px;
 }
-.doar-cesta-btn-row button {
-	margin: 0 auto;
-	padding: 18px 48px;
-	font-size: 28px;
-	border-radius: 12px;
-	border: 2px solid #222;
-	background: #e5e5e5;
-	color: #222;
-	box-shadow: 2px 3px 8px #2222;
+
+.doar-cesta-btn {
+	padding: 14px 40px !important;
+	border-radius: 8px !important;
+	border: 2px solid #264040 !important;
+	background: #264040 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 18px !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
+	transition: all 0.8s ease !important;
+	display: block !important;
+	color: #F2F2F2 !important;
+	min-width: 140px !important;
+	text-align: center !important;
+}
+
+.doar-cesta-btn:hover {
+	background: #D9C27E !important;
+	border-color: #D9C27E !important;
+	color: #264040 !important;
+}
+
+.doar-cesta-btn:disabled {
+	background: #cccccc !important;
+	border-color: #cccccc !important;
+	color: #666666 !important;
+	cursor: not-allowed !important;
+}
+
+/* Resultados da busca de CPF */
+.doar-cesta-resultados {
+	width: 99,8%;
+	background: #F2F2F2 !important;
+	border: 2px solid #264040;
+	border-top: none;
+	border-radius: 0 0 8px 8px;
+	font-family: 'Noto Sans', sans-serif;
+	font-size: 18px;
+	color: #264040;
+	display: flex;
+	flex-direction: column;
+	margin-top: -29px !important;
+	margin-bottom: 0;
+	padding: 0;
+	overflow: hidden;
+	z-index: 999;
+}
+
+.doar-cesta-resultado {
+	padding: 12px 16px;
+	border-bottom: 1px solid #D9C27E;
 	cursor: pointer;
-	transition: background 0.2s;
+	transition: background 0.3s ease;
+	background: #F2F2F2 !important;
 }
-.doar-cesta-btn-row button:hover {
-	background: #d0d0d0;
+
+.doar-cesta-resultado:hover {
+	background: #D9C27E !important;
+	color: #264040;
+}
+
+.doar-cesta-resultado:last-child {
+	border-bottom: none;
 }

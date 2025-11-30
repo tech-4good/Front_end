@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
 import Modal from "../components/Modal";
 import { voluntarioService } from "../services/voluntarioService";
 import "../styles/VoluntariosExcluir.css";
@@ -9,6 +8,7 @@ import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 export default function VoluntariosExcluir() {
   const navigate = useNavigate();
@@ -32,9 +32,36 @@ export default function VoluntariosExcluir() {
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
   const [carregando, setCarregando] = useState(false);
 
+  // Auto-close modal de sucesso após 3 segundos e redirecionar para home
+  React.useEffect(() => {
+    if (modalSucesso) {
+      const timer = setTimeout(() => {
+        setModalSucesso(false);
+        navigate("/home");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalSucesso, navigate]);
+
+  const formatCPF = (value) => {
+    let numbers = value.replace(/\D/g, "");
+    if (numbers.length > 11) numbers = numbers.slice(0, 11);
+    let formatted = numbers;
+    if (numbers.length > 9) {
+      formatted = numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+    } else if (numbers.length > 6) {
+      formatted = numbers.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
+    } else if (numbers.length > 3) {
+      formatted = numbers.replace(/(\d{3})(\d{0,3})/, "$1.$2");
+    }
+    return formatted;
+  };
+
   async function handleCpfChange(e) {
-    const valor = e.target.value.replace(/\D/g, "");
-    setCpfBusca(valor);
+    const raw = e.target.value;
+    const formatted = formatCPF(raw);
+    setCpfBusca(formatted);
+    const valor = formatted.replace(/\D/g, "");
     
     if (valor.length >= 3) { // Buscar quando tiver pelo menos 3 dígitos
       setCarregando(true);
@@ -107,87 +134,100 @@ export default function VoluntariosExcluir() {
   }
 
   return (
-    <div className="voluntarios-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+    <div>
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isVoluntariosPage={true} />
       <div className="voluntarios-excluir-container">
-        <Voltar onClick={() => navigate("/voluntarios-menu")} />
-        <h1 className="voluntarios-excluir-title">Exclua um Voluntário</h1>
-        <div className="voluntarios-excluir-subtitle">Exclua uma pessoa que vai sair do voluntariado!</div>
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="voluntarios-excluir-icone-voltar"
+          onClick={() => navigate("/voluntarios-menu")}
+        />
+        <h1 className="voluntarios-excluir-title">Excluir Voluntário</h1>
+        
         <div className="voluntarios-excluir-form">
-          <input
-            className="voluntarios-excluir-input"
-            type="text"
-            placeholder="Insira o CPF"
-            value={cpfBusca}
-            onChange={handleCpfChange}
-            maxLength={11}
-          />
+          {/* Campo de busca por CPF */}
+          <div className="voluntarios-excluir-row voluntarios-excluir-row-single">
+            <div className="voluntarios-excluir-field">
+              <label className="voluntarios-excluir-label">CPF:</label>
+              <input
+                type="text"
+                name="cpfBusca"
+                value={cpfBusca}
+                onChange={handleCpfChange}
+                placeholder="Digite o CPF para buscar"
+                autoComplete="off"
+                maxLength={14}
+                className="voluntarios-excluir-input"
+              />
+            </div>
+          </div>
+
+          {/* Resultados da busca */}
           {carregando && cpfBusca.length >= 3 && (
             <div className="voluntarios-excluir-resultados">
-              <div className="voluntarios-excluir-resultado">Buscando...</div>
+              <div className="voluntarios-excluir-resultado-loading">Buscando voluntários...</div>
             </div>
           )}
+          
           {!carregando && cpfBusca && resultados.length > 0 && (
             <div className="voluntarios-excluir-resultados">
+              <div className="voluntarios-excluir-resultados-header">Voluntários encontrados:</div>
               {resultados.map((v, idx) => (
                 <div
-                  className="voluntarios-excluir-resultado"
+                  className="voluntarios-excluir-resultado-item"
                   key={v.idVoluntario || v.id || idx}
-                  style={{ cursor: "pointer" }}
                   onClick={() => handleClickVoluntario(v)}
                 >
-                  {v.nomeCompleto || v.nome} - CPF: {v.cpf}
+                  <div className="voluntarios-excluir-resultado-nome">{v.nomeCompleto || v.nome}</div>
+                  <div className="voluntarios-excluir-resultado-cpf">CPF: {v.cpf}</div>
                 </div>
               ))}
             </div>
           )}
+          
           {!carregando && cpfBusca.length >= 3 && resultados.length === 0 && (
             <div className="voluntarios-excluir-resultados">
-              <div className="voluntarios-excluir-resultado">Nenhum voluntário encontrado</div>
+              <div className="voluntarios-excluir-resultado-vazio">Nenhum voluntário encontrado</div>
             </div>
           )}
-          <Modal
-            isOpen={modalConfirm.open}
-            onClose={() => setModalConfirm({ open: false, voluntario: null })}
-            texto={modalConfirm.voluntario ? (
-              <>
-                <div style={{ fontWeight: 600, fontSize: 24, marginBottom: 8 }}>ATENÇÃO</div>
-                <div style={{ marginBottom: 12 }}>
-                  Você tem certeza que deseja excluir o voluntário?
-                </div>
-                <div style={{ fontWeight: 600, fontSize: 28, textDecoration: "underline", marginBottom: 18 }}>
-                  {modalConfirm.voluntario?.nomeCompleto || modalConfirm.voluntario?.nome}
-                </div>
-              </>
-            ) : ""}
-            showClose={false}
-            botoes={[
-              {
-                texto: "NÃO",
-                style: { background: "#111", color: "#fff", minWidth: 90 },
-                onClick: () => setModalConfirm({ open: false, voluntario: null })
-              },
-              {
-                texto: carregando ? "Excluindo..." : "SIM",
-                style: { background: "#d9d9d9", color: "#222", minWidth: 90 },
-                onClick: handleExcluir,
-                disabled: carregando
-              }
-            ]}
-          />
-          <Modal
-            isOpen={modalSucesso}
-            onClose={() => setModalSucesso(false)}
-            texto={"Voluntário excluído com sucesso!"}
-            showClose={true}
-          />
-          <Modal
-            isOpen={modalErro.open}
-            onClose={() => setModalErro({ open: false, mensagem: "" })}
-            texto={modalErro.mensagem}
-            showClose={true}
-          />
         </div>
+        
+        {/* Modals */}
+        <Modal
+          isOpen={modalConfirm.open}
+          onClose={() => setModalConfirm({ open: false, voluntario: null })}
+          texto={modalConfirm.voluntario ? (
+            `ATENÇÃO\n\nVocê tem certeza que deseja excluir o voluntário?\n\n${modalConfirm.voluntario?.nomeCompleto || modalConfirm.voluntario?.nome}`
+          ) : ""}
+          showClose={false}
+          botoes={[
+            {
+              texto: carregando ? "Excluindo..." : "Sim",
+              onClick: handleExcluir
+            },
+            {
+              texto: "Não",
+              onClick: () => setModalConfirm({ open: false, voluntario: null })
+            }
+            
+          ]}
+        />
+        <Modal
+          isOpen={modalSucesso}
+          onClose={() => {
+            setModalSucesso(false);
+            navigate("/home");
+          }}
+          texto="Voluntário excluído com sucesso!"
+          showClose={false}
+        />
+        <Modal
+          isOpen={modalErro.open}
+          onClose={() => setModalErro({ open: false, mensagem: "" })}
+          texto={modalErro.mensagem}
+          showClose={false}
+        />
       </div>
     </div>
   );

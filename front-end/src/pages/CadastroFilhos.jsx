@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
 import Modal from "../components/Modal";
 import Input from "../components/Input";
 import "../styles/CadastroFilhos.css";
@@ -13,6 +12,7 @@ import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
 
+
 export default function CadastroFilhos() {
     const [cpfBeneficiado, setCpfBeneficiado] = useState("");
     const [isEstudante, setIsEstudante] = useState(null);
@@ -20,7 +20,7 @@ export default function CadastroFilhos() {
     const [dataNascimento, setDataNascimento] = useState("");
     const [erros, setErros] = useState({});
     const [modalCampos, setModalCampos] = useState(false);
-    const [modalCamposTexto, setModalCamposTexto] = useState("Preencha todos os campos antes de salvar.");
+    const [modalCamposTexto, setModalCamposTexto] = useState("Preencha todos os campos");
     const [modalSucesso, setModalSucesso] = useState(false);
     const [carregando, setCarregando] = useState(false);
     const [beneficiadoEncontrado, setBeneficiadoEncontrado] = useState(null);
@@ -32,6 +32,18 @@ export default function CadastroFilhos() {
         const tipo = sessionStorage.getItem("tipoUsuario") || "2";
         setTipoUsuario(tipo);
     }, []);
+
+    // Auto-close modal de campos após 3 segundos
+    useEffect(() => {
+        if (modalCampos) {
+            const timer = setTimeout(() => {
+                setModalCampos(false);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [modalCampos]);
+
+
 
     // Buscar beneficiado quando CPF for preenchido completamente
     useEffect(() => {
@@ -46,20 +58,16 @@ export default function CadastroFilhos() {
 
     async function buscarBeneficiado(cpf) {
         try {
-            console.log('🔍 Buscando beneficiado com CPF:', cpf);
             const resultado = await beneficiadoService.buscarPorCpf(cpf);
             
             if (resultado.success && resultado.data) {
-                console.log('✅ Beneficiado encontrado:', resultado.data);
                 setBeneficiadoEncontrado(resultado.data);
                 setErros(prev => ({ ...prev, cpf: undefined }));
             } else {
-                console.log('❌ Beneficiado não encontrado');
                 setBeneficiadoEncontrado(null);
                 setErros(prev => ({ ...prev, cpf: 'Beneficiado não encontrado' }));
             }
         } catch (error) {
-            console.error('Erro ao buscar beneficiado:', error);
             setBeneficiadoEncontrado(null);
             setErros(prev => ({ ...prev, cpf: 'Erro ao buscar beneficiado' }));
         }
@@ -139,8 +147,10 @@ export default function CadastroFilhos() {
         }
         
         // Verificar se beneficiado foi encontrado
-        if (!beneficiadoEncontrado) {
-            newErros.cpf = "Beneficiado não encontrado com este CPF";
+        if (!beneficiadoEncontrado && cpfDigits.length === 11) {
+            setModalCamposTexto("CPF não encontrado");
+            setModalCampos(true);
+            return;
         }
         
         if (isEstudante === null) newErros.estudante = "Selecione uma opção";
@@ -150,19 +160,15 @@ export default function CadastroFilhos() {
         }
 
         setErros(newErros);
-        console.log('Validação cadastro filhos:', newErros);
 
         if (Object.keys(newErros).length > 0) {
-            // montar texto com os erros para o modal
-            const itens = Object.values(newErros).join('\n');
-            setModalCamposTexto(itens || "Preencha todos os campos antes de salvar.");
+            setModalCamposTexto("Preencha todos os campos");
             setModalCampos(true);
             return;
         }
 
-        // Verificar se beneficiado tem endereço
         if (!beneficiadoEncontrado.endereco || !beneficiadoEncontrado.endereco.id) {
-            setModalCamposTexto("Beneficiado não possui endereço cadastrado. É necessário um endereço para cadastrar o filho.");
+            setModalCamposTexto("Preencha todos os campos");
             setModalCampos(true);
             return;
         }
@@ -170,10 +176,8 @@ export default function CadastroFilhos() {
         setCarregando(true);
 
         try {
-            console.log('🚀 Iniciando cadastro do filho...');
-            
             const dadosFilho = {
-                nome: "Filho de " + beneficiadoEncontrado.nome, // Nome padrão baseado no beneficiado
+                nome: "Filho de " + beneficiadoEncontrado.nome,
                 dataNascimento: convertDateToISO(dataNascimento),
                 isEstudante: isEstudante,
                 hasCreche: isCreche,
@@ -181,21 +185,16 @@ export default function CadastroFilhos() {
                 enderecoId: beneficiadoEncontrado.endereco.id
             };
 
-            console.log('📋 Dados do filho para cadastro:', dadosFilho);
-
             const resultado = await beneficiadoService.cadastrarFilho(dadosFilho);
 
             if (resultado.success) {
-                console.log('✅ Filho cadastrado com sucesso!');
                 setModalSucesso(true);
             } else {
-                console.log('❌ Erro ao cadastrar filho:', resultado.error);
-                setModalCamposTexto(resultado.error || "Erro ao cadastrar filho");
+                setModalCamposTexto("Preencha todos os campos");
                 setModalCampos(true);
             }
         } catch (error) {
-            console.error('Erro inesperado:', error);
-            setModalCamposTexto("Erro inesperado ao cadastrar filho");
+            setModalCamposTexto("Preencha todos os campos");
             setModalCampos(true);
         } finally {
             setCarregando(false);
@@ -213,89 +212,87 @@ export default function CadastroFilhos() {
 
     return (
         <div className="cadastro-filhos-bg">
-            <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+            <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCadastrarBeneficiadosPage={true} />
             <div className="cadastro-filhos-container">
-                <div className="cadastro-filhos-voltar">
-                    <Voltar onClick={() => navigate("/home")} />
-                </div>
+
 
                 <h1 className="cadastro-filhos-title">Cadastro de Filhos</h1>
 
                 <form className="cadastro-filhos-form" onSubmit={handleCadastrar}>
-                    {/* CPF */}
-                    <Input
-                        label="CPF do Beneficiado:"
-                        type="text"
-                        name="cpfBeneficiado"
-                        placeholder="000.000.000-00"
-                        value={cpfBeneficiado}
-                        onChange={(e) => setCpfBeneficiado(formatCPF(e.target.value))}
-                        maxLength={14}
-                        style={erros.cpf ? { border: "2px solid #e74c3c" } : {}}
-                    />
-                    {erros.cpf && (
-                        <span style={{ color: "#e74c3c", fontSize: 13 }}>{erros.cpf}</span>
-                    )}
-                    {beneficiadoEncontrado && (
-                        <span style={{ color: "#27ae60", fontSize: 13 }}>
-                            ✓ Beneficiado: {beneficiadoEncontrado.nome}
-                        </span>
-                    )}
-
-                    <div className="cadastro-filhos-radio-container">
-                        <div className="cadastro-filhos-radio-col">
-                            <span className="cadastro-filhos-radio-label">É estudante?</span>
-                            <Radio
-                                name="estudante"
-                                options={[
-                                    { label: "Sim", value: "true" },
-                                    { label: "Não", value: "false" },
-                                ]}
-                                value={isEstudante !== null ? String(isEstudante) : ""}
-                                onChange={(e) => setIsEstudante(e.target.value === "true")}
+                    {/* Linha 1: CPF e Data de Nascimento */}
+                    <div className="cadastro-filhos-row-double">
+                        <div className="cadastro-filhos-input-group">
+                            <Input
+                                label="CPF do Beneficiado:"
+                                type="text"
+                                name="cpfBeneficiado"
+                                placeholder="000.000.000-00"
+                                value={cpfBeneficiado}
+                                onChange={(e) => setCpfBeneficiado(formatCPF(e.target.value))}
+                                maxLength={14}
+                                style={erros.cpf ? { border: "2px solid #e74c3c" } : {}}
                             />
-                            {erros.estudante && (
-                                <span className="cadastro-filhos-erro">{erros.estudante}</span>
-                            )}
+
                         </div>
 
-                        <div className="cadastro-filhos-radio-col">
-                            <span className="cadastro-filhos-radio-label">
-                                Está em uma creche?
-                            </span>
-                            <Radio
-                                name="creche"
-                                options={[
-                                    { label: "Sim", value: "true" },
-                                    { label: "Não", value: "false" },
-                                ]}
-                                value={isCreche !== null ? String(isCreche) : ""}
-                                onChange={(e) => setIsCreche(e.target.value === "true")}
+                        <div className="cadastro-filhos-input-group">
+                            <Input
+                                label="Data de Nascimento:"
+                                type="text"
+                                name="dataNascimento"
+                                value={dataNascimento}
+                                onChange={(e) => {
+                                    const formatted = formatDate(e.target.value);
+                                    setDataNascimento(formatted);
+                                }}
+                                maxLength={10}
+                                placeholder="DD/MM/AAAA"
+                                style={erros.dataNascimento ? { border: "2px solid #e74c3c" } : {}}
                             />
-                            {erros.creche && (
-                                <span className="cadastro-filhos-erro">{erros.creche}</span>
-                            )}
+
                         </div>
                     </div>
 
-                    <Input
-                        label="Data de Nascimento:"
-                        type="text"
-                        name="dataNascimento"
-                        value={dataNascimento}
-                        onChange={(e) => {
-                            const formatted = formatDate(e.target.value);
-                            setDataNascimento(formatted);
-                        }}
-                        maxLength={10}
-                        placeholder="DD/MM/AAAA"
-                        style={erros.dataNascimento ? { border: "2px solid #e74c3c" } : {}}
-                    />
-                    {erros.dataNascimento && (
-                        <span style={{ color: "#e74c3c", fontSize: 13 }}>
-                            {erros.dataNascimento}
-                        </span>
-                    )}
+                    {/* Linha 2: Sliders */}
+                    <div className="cadastro-filhos-row-double">
+                        <div className="cadastro-filhos-slider-group">
+                            <span className="cadastro-filhos-slider-label">É estudante?</span>
+                            <div className="cadastro-filhos-toggle-container">
+                                <span className={`cadastro-filhos-toggle-option ${isEstudante === false ? 'active' : ''}`}>
+                                    Não
+                                </span>
+                                <div 
+                                    className="cadastro-filhos-toggle-switch"
+                                    onClick={() => setIsEstudante(!isEstudante)}
+                                >
+                                    <div className={`cadastro-filhos-toggle-slider ${isEstudante ? 'right' : 'left'}`}></div>
+                                </div>
+                                <span className={`cadastro-filhos-toggle-option ${isEstudante === true ? 'active' : ''}`}>
+                                    Sim
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div className="cadastro-filhos-slider-group">
+                            <span className="cadastro-filhos-slider-label">Está em uma creche?</span>
+                            <div className="cadastro-filhos-toggle-container">
+                                <span className={`cadastro-filhos-toggle-option ${isCreche === false ? 'active' : ''}`}>
+                                    Não
+                                </span>
+                                <div 
+                                    className="cadastro-filhos-toggle-switch"
+                                    onClick={() => setIsCreche(!isCreche)}
+                                >
+                                    <div className={`cadastro-filhos-toggle-slider ${isCreche ? 'right' : 'left'}`}></div>
+                                </div>
+                                <span className={`cadastro-filhos-toggle-option ${isCreche === true ? 'active' : ''}`}>
+                                    Sim
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
 
                     <button 
                         className="cadastro-filhos-btn-row" 
@@ -309,14 +306,14 @@ export default function CadastroFilhos() {
                 <Modal
                     isOpen={modalCampos}
                     onClose={() => setModalCampos(false)}
-                    texto="Preencha todos os campos antes de salvar."
-                    showClose={true}
+                    texto={modalCamposTexto}
+                    showClose={false}
                 />
                 <Modal
                     isOpen={modalSucesso}
                     onClose={() => setModalSucesso(false)}
                     texto={"Filho cadastrado com sucesso!\nDeseja cadastrar outro filho?"}
-                    showClose={true}
+                    showClose={false}
                     botoes={[
                         {
                             texto: 'Sim',
