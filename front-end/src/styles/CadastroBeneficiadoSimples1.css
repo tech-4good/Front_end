@@ -1,14 +1,18 @@
-.cadastro-simples-passo1_2 {
-  position: absolute;
-  top: 32px;
-  right: 48px;
-  z-index: 2;
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
+}
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
 }
 
 .cadastro-simples-bg {
   min-height: 100vh;
   width: 100vw;
-  background: #6ec1cf;
+  background: #F2F2F2 !important;
   margin: 0;
   padding: 0;
 }
@@ -19,55 +23,273 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0px 0 0 0;
+  padding: 12px 0 0 0;
   box-sizing: border-box;
+  position: relative;
+}
+
+.cadastro-simples-icone-voltar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
 }
 
 .cadastro-simples-title {
-  font-size: 48px;
-  font-weight: 500;
-  margin: 10px 0 24px 0;
+  font-family: 'AdventSans-Logo', sans-serif !important;
   text-align: center;
+  font-size: 48px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 30px 0 50px 0 !important;
+  line-height: 1.1;
+  background: #D9C27E !important;
+  padding: 20px 40px !important;
+  border-radius: 20px !important;
+  max-width: 740px !important;
+  width: 85% !important;
 }
 
 .cadastro-simples-form {
+  max-width: 900px;
   width: 100%;
-  max-width: 420px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 15px;
+  padding: 0 20px;
+}
+
+.cadastro-simples-field-group {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.cadastro-simples-field-group .cadastro-simples-field {
+  max-width: 800px !important;
+  width: 800px !important;
+  flex: none !important;
+}
+
+.cadastro-simples-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  margin: 0;
+}
+
+.cadastro-simples-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 380px;
+  margin: 0;
+  transform: translateY(-8px) !important;
+}
+
+/* Ajustar largura dos campos de linha dupla para alinhamento */
+.cadastro-simples-row:not(.cadastro-simples-row-triple) {
+  max-width: 800px;
+  width: 800px;
   margin: 0 auto;
+  gap: 10px;
+}
+
+.cadastro-simples-row:not(.cadastro-simples-row-triple) .cadastro-simples-field {
+  max-width: 395px !important;
+  width: 395px !important;
+  flex: none !important;
+}
+
+/* Campo CPF mais estreito - especificidade máxima para sobrescrever Completo1 */
+.cadastro-simples-container .cadastro-simples-form .cadastro-simples-row .cadastro-simples-field:first-child {
+  max-width: 395px !important;
+  width: 395px !important;
+  flex: none !important;
+}
+
+/* Campo Data de Nascimento mais largo para compensar */
+.cadastro-simples-container .cadastro-simples-form .cadastro-simples-row .cadastro-simples-field:last-child {
+  max-width: 395px !important;
+  width: 395px !important;
+  flex: none !important;
+}
+
+/* Garantir que os inputs dentro desses campos também respeitem o tamanho */
+.cadastro-simples-container .cadastro-simples-form .cadastro-simples-row .cadastro-simples-field:first-child .cadastro-simples-input,
+.cadastro-simples-container .cadastro-simples-form .cadastro-simples-row .cadastro-simples-field:first-child input {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.cadastro-simples-container .cadastro-simples-form .cadastro-simples-row .cadastro-simples-field:last-child .cadastro-simples-input,
+.cadastro-simples-container .cadastro-simples-form .cadastro-simples-row .cadastro-simples-field:last-child input {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.cadastro-simples-label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 4px !important;
+}
+
+.cadastro-simples-form label,
+.cadastro-simples-field-group label,
+.cadastro-simples-row label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 4px !important;
+}
+
+.cadastro-simples-input {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.cadastro-simples-row .cadastro-simples-input,
+.cadastro-simples-field-group .cadastro-simples-input,
+.cadastro-simples-form input[type="text"] {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.cadastro-simples-form input[type="text"]:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-simples-input::placeholder {
+  color: #999999 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+}
+
+.cadastro-simples-input:focus {
+  border-color: #BF7E04 !important;
 }
 
 .cadastro-simples-btn {
-  font-size: 22px;
-  font-weight: 500;
-  padding: 12px 0;
-  background: #e5e5e5;
-  border: 2px solid #222;
-  border-radius: 12px;
-  box-shadow: 2px 3px 3px #2222;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  margin-top: 24px;
+  margin: 20px 55px 20px auto !important;
+  margin-top: -10px !important;
+  padding: 14px 40px !important;
+  border-radius: 8px !important;
+  border: 2px solid #264040 !important;
+  background: #264040 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.8s ease !important;
+  display: block !important;
+  color: #F2F2F2 !important;
+  min-width: 140px !important;
+  text-align: center !important;
+}
+
+.cadastro-simples-btn:disabled {
+  background: #cccccc !important;
+  border-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
 }
 
 .cadastro-simples-btn:hover {
-  background-color: #bfbfbf;
+  background: #D9C27E !important;
+  border-color: #D9C27E !important;
+  color: #264040 !important;
 }
 
-.cadastro-simples-passo {
+/* Estilos do indicador de progresso */
+.cadastro-simples-progress-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -10px 0 20px 0;
   position: relative;
-  right: 48px;
-  top: 32px;
-  margin-top: 0px;
-  font-size: 22px;
-  font-weight: 400;
+  width: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.cadastrobeneficiado-voltar {
+.cadastro-simples-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   position: relative;
-  margin-top: 0;
-  left: 48px;
-  top: 32px;
+  z-index: 2;
+}
+
+.cadastro-simples-progress-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #CCCCCC;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cadastro-simples-progress-step.active .cadastro-simples-progress-circle {
+  background: #264040;
+}
+
+.cadastro-simples-progress-step.completed .cadastro-simples-progress-circle {
+  background: #264040;
+}
+
+.cadastro-simples-progress-line {
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  right: 24px;
+  height: 4px;
+  background: #CCCCCC;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.cadastro-simples-progress-line.completed {
+  background: #264040;
+}
+
+.cadastro-simples-progress-label {
+  margin-top: 12px;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  color: #264040 !important;
+  white-space: nowrap;
 }

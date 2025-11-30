@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
 import "../styles/FilaEspera.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 function formatarDataBR(dataStr) {
   const d = new Date(dataStr);
@@ -136,9 +136,14 @@ export default function FilaEspera() {
 
   return (
     <div className="fila-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isFilaEsperaPage={true} />
       <div className="fila-container">
-        <Voltar onClick={() => navigate("/home")} />
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="fila-icone-voltar"
+          onClick={() => navigate("/home")}
+        />
         <h1 className="fila-title">Fila de Espera</h1>
         <div className="fila-content">
           <div className="fila-enderecos-lista">

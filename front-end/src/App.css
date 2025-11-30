@@ -1,1 +1,10 @@
+#root {
+  background-color: #F2F2F2;
+  min-height: 100vh;
+}
 
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #F2F2F2;
+}

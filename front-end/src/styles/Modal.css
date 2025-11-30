@@ -13,14 +13,14 @@
 }
 
 .modal-content {
-	background: #fff;
+	background: #D9C27E;
 	border-radius: 20px;
 	box-shadow: 0 4px 24px rgba(0,0,0,0.18);
 	padding: 48px 32px 36px 32px;
 	min-width: 380px;
 	max-width: 95vw;
 	position: relative;
-	border: 3px solid #111;
+	border: none;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -40,10 +40,11 @@
 .modal-texto {
 	font-size: 32px;
 	font-weight: 600;
-	color: #111;
+	color: #264040;
 	text-align: center;
 	margin-bottom: 32px;
 	white-space: pre-line;
+	font-family: 'Noto Sans', sans-serif;
 }
 
 .modal-botoes {
@@ -56,19 +57,36 @@
 
 .modal-botoes .botao-personalizado {
 	min-width: 160px;
-	font-size: 32px;
-	padding: 18px 0;
-	border-radius: 16px;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+	height: 60px !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 18px !important;
+	font-weight: 600 !important;
+	padding: 18px 48px;
+	border-radius: 8px !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	cursor: pointer !important;
+	transition: all 0.8s ease !important;
+	border: none !important;
 }
 
 .modal-botoes .botao-personalizado:first-child {
-	background: #111;
-	color: #fff;
+	background: #264040 !important;
+	color: #F2F2F2 !important;
+}
+
+.modal-botoes .botao-personalizado:first-child:hover {
+	color: #264040 !important;
+	background-color: #F2F2F2 !important;
+	transform: translateY(-1px) !important;
 }
 
 .modal-botoes .botao-personalizado:last-child {
-	background: #D9D9D9;
-	color: #222;
-	border: 2px solid #222;
+	background: #264040 !important;
+	color: #F2F2F2 !important;
+}
+
+.modal-botoes .botao-personalizado:last-child:hover {
+	color: #264040 !important;
+	background-color: #F2F2F2 !important;
+	transform: translateY(-1px) !important;
 }

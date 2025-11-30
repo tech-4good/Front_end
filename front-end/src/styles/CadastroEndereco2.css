@@ -1,0 +1,388 @@
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
+}
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+}
+
+.cadastro-endereco2-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: #F2F2F2 !important;
+  margin: 0;
+  padding: 0;
+}
+
+.cadastro-endereco2-container {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 0 0;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.cadastro-endereco2-icone-voltar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.cadastro-endereco2-title {
+  font-family: 'AdventSans-Logo', sans-serif !important;
+  text-align: center;
+  font-size: 48px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 30px 0 50px 0 !important;
+  line-height: 1.1;
+  background: #D9C27E !important;
+  padding: 20px 40px !important;
+  border-radius: 20px !important;
+  max-width: 740px !important;
+  width: 85% !important;
+}
+
+.cadastro-endereco2-form {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 0 20px;
+}
+
+.cadastro-endereco2-field-group {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.cadastro-endereco2-field-group .cadastro-endereco2-field {
+  max-width: 800px !important;
+  width: 800px !important;
+  flex: none !important;
+}
+
+.cadastro-endereco2-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  margin: 0;
+}
+
+.cadastro-endereco2-row-triple {
+  gap: 10px;
+  max-width: 800px;
+  width: 800px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.cadastro-endereco2-row-triple .cadastro-endereco2-field {
+  flex: none;
+  min-width: 0;
+}
+
+.cadastro-endereco2-row-triple .cadastro-endereco2-field:nth-child(1) {
+  width: 160px !important;
+  max-width: 160px !important;
+}
+
+.cadastro-endereco2-row-triple .cadastro-endereco2-field:nth-child(2) {
+  width: 200px !important;
+  max-width: 200px !important;
+}
+
+.cadastro-endereco2-row-triple .cadastro-endereco2-field:nth-child(3) {
+  width: 420px !important;
+  max-width: 420px !important;
+}
+
+.cadastro-endereco2-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 380px;
+  margin: 0;
+}
+
+/* Ajustar largura dos campos de linha dupla para alinhamento */
+.cadastro-endereco2-row:not(.cadastro-endereco2-row-triple) {
+  max-width: 800px;
+  width: 800px;
+  margin: 0 auto;
+  gap: 10px;
+}
+
+.cadastro-endereco2-row:not(.cadastro-endereco2-row-triple) .cadastro-endereco2-field {
+  max-width: 395px !important;
+  width: 395px !important;
+  flex: none !important;
+}
+
+/* Alinhar todos os campos na mesma altura */
+.cadastro-endereco2-field {
+  transform: translateY(-8px) !important;
+}
+
+/* Subir especificamente os campos Tipo de Cesta e Status */
+.cadastro-endereco2-field-tipo-cesta,
+.cadastro-endereco2-field-status {
+  transform: translateY(-30px) !important;
+}
+
+.cadastro-endereco2-label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 4px !important;
+}
+
+.cadastro-endereco2-form label,
+.cadastro-endereco2-field-group label,
+.cadastro-endereco2-row label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 4px !important;
+}
+
+.cadastro-endereco2-input {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.cadastro-endereco2-row .cadastro-endereco2-input,
+.cadastro-endereco2-field-group .cadastro-endereco2-input,
+.cadastro-endereco2-form input[type="text"] {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.cadastro-endereco2-form input[type="text"]:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-endereco2-input:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-endereco2-input::placeholder {
+  color: #999999 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+}
+
+.cadastro-endereco2-input-highlight {
+  border: 4px solid #D9D9D9 !important;
+  background: #FFFFFF !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+}
+
+.cadastro-endereco2-input:disabled {
+  background: #F5F5F5 !important;
+  color: #999999 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+.cadastro-endereco2-select {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 15px 20px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  line-height: 1.2 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.cadastro-endereco2-select:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-endereco2-select option {
+  font-size: 20px !important;
+  color: #264040 !important;
+  padding: 8px 16px !important;
+}
+
+.cadastro-endereco2-btn {
+  margin: 20px 55px 20px auto !important;
+  margin-top: -38px !important;
+  padding: 14px 40px !important;
+  border-radius: 8px !important;
+  border: 2px solid #264040 !important;
+  background: #264040 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.8s ease !important;
+  display: block !important;
+  color: #F2F2F2 !important;
+  min-width: 140px !important;
+  text-align: center !important;
+}
+
+.cadastro-endereco2-btn:hover {
+  background: #D9C27E !important;
+  border-color: #D9C27E !important;
+  color: #264040 !important;
+}
+
+.cadastro-endereco2-btn:disabled {
+  background: #cccccc !important;
+  border-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+}
+
+.cadastro-endereco2-botoes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -60px;
+  width: 100%;
+  max-width: 790px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cadastro-endereco2-btn-voltar {
+  margin: 0 !important;
+  padding: 14px 40px !important;
+  border-radius: 8px !important;
+  border: 2px solid #264040 !important;
+  background: #264040 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.8s ease !important;
+  display: block !important;
+  color: #F2F2F2 !important;
+  min-width: 140px !important;
+  text-align: center !important;
+}
+
+.cadastro-endereco2-btn-voltar:hover {
+  background: #D9C27E !important;
+  border-color: #D9C27E !important;
+  color: #264040 !important;
+}
+
+.cadastro-endereco2-botoes .cadastro-endereco2-btn {
+  margin: 0 !important;
+}
+
+/* Estilos do indicador de progresso */
+.cadastro-endereco2-progress-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -10px 0 20px 0;
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cadastro-endereco2-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.cadastro-endereco2-progress-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #CCCCCC;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cadastro-endereco2-progress-step.active .cadastro-endereco2-progress-circle {
+  background: #264040;
+}
+
+.cadastro-endereco2-progress-step.completed .cadastro-endereco2-progress-circle {
+  background: #264040;
+}
+
+.cadastro-endereco2-progress-line {
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  right: 24px;
+  height: 4px;
+  background: #CCCCCC;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.cadastro-endereco2-progress-line.completed {
+  background: #264040;
+}
+
+.cadastro-endereco2-progress-label {
+  margin-top: 12px;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  color: #264040 !important;
+  white-space: nowrap;
+}

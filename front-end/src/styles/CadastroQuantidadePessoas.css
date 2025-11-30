@@ -1,0 +1,201 @@
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
+}
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+}
+
+.cadastro-quantidade-pessoas-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: #F2F2F2 !important;
+  margin: 0;
+  padding: 0;
+}
+
+.cadastro-quantidade-pessoas-container {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 0 0;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.cadastro-quantidade-pessoas-icone-voltar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.cadastro-quantidade-pessoas-title {
+  font-family: 'AdventSans-Logo', sans-serif !important;
+  text-align: center;
+  font-size: 48px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 30px 0 50px 0 !important;
+  line-height: 1.1;
+  background: #D9C27E !important;
+  padding: 20px 40px !important;
+  border-radius: 20px !important;
+  max-width: 740px !important;
+  width: 85% !important;
+}
+
+.cadastro-quantidade-pessoas-form {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 0 20px;
+}
+
+.cadastro-quantidade-pessoas-field-group {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.cadastro-quantidade-pessoas-field-group .cadastro-quantidade-pessoas-field {
+  max-width: 800px !important;
+  width: 800px !important;
+  flex: none !important;
+}
+
+.cadastro-quantidade-pessoas-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  margin: 0;
+  max-width: 800px;
+  width: 800px;
+  margin: 0 auto;
+}
+
+.cadastro-quantidade-pessoas-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 395px;
+  margin: 0;
+  transform: translateY(-8px) !important;
+}
+
+.cadastro-quantidade-pessoas-row .cadastro-quantidade-pessoas-field {
+  max-width: 395px !important;
+  width: 395px !important;
+  flex: none !important;
+}
+
+.cadastro-quantidade-pessoas-row-triple {
+  gap: 10px;
+  max-width: 800px;
+  width: 800px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.cadastro-quantidade-pessoas-row-triple .cadastro-quantidade-pessoas-field {
+  flex: none;
+  min-width: 0;
+  max-width: 260px !important;
+  width: 260px !important;
+}
+
+.cadastro-quantidade-pessoas-label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 4px !important;
+}
+
+.cadastro-quantidade-pessoas-input {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.cadastro-quantidade-pessoas-input:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-quantidade-pessoas-input::placeholder {
+  color: #999999 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+}
+
+.cadastro-quantidade-pessoas-input:disabled {
+  background: #F5F5F5 !important;
+  color: #999999 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+.cadastro-quantidade-pessoas-btn {
+  margin: 20px auto !important;
+  margin-top: 15px !important;
+  padding: 14px 40px !important;
+  border-radius: 8px !important;
+  border: 2px solid #264040 !important;
+  background: #264040 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.8s ease !important;
+  display: block !important;
+  color: #F2F2F2 !important;
+  min-width: 140px !important;
+  text-align: center !important;
+}
+
+.cadastro-quantidade-pessoas-btn:hover {
+  background: #D9C27E !important;
+  border-color: #D9C27E !important;
+  color: #264040 !important;
+}
+
+.cadastro-quantidade-pessoas-btn:disabled {
+  background: #cccccc !important;
+  border-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+}
+
+.cadastro-quantidade-pessoas-botoes {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -25px;
+  width: 100%;
+  max-width: 790px;
+  margin-left: auto;
+  margin-right: auto;
+}

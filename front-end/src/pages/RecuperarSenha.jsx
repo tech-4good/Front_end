@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import Input from "../components/Input";
 import Botao from "../components/Botao";
 import { authService } from "../services/authService";
+import iconeVoltar from "../assets/icone-voltar.png";
 import "../styles/RecuperarSenha.css";
 
 const RecuperarSenha = () => {
@@ -14,6 +14,13 @@ const RecuperarSenha = () => {
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
   const [modalTimeout, setModalTimeout] = useState(null);
   const [carregando, setCarregando] = useState(false);
+
+  const mostrarModal = (mensagem) => {
+    setModalErro({ open: true, mensagem });
+    if (modalTimeout) clearTimeout(modalTimeout);
+    const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 3000);
+    setModalTimeout(timeout);
+  };
 
   const handleVoltarLogin = () => {
     navigate("/");
@@ -26,20 +33,14 @@ const RecuperarSenha = () => {
   const handleEnviarEmail = async () => {
     // Validação básica
     if (!email.trim()) {
-      setModalErro({ open: true, mensagem: "Preencha o campo de e-mail." });
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-      setModalTimeout(timeout);
+      mostrarModal("Preencha o campo de e-mail.");
       return;
     }
 
     // Validação de formato de e-mail
     const validacaoEmail = authService.validarEmail(email);
     if (!validacaoEmail.valido) {
-      setModalErro({ open: true, mensagem: validacaoEmail.erro });
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-      setModalTimeout(timeout);
+      mostrarModal(validacaoEmail.erro);
       return;
     }
 
@@ -51,25 +52,13 @@ const RecuperarSenha = () => {
       if (resultado.sucesso) {
         setCurrentPage("feedback");
       } else {
-        setModalErro({ 
-          open: true, 
-          mensagem: resultado.mensagem || "Erro ao enviar e-mail de recuperação." 
-        });
-        if (modalTimeout) clearTimeout(modalTimeout);
-        const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-        setModalTimeout(timeout);
+        mostrarModal(resultado.mensagem || "Erro ao enviar e-mail de recuperação.");
       }
     } catch (erro) {
       console.error("Erro ao solicitar recuperação:", erro);
       // Usar a mensagem de erro que vem da exceção
       const mensagemErro = erro.message || "Erro inesperado ao processar solicitação. Tente novamente.";
-      setModalErro({ 
-        open: true, 
-        mensagem: mensagemErro
-      });
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-      setModalTimeout(timeout);
+      mostrarModal(mensagemErro);
     } finally {
       setCarregando(false);
     }
@@ -78,13 +67,13 @@ const RecuperarSenha = () => {
   if (currentPage === "feedback") {
     return (
       <div className="recuperar-container">
-        <div className="recuperar-card-feedback">
-          <div className="feedback-content">
+        <div className="recuperar-card">
+          <div className="recuperar-content">
             <div className="feedback-message">
               <p>Você irá receber um e-mail com instruções para redefinir a sua senha!</p>
             </div>
             <div className="botao-container">
-              <Botao texto="Retornar para tela de login" onClick={handleRetornarLogin} />  {/* colocar fora depois */}
+              <Botao texto="Retornar para tela de login" onClick={handleRetornarLogin} />
             </div>
           </div>
         </div>
@@ -100,19 +89,18 @@ const RecuperarSenha = () => {
           isOpen={modalErro.open}
           onClose={() => setModalErro({ open: false, mensagem: "" })}
           texto={modalErro.mensagem}
-          showClose={true}
+          showClose={false}
         />
       </div>
       <div className="voltar-section">
         <button onClick={handleVoltarLogin} className="voltar-button">
-          <ArrowLeft className="voltar-icon" />
-          <span>Voltar</span>
+          <img src={iconeVoltar} alt="Voltar" className="voltar-icon" />
         </button>
       </div>
 
       <div className="recuperar-card">
         <div className="recuperar-content">
-          <h2 className="recuperar-title">INSIRA O<br />SEU E-MAIL</h2>
+          <h2 className="recuperar-title">Insira o seu E-mail</h2>
           <div className="form-section">
             <Input
               label="E-mail:"

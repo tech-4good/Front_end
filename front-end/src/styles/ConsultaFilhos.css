@@ -1,33 +1,94 @@
-.consulta-filhos-bg {
-	min-height: 100vh;
-	background: #6ec1c7;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
 }
 
+/* Override global body styles specifically for this page */
+.consulta-filhos-container ~ body,
+body:has(.consulta-filhos-container) {
+	overflow-y: auto !important;
+	height: auto !important;
+}
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+}
+
+
+
 .consulta-filhos-container {
-	max-width: 1800px;
-	padding: 32px 0 0 0;
+	background: #F2F2F2 !important;
+	min-height: 100vh;
+	height: 100vh;
+	padding: 100px 20px 60px 20px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	height: calc(100vh - 80px);
-	overflow-y: auto;
+	position: relative;
+	overflow-y: scroll !important;
+	overflow-x: hidden;
+	width: 100%;
+	scrollbar-width: auto !important;
+	scrollbar-color: #264040 #f1f1f1;
+}
+
+/* Estilo personalizado para scrollbar - sempre visível */
+.consulta-filhos-container::-webkit-scrollbar {
+	width: 14px;
+	background: #f1f1f1;
+}
+
+.consulta-filhos-container::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 10px;
+}
+
+.consulta-filhos-container::-webkit-scrollbar-thumb {
+	background: #264040;
+	border-radius: 10px;
+	border: 2px solid #f1f1f1;
+}
+
+.consulta-filhos-container::-webkit-scrollbar-thumb:hover {
+	background: #1a2f2f;
+}
+
+.consulta-filhos-container::-webkit-scrollbar-corner {
+	background: #f1f1f1;
+}
+
+.consulta-filhos-icone-voltar {
+	position: absolute;
+	top: 30px;
+	left: 30px;
+	width: 40px;
+	height: 40px;
+	cursor: pointer;
+	transition: opacity 0.2s;
 }
 
 .consulta-filhos-voltar {
-	align-self: flex-start;
-	margin-bottom: 16px;
-	margin-top: -30px;
+	position: absolute;
+	top: 30px;
+	left: 30px;
+	z-index: 10;
 }
 
 .consulta-filhos-title {
-	font-size: 3rem;
-	font-weight: bold;
-	margin-bottom: 32px;
-	margin-top: 12px;
+	font-family: 'AdventSans-Logo', sans-serif !important;
 	text-align: center;
+	font-size: 48px !important;
+	font-weight: 400 !important;
+	color: #264040 !important;
+	margin: -50px 0 50px 0 !important;
+	line-height: 1.1;
+	background: #D9C27E !important;
+	padding: 20px 40px !important;
+	border-radius: 20px !important;
+	max-width: 725px !important;
+	width: 90% !important;
 }
 
 .consulta-filhos-form {
@@ -38,64 +99,214 @@
 	align-items: center;
 }
 
-.consulta-filhos-lista {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 80px 100px;
-	width: 100%;
-	justify-content: center;
-}
 
-.consulta-filhos-card {
-	background: none;
+
+.consulta-filhos-form {
+	width: 100%;
+	max-width: 1200px;
 	display: flex;
 	flex-direction: column;
-	gap: 15px;
-	min-width: 320px;
-	max-width: 400px;
+	gap: 40px;
+	padding: 0 0 100px 0;
+	margin: 0 auto;
 }
-.consulta-filhos-label {
-	font-weight: 600;
-	font-size: 1.5rem;
-	margin-bottom: 8px;
-}
-.consulta-filhos-card label {
-	font-weight: 500;
-	font-size: 20px;
-	margin-bottom: 2px;
-}
-.consulta-filhos-card input {
-	background: #fff;
-	border-radius: 10px;
-	border: none;
-	font-size: 1.3rem;
-	padding: 15px 18px;
-	margin-bottom: 8px;
-	color: #222;
+
+.consulta-filhos-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+	gap: 76px;
 	width: 100%;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+	justify-items: center;
+}
+
+.consulta-filhos-card-item {
+	background: #FFFFFF !important;
+	border: 4px solid #D9C27E !important;
+	border-radius: 20px !important;
+	padding: 30px !important;
+	min-height: 320px !important;
+	width: 100% !important;
+	max-width: 400px !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	text-align: center !important;
+	box-shadow: 0 8px 24px rgba(38, 64, 64, 0.15) !important;
+	transition: all 0.3s ease !important;
+	cursor: default !important;
+}
+
+.consulta-filhos-card-item:hover {
+	transform: translateY(-5px) !important;
+	box-shadow: 0 12px 32px rgba(38, 64, 64, 0.2) !important;
+	border-color: #BF7E04 !important;
+}
+
+.consulta-filhos-card-title {
+	font-family: 'AdventSans-Logo', sans-serif !important;
+	font-size: 24px !important;
+	font-weight: 400 !important;
+	color: #264040 !important;
+	margin: 0 0 25px 0 !important;
+	background: #D9C27E !important;
+	padding: 12px 20px !important;
+	border-radius: 15px !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.consulta-filhos-card-content {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	width: 100%;
+	flex-grow: 1;
+}
+
+.consulta-filhos-field {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	width: 100%;
+}
+
+.consulta-filhos-field-label {
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 24px !important;
+	font-weight: 400 !important;
+	color: #264040 !important;
+	margin-bottom: 4px !important;
+}
+
+.consulta-filhos-input {
+	width: 100% !important;
+	height: 60px !important;
+	padding: 18px 24px !important;
+	border: 4px solid #D9D9D9 !important;
+	border-radius: 8px !important;
+	background: #FFFFFF !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 20px !important;
+	font-weight: 400 !important;
+	color: #264040 !important;
+	outline: none !important;
+	box-sizing: border-box !important;
+	transition: all 0.2s ease !important;
+}
+
+.consulta-filhos-input:focus {
+	border-color: #BF7E04 !important;
+}
+
+/* Estilos específicos para selects */
+.consulta-filhos-input[type="select"],
+.consulta-filhos-input select,
+select.consulta-filhos-input {
+	padding: 15px 40px 15px 24px !important;
+	line-height: 1.5 !important;
+	height: 60px !important;
+	display: flex !important;
+	align-items: center !important;
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23264040' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 12px center !important;
+	background-size: 16px !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+}
+
+.consulta-filhos-input::placeholder {
+	color: #999999 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 16px !important;
+	font-weight: 400 !important;
 }
 
 .consulta-filhos-botoes {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 24px;
+	gap: 20px;
 	justify-content: center;
-	margin: 32px 0 32px 0;
+	margin: 20px 0 150px 0;
 }
+
 .consulta-filhos-botao {
-	background: #ededed;
-	border: 2px solid #222;
-	border-radius: 14px;
-	font-size: 1.2rem;
-	font-weight: 500;
-	padding: 14px 32px;
-	width: 300px;
-	cursor: pointer;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-	transition: background 0.2s, box-shadow 0.2s;
+	background: #264040 !important;
+	color: #FFFFFF !important;
+	border: 3px solid #264040 !important;
+	border-radius: 15px !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 16px !important;
+	font-weight: 600 !important;
+	padding: 15px 30px !important;
+	min-width: 200px !important;
+	cursor: pointer !important;
+	transition: all 0.8s ease !important;
+	box-shadow: 0 4px 12px rgba(38, 64, 64, 0.2) !important;
 }
+
 .consulta-filhos-botao:hover {
-	background: #bfbfbf;
-	box-shadow: 0 4px 16px rgba(0,0,0,0.16);
+	background: #D9C27E !important;
+	color: #264040 !important;
+	border-color: #D9C27E !important;
+	transform: translateY(-2px) !important;
+	box-shadow: 0 6px 16px rgba(38, 64, 64, 0.3) !important;
+}
+
+@media (max-width: 768px) {
+	.consulta-filhos-title {
+		font-size: 40px !important;
+		padding: 16px 32px !important;
+	}
+	
+	.consulta-filhos-form {
+		padding: 0 15px;
+	}
+	
+	.consulta-filhos-grid {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+	
+	.consulta-filhos-card-item {
+		min-height: 280px !important;
+		padding: 20px !important;
+	}
+	
+	.consulta-filhos-botoes {
+		flex-direction: column;
+		align-items: center;
+	}
+	
+	.consulta-filhos-botao {
+		width: 100%;
+		max-width: 300px;
+	}
+}
+
+/* Estilos específicos para botões dos modais de filhos */
+.modal-botoes .botao-personalizado {
+	background: #264040 !important;
+	color: #F2F2F2 !important;
+	border: none !important;
+	min-width: 160px !important;
+	height: 60px !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 18px !important;
+	font-weight: 600 !important;
+	padding: 18px 48px !important;
+	border-radius: 8px !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+	cursor: pointer !important;
+	transition: all 0.8s ease !important;
+}
+
+.modal-botoes .botao-personalizado:hover {
+	color: #264040 !important;
+	background-color: #F2F2F2 !important;
+	transform: translateY(-1px) !important;
 }

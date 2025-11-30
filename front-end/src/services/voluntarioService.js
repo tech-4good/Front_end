@@ -16,27 +16,27 @@ export const voluntarioService = {
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro no cadastro:', error);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       // Extrair mensagem de erro do backend (pode estar em diferentes lugares)
-      const errorMsg = error.response?.data?.message || 
-                      error.response?.data?.error || 
-                      error.message || 
-                      '';
-      
+      const errorMsg = error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        '';
+
       console.log('Mensagem de erro capturada:', errorMsg); // Debug
-      
+
       // Verificar se é erro de duplicação (pode vir em erro 500, 409 ou 400)
-      if (errorMsg.toLowerCase().includes('duplicate entry') || 
-          errorMsg.toLowerCase().includes('duplicat')) {
-        
+      if (errorMsg.toLowerCase().includes('duplicate entry') ||
+        errorMsg.toLowerCase().includes('duplicat')) {
+
         // Extrair o email da mensagem de erro se possível
         const emailMatch = errorMsg.match(/'([^']*@[^']*)'/);
         const emailDuplicado = emailMatch ? emailMatch[1] : '';
-        
+
         if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('e-mail') || emailDuplicado) {
-          mensagem = emailDuplicado 
+          mensagem = emailDuplicado
             ? `O e-mail "${emailDuplicado}" já está cadastrado no sistema.`
             : 'Este e-mail já está cadastrado no sistema.';
         } else if (errorMsg.toLowerCase().includes('cpf')) {
@@ -44,7 +44,7 @@ export const voluntarioService = {
         } else {
           mensagem = 'Já existe um cadastro com estes dados no sistema.';
         }
-      } 
+      }
       // Tratamento específico por status HTTP
       else if (error.response?.status === 400) {
         if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('e-mail')) {
@@ -74,7 +74,7 @@ export const voluntarioService = {
         // Usar mensagem do backend se disponível
         mensagem = errorMsg;
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -86,33 +86,33 @@ export const voluntarioService = {
         email,
         senha
       });
-      
+
       console.log('Resposta do login:', response.data); // Debug log
-      
+
       // Salvar token e dados do usuário no sessionStorage
       if (response.data.token) {
         // Isso aqui é só pra fazer funcionar por enquanto pois o valor de administrador está vindo como undefined
         // const tipoUsuario = response.data.administrador === 1 ? "1" : "2";
-        
+
         sessionStorage.setItem('authToken', response.data.token);
         sessionStorage.setItem('nomeUsuario', response.data.nome);
         sessionStorage.setItem('emailUsuario', response.data.email);
         sessionStorage.setItem('tipoUsuario', response.data.administrador === 1 ? "2" : "1");
         sessionStorage.setItem('userId', response.data.userId.toString());
-        
+
         console.log('Dados salvos no sessionStorage:', {
           tipoUsuario: response.data.administrador === 1 ? "2" : "1",
           administrador: response.data.administrador,
           userId: response.data.userId
         }); // Debug log
       }
-      
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro no login:', error);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       if (error.response?.status === 401) {
         mensagem = 'E-mail ou senha incorretos.';
       } else if (error.response?.data?.message) {
@@ -120,7 +120,7 @@ export const voluntarioService = {
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -147,34 +147,116 @@ export const voluntarioService = {
     }
   },
 
-  // Atualizar voluntário
+  // 🔒 Atualizar voluntário usando EMAIL ORIGINAL como identificador
+  // Busca pelo email original e depois atualiza os dados
+  atualizarPorEmailOriginal: async (emailOriginal, dadosVoluntario) => {
+    try {
+      console.log('🔍 Método simplificado: usando diretamente ID do sessionStorage');
+      console.log('📧 Email original (para referência):', emailOriginal);
+
+      // ⚡ MÉTODO SIMPLIFICADO: Usar diretamente ID do sessionStorage
+      // O backend tem problemas com busca por email, então vamos pular essa etapa
+      const usuarioId = sessionStorage.getItem('userId');
+
+      if (!usuarioId) {
+        console.error('❌ ID do usuário não encontrado no sessionStorage');
+        return { success: false, error: 'ID do usuário não encontrado. Faça login novamente.' };
+      }
+
+      console.log('✅ Usando ID do sessionStorage:', usuarioId);
+
+      // 2º PASSO: Atualizar os dados usando o ID encontrado
+      const payload = {};
+
+      // Verificar se houve mudança de email
+      const emailMudou = dadosVoluntario.email && dadosVoluntario.email.toLowerCase().trim() !== emailOriginal.toLowerCase();
+
+      // Backend só aceita estes 2 campos:
+      if (dadosVoluntario.telefone !== undefined) {
+        payload.telefone = String(dadosVoluntario.telefone).replace(/\D/g, '');
+      }
+
+      // 🚨 LIMITAÇÃO DO BACKEND: Não suporta mudança de email
+      if (emailMudou) {
+        console.warn('⚠️ Backend não suporta mudança de email. Atualizando apenas telefone.');
+        console.warn('⚠️ Email permanecerá:', emailOriginal);
+      } else if (dadosVoluntario.email !== undefined) {
+        payload.email = String(dadosVoluntario.email).toLowerCase().trim();
+        console.log('📧 Mantendo email:', payload.email);
+      }
+
+      console.log('📤 Enviando payload de atualização:', payload);
+      console.log('📤 Para o usuário ID:', usuarioId);
+
+      const response = await apiClient.patch(`/voluntarios/${usuarioId}`, payload);
+
+      // Se chegou aqui, a requisição foi bem-sucedida (status 200-299)
+      console.log('✅ Atualização bem-sucedida - Status:', response.status);
+      console.log('✅ Resposta:', response.data);
+
+      // emailMudou já foi calculado acima
+
+      return {
+        success: true,
+        data: response.data,
+        emailMudou: emailMudou,
+        novoEmail: emailMudou ? dadosVoluntario.email.toLowerCase().trim() : null
+      };
+    } catch (error) {
+      console.error('❌ Erro ao atualizar voluntário por email original:', error);
+      console.error('❌ Detalhes:', error.response?.data);
+
+      let mensagem = 'Erro ao atualizar dados';
+
+      if (error.response?.status === 400) {
+        mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
+      } else if (error.response?.status === 404) {
+        mensagem = 'Usuário não encontrado com o email original.';
+      } else if (error.response?.data?.message) {
+        mensagem = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Se houver erros de validação específicos
+        const erros = error.response.data.errors;
+        if (Array.isArray(erros)) {
+          mensagem = erros.map(e => e.defaultMessage || e.message).join(', ');
+        }
+      }
+
+      return { success: false, error: mensagem };
+    }
+  },
+
+  // Atualizar voluntário (método antigo - mantido para compatibilidade)
   // ⚠️ IMPORTANTE: Backend atual só aceita TELEFONE e EMAIL
   // Outros campos (nome, cpf, senha) são ignorados pela API
   atualizar: async (id, dadosVoluntario) => {
     try {
       const payload = {};
-      
+
       // Backend só aceita estes 2 campos:
       if (dadosVoluntario.telefone !== undefined) {
         payload.telefone = String(dadosVoluntario.telefone).replace(/\D/g, '');
       }
-      
+
       if (dadosVoluntario.email !== undefined) {
         payload.email = String(dadosVoluntario.email).toLowerCase().trim();
+        sessionStorage.setItem('emailUsuario', payload.email);
       }
 
       console.log('📤 Enviando payload de atualização (telefone e email apenas):', payload);
       const response = await apiClient.patch(`/voluntarios/${id}`, payload);
-      console.log('✅ Atualização bem-sucedida:', response.data);
-      console.log('ℹ️ Campos atualizados: telefone e email');
-      console.log('⚠️ Campos NÃO atualizados: nome, cpf, senha (backend não suporta)');
+
+      // Se chegou aqui, a requisição foi bem-sucedida (status 200-299)
+      console.log('✅ Atualização bem-sucedida - Status:', response.status);
+      console.log('✅ Resposta:', response.data);
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error('❌ Erro ao atualizar voluntário:', error);
       console.error('❌ Detalhes:', error.response?.data);
-      
+
       let mensagem = 'Erro ao atualizar dados';
-      
+
       if (error.response?.status === 400) {
         mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
       } else if (error.response?.data?.message) {
@@ -186,7 +268,7 @@ export const voluntarioService = {
           mensagem = erros.map(e => e.defaultMessage || e.message).join(', ');
         }
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -210,13 +292,13 @@ export const voluntarioService = {
     } catch (error) {
       console.error('Erro ao redefinir senha:', error);
       let mensagem = 'Erro ao redefinir senha';
-      
+
       if (error.response?.status === 404) {
         mensagem = 'E-mail não encontrado.';
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
       }
-      
+
       return { success: false, error: mensagem };
     }
   }

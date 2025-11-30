@@ -10,6 +10,7 @@ import iconeCasa from '../assets/icone-casa.png';
 import iconeUsuario from '../assets/icone-usuario.png';
 import iconeRelogio from '../assets/icone-relogio.png';
 import iconeSair from '../assets/icone-sair.png';
+import iconeVoltar from '../assets/icone-voltar.png';
 import { Download } from 'lucide-react';
 import { beneficiadoService } from '../services/beneficiadoService';
 
@@ -36,6 +37,27 @@ export default function CadastroBeneficiadoCompleto3() {
     const tipo = sessionStorage.getItem('tipoUsuario') || '2';
     setTipoUsuario(tipo);
   }, []);
+
+  // Auto-fechar modal de sucesso em 3 segundos
+  useEffect(() => {
+    if (modalSucesso.open) {
+      const timeout = setTimeout(() => {
+        setModalSucesso({ open: false, mensagem: '' });
+        setModalFilhos(true);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalSucesso.open]);
+
+  // Auto-fechar modal de erro em 3 segundos
+  useEffect(() => {
+    if (modalErro.open) {
+      const timeout = setTimeout(() => {
+        setModalErro({ open: false, mensagem: '' });
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [modalErro.open]);
 
   const botoesNavbar = [
     { texto: 'Início', onClick: () => navigate('/home'), icone: iconeCasa },
@@ -105,9 +127,25 @@ export default function CadastroBeneficiadoCompleto3() {
       setForm({ ...form, renda: formatReais(value) });
     } else if (name === 'dependentes') {
       const onlyNumbers = value.replace(/[^0-9]/g, "");
-      setForm({ ...form, [name]: onlyNumbers });
+      // Limitar a 2 caracteres
+      const limitedValue = onlyNumbers.slice(0, 2);
+      setForm({ ...form, [name]: limitedValue });
     } else {
-      setForm({ ...form, [name]: value });
+      // Validação especial para campos que devem ter apenas letras e espaços simples
+      const textOnlyFields = ["profissao", "cargo"];
+      if (textOnlyFields.includes(name)) {
+        // Remove números e caracteres especiais, mantém apenas letras e espaços
+        let newValue = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+        // Remove dois espaços seguidos
+        newValue = newValue.replace(/\s{2,}/g, " ");
+        setForm({ ...form, [name]: newValue });
+      } else if (name === 'empresa') {
+        // Campo empresa: não permite espaços duplos
+        let newValue = value.replace(/\s{2,}/g, " ");
+        setForm({ ...form, [name]: newValue });
+      } else {
+        setForm({ ...form, [name]: value });
+      }
     }
   }
 
@@ -192,7 +230,8 @@ export default function CadastroBeneficiadoCompleto3() {
         setModalSucesso({ open: true, mensagem: 'Beneficiado cadastrado com sucesso!' });
       } else {
         console.error('Erro no cadastro:', response.error);
-        setModalErro({ open: true, mensagem: response.error || 'Erro ao cadastrar beneficiado.' });
+        // Não mostrar mensagem técnica do backend
+        setModalErro({ open: true, mensagem: 'Erro ao cadastrar beneficiado. Verifique os dados e tente novamente.' });
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -203,22 +242,42 @@ export default function CadastroBeneficiadoCompleto3() {
   }
 
   return (
-    <div className="cadastro-beneficiado-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
-      <div className="cadastro-beneficiado-container">
-        <div className="cadastro-beneficiado-voltar">
-          <Voltar onClick={() => navigate('/cadastro-beneficiado-completo2')} />
-        </div>
-        <div className="cadastro-beneficiado-header">
-          <h1 className="cadastro-beneficiado-title">Cadastro de Beneficiado</h1>
-          <span className="cadastro-beneficiado-passo">Passo: 3/3</span>
+    <div className="cadastro-completo3-bg">
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCadastrarBeneficiadosPage={true} />
+      
+      <div className="cadastro-completo3-container">
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="cadastro-completo3-icone-voltar"
+          onClick={() => navigate("/cadastro-beneficiado-completo2")}
+        />
+        
+        <h1 className="cadastro-completo3-title">Cadastro de Beneficiado</h1>
+        
+        {/* Indicador de progresso */}
+        <div className="cadastro-completo3-progress-container">
+          <div className="cadastro-completo3-progress-step completed">
+            <div className="cadastro-completo3-progress-circle"></div>
+            <span className="cadastro-completo3-progress-label">Passo 1</span>
+          </div>
+          <div className="cadastro-completo3-progress-line completed"></div>
+          <div className="cadastro-completo3-progress-step completed">
+            <div className="cadastro-completo3-progress-circle"></div>
+            <span className="cadastro-completo3-progress-label">Passo 2</span>
+          </div>
+          <div className="cadastro-completo3-progress-line completed"></div>
+          <div className="cadastro-completo3-progress-step active">
+            <div className="cadastro-completo3-progress-circle"></div>
+            <span className="cadastro-completo3-progress-label">Passo 3</span>
+          </div>
         </div>
         {/* Modal de sucesso/erro */}
         <Modal
           isOpen={modalSucesso.open}
           onClose={() => { setModalSucesso({ open: false, mensagem: "" }); setModalFilhos(true); }}
           texto={modalSucesso.mensagem}
-          showClose={true}
+          showClose={false}
         />
         
         {/* Modal de erro */}
@@ -226,25 +285,26 @@ export default function CadastroBeneficiadoCompleto3() {
           isOpen={modalErro.open}
           onClose={() => setModalErro({ open: false, mensagem: "" })}
           texto={modalErro.mensagem}
-          showClose={true}
+          showClose={false}
         />
         {/* Modal de pergunta filhos usando Modal padrão */}
         <Modal
           isOpen={modalFilhos}
           onClose={() => { setModalFilhos(false); setModalAuxilios(true); }}
           texto="Deseja cadastrar filhos?"
-          showClose={true}
+          showClose={false}
           botoes={[
             {
-              texto: 'NÃO',
-              onClick: () => { setModalFilhos(false); setModalAuxilios(true); },
-              style: { background: '#111', color: '#fff', border: '2px solid #111', minWidth: 120, minHeight: 44, fontSize: 18 }
-            },
-            {
-              texto: 'SIM',
+              texto: 'Sim',
               onClick: () => { setModalFilhos(false); navigate('/cadastro-filhos'); },
               style: { background: '#ededed', color: '#222', minWidth: 120, minHeight: 44, fontSize: 18 }
+            },
+            {
+              texto: 'Não',
+              onClick: () => { setModalFilhos(false); setModalAuxilios(true); },
+              style: { background: '#111', color: '#fff', border: '2px solid #111', minWidth: 120, minHeight: 44, fontSize: 18 }
             }
+            
           ]}
         />
         {/* Modal de pergunta auxílios usando Modal padrão */}
@@ -252,18 +312,19 @@ export default function CadastroBeneficiadoCompleto3() {
           isOpen={modalAuxilios}
           onClose={() => { setModalAuxilios(false); navigate('/cadastro-beneficiado-menu'); }}
           texto="Deseja cadastrar auxílios governamentais?"
-          showClose={true}
+          showClose={false}
           botoes={[
             {
-              texto: 'NÃO',
-              onClick: () => { setModalAuxilios(false); navigate('/cadastro-beneficiado-menu'); },
-              style: { background: '#111', color: '#fff', border: '2px solid #111', minWidth: 120, minHeight: 44, fontSize: 18 }
-            },
-            {
-              texto: 'SIM',
+              texto: 'Sim',
               onClick: () => { setModalAuxilios(false); navigate('/cadastro-auxilios'); },
               style: { background: '#ededed', color: '#222', minWidth: 120, minHeight: 44, fontSize: 18 }
+            },
+            {
+              texto: 'Não',
+              onClick: () => { setModalAuxilios(false); navigate('/cadastro-beneficiado-menu'); },
+              style: { background: '#111', color: '#fff', border: '2px solid #111', minWidth: 120, minHeight: 44, fontSize: 18 }
             }
+            
           ]}
         />
         
@@ -275,95 +336,95 @@ export default function CadastroBeneficiadoCompleto3() {
           showClose={true}
         />
 
-        <form onSubmit={handleSubmit} className="cadastro-beneficiado-form">
-          <div className="cadastro-beneficiado-grid">
-            <div className="cadastro-beneficiado-col">
-              <div className="cadastro-beneficiado-field">
-                <label htmlFor="profissao">Profissão:</label>
-                <Input
-                  id="profissao"
-                  name="profissao"
-                  placeholder="Insira a profissão"
-                  value={form.profissao}
-                  onChange={handleChange}
-                  className="cadastro-beneficiado-input"
-                />
-              </div>
-              <div className="cadastro-beneficiado-field">
-                <label htmlFor="empresa">Empresa:</label>
-                <Input
-                  id="empresa"
-                  name="empresa"
-                  placeholder="Insira o nome da empresa"
-                  value={form.empresa}
-                  onChange={handleChange}
-                  className="cadastro-beneficiado-input"
-                />
-              </div>
-              <div className="cadastro-beneficiado-field">
-                <label htmlFor="dependentes">Quantidade de Dependentes:</label>
-                <Input
-                  id="dependentes"
-                  name="dependentes"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={form.dependentes}
-                  onChange={handleChange}
-                  className="cadastro-beneficiado-input"
-                />
-              </div>
+        <form onSubmit={handleSubmit} className="cadastro-completo3-form" autoComplete="off">
+          {/* Primeira linha - Profissão, Empresa, Dependentes */}
+          <div className="cadastro-completo3-row-triple">
+            <div className="cadastro-completo3-field">
+              <label className="cadastro-completo3-label">Profissão:</label>
+              <Input
+                name="profissao"
+                placeholder="Insira a profissão"
+                value={form.profissao}
+                onChange={handleChange}
+                className="cadastro-completo3-input"
+              />
             </div>
-            <div className="cadastro-beneficiado-col">
-              <div className="cadastro-beneficiado-field">
-                <label htmlFor="renda">Renda Mensal:</label>
-                <Input
-                  id="renda"
-                  name="renda"
-                  placeholder="R$ 0,00"
-                  value={form.renda}
-                  onChange={handleChange}
-                  className="cadastro-beneficiado-input"
-                />
-              </div>
-              <div className="cadastro-beneficiado-field">
-                <label htmlFor="cargo">Cargo:</label>
-                <Input
-                  id="cargo"
-                  name="cargo"
-                  placeholder="Auxiliar de Limpeza"
-                  value={form.cargo}
-                  onChange={handleChange}
-                  className="cadastro-beneficiado-input"
-                />
-              </div>
-              <div className="cadastro-beneficiado-field" style={{ position: 'relative' }}>
-                <label htmlFor="foto">Foto do Beneficiado: <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal' }}>(máx. 800KB)</span></label>
-                <input
-                  id="foto"
-                  name="foto"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleChange}
-                  className="cadastro-beneficiado-input"
-                  style={{ paddingRight: 40 }}
-                  title="Selecione um arquivo de imagem (máximo 800KB)"
-                />
-                <span style={{ position: 'absolute', right: 18, top: 38 }}><Download size={24} /></span>
-                {form.foto && (
-                  <p style={{ fontSize: '13px', color: '#4caf50', marginTop: '5px' }}>
-                    ✓ {form.foto.name} ({(form.foto.size / 1024).toFixed(0)} KB)
-                  </p>
-                )}
-              </div>
+            <div className="cadastro-completo3-field">
+              <label className="cadastro-completo3-label">Empresa:</label>
+              <Input
+                name="empresa"
+                placeholder="Insira o nome da empresa"
+                value={form.empresa}
+                onChange={handleChange}
+                className="cadastro-completo3-input"
+              />
+            </div>
+            <div className="cadastro-completo3-field">
+              <label className="cadastro-completo3-label">Dependentes:</label>
+              <Input
+                name="dependentes"
+                placeholder="Insira a quantidade"
+                value={form.dependentes}
+                onChange={handleChange}
+                className="cadastro-completo3-input"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              />
             </div>
           </div>
-          <div className="cadastro-beneficiado-btn-row">
+
+          {/* Segunda linha - Renda, Cargo, Foto */}
+          <div className="cadastro-completo3-row-triple">
+            <div className="cadastro-completo3-field">
+              <label className="cadastro-completo3-label">Renda Mensal:</label>
+              <Input
+                name="renda"
+                placeholder="R$ 0,00"
+                value={form.renda}
+                onChange={handleChange}
+                className="cadastro-completo3-input"
+              />
+            </div>
+            <div className="cadastro-completo3-field">
+              <label className="cadastro-completo3-label">Cargo:</label>
+              <Input
+                name="cargo"
+                placeholder="Auxiliar de Limpeza"
+                value={form.cargo}
+                onChange={handleChange}
+                className="cadastro-completo3-input"
+              />
+            </div>
+            <div className="cadastro-completo3-field">
+              <label className="cadastro-completo3-label">
+                Foto do Beneficiado: 
+                <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal' }}></span>
+              </label>
+              <input
+                name="foto"
+                type="file"
+                accept="image/*"
+                onChange={handleChange}
+                className="cadastro-completo3-input"
+                style={{ transform: 'translateY(-4px)' }}
+                title="Selecione um arquivo de imagem (máximo 800KB)"
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '-5px', width: 'calc(100% + 55px)' }}>
+            <Botao 
+              texto="Voltar" 
+              onClick={() => navigate("/cadastro-beneficiado-completo2")}
+              className="cadastro-completo3-btn" 
+              style={{ position: 'relative', left: '5px' }}
+            />
             <Botao 
               texto={cadastrando ? "Cadastrando..." : "Cadastrar"} 
               type="submit" 
-              className="cadastrobeneficiado-botao"
+              className="cadastro-completo3-btn"
               disabled={cadastrando}
+              style={{ position: 'relative', right: '60px' }}
             />
           </div>
         </form>

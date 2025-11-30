@@ -1,5 +1,5 @@
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap');
 
 :root{
 	overflow: hidden;
@@ -10,21 +10,20 @@
 	width: 100vw;
 	margin: 0;
 	padding: 0;
-	background-color: #6dbdc9;
+	background-color: #F2F2F2;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	font-family: 'Noto Sans', sans-serif;
 }
 
 .login-card {
-	background-color: #fff;
-	border-radius: 18px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+	background-color: #D9C27E;
+	border-radius: 16px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 	width: 100%;
-	max-width: 600px;
-	padding: 36px 32px 24px 32px;
-	border: 4px solid #111;
+	max-width: 650px;
+	padding: 40px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -39,20 +38,10 @@
 }
 
 .login-logo {
-	width: 90px;
-	height: 90px;
-	margin-bottom: 0.2rem;
-	filter: drop-shadow(0 0 18px #6ec6d8);
-  border-radius: 50%;
-}
-
-.login-header {
-	font-size: 40px;
-	font-weight: 300;
-	color: #111;
-	text-align: center;
-	margin: 0 0 32px 0;
-	letter-spacing: 1px;
+	height: 120px;
+	width: auto;
+	margin-bottom: 30px;
+	object-fit: contain;
 }
 
 .login-form {
@@ -62,73 +51,82 @@
 	gap: 0.5rem;
 }
 
-.input-group {
-	width: 100%;
-	margin-bottom: 18px;
-}
-.input-label {
-	font-size: 20px;
-	font-weight: 500;
-	color: #222;
-	margin-bottom: 6px;
-	display: block;
+.login-card .input-group {
+	width: 100% !important;
+	margin-bottom: 20px !important;
 }
 
-.login-forgot {
-	color: #222;
-	font-size: 16px;
-	margin: 0.2rem 0 0.5rem 0.1rem;
-	font-weight: 400;
-	letter-spacing: 0.2px;
+.login-card .input-label {
+	font-size: 22px !important;
+	font-weight: 600 !important;
+	color: #264040 !important;
+	margin-bottom: -5px !important;
+	display: block !important;
+	font-family: 'Noto Sans', sans-serif !important;
 }
 
-.botao-personalizado {
-	background-color: #d9d9d9;
-	color: #000;
-	border: none;
-	border-radius: 20px;
-	padding: 24px 44px;
-	font-size: 20px;
-	font-weight: 300;
-	cursor: pointer;
-	transition: background 0.2s;
+.login-card .login-forgot {
+	color: #264040 !important;
+	font-size: 18px !important;
+	margin-top: -25px !important;
+	margin-bottom: 30px !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.2px !important;
+	text-decoration: underline !important;
+	text-align: left !important;
+	display: block !important;
+	width: 33% !important;
+	font-family: 'Noto Sans', sans-serif !important;
 }
-.botao-personalizado:hover {
-	background-color: #bfbfbf;
+
+.login-card .botao-personalizado {
+	background-color: #264040 !important;
+	color: #F2F2F2 !important;
+	border: none !important;
+	border-radius: 8px !important;
+	padding: 15px 60px !important;
+	font-size: 20px !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	transition: all 0.8s ease !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	width: auto !important;
+	display: block !important;
+	margin: 0 auto !important;
+}
+.login-card .botao-personalizado:hover {
+	color: #264040 !important;
+	background-color: #F2F2F2 !important;
+	transform: translateY(-1px) !important;
+}
+
+.login-card .input-personalizado {
+	background: #F2F2F2 !important;
+	border: 2px solid transparent !important;
+	transition: all 0.3s ease !important;
+}
+
+.login-card .input-personalizado:focus {
+	background: #F2F2F2 !important;
+	border: 2px solid #264040 !important;
+	outline: none !important;
 }
 
 .login-link-row {
 	text-align: center;
-	margin-top: 24px;
-	font-size: 18px;
+	margin-top: 30px;
+	font-size: 18px !important;
+	color: #264040 !important;
+	font-weight: 500 !important;
 }
 .login-link-btn {
-	color: #007baf;
-	text-decoration: underline;
-	font-weight: 500;
-	background: none;
-	border: none;
-	cursor: pointer;
-	font-size: 18px;
+	color: #264040 !important;
+	font-weight: 600 !important;
+	background: none !important;
+	border: none !important;
+	cursor: pointer !important;
+	font-size: 18px !important;
 	margin-left: 4px;
 }
 
-@media (max-width: 900px) {
-	.login-card {
-		max-width: 98vw;
-		padding: 18px 6vw 18px 6vw;
-	}
-}
-@media (max-width: 640px) {
-	.login-bg {
-		padding: 12px;
-	}
-	.login-card {
-		padding: 18px 2vw 18px 2vw;
-		max-width: 100%;
-	}
-	.login-header {
-		font-size: 28px;
-	}
-}
 

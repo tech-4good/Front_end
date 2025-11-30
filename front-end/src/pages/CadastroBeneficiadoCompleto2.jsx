@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import Modal from '../components/Modal';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Voltar from '../components/Voltar';
 import Input from '../components/Input';
 import Select from '../components/Select';
 import Botao from '../components/Botao';
+import Modal from '../components/Modal';
 import '../styles/CadastroBeneficiadoCompleto2.css';
 import iconeCasa from '../assets/icone-casa.png';
 import iconeUsuario from '../assets/icone-usuario.png';
 import iconeRelogio from '../assets/icone-relogio.png';
 import iconeSair from '../assets/icone-sair.png';
-import { Calendar } from 'lucide-react';
+import iconeVoltar from '../assets/icone-voltar.png';
+
 
 export default function CadastroBeneficiadoCompleto2() {
 	const [form, setForm] = useState({
@@ -34,6 +34,14 @@ export default function CadastroBeneficiadoCompleto2() {
 		setTipoUsuario(tipo);
 	}, []);
 
+	// Timeouts automáticos para modais (3 segundos)
+	useEffect(() => {
+		if (modalErro.open) {
+			const timeout = setTimeout(() => setModalErro({ open: false, mensagem: '' }), 3000);
+			return () => clearTimeout(timeout);
+		}
+	}, [modalErro.open]);
+
 	const botoesNavbar = [
 		{ texto: 'Início', onClick: () => navigate('/home'), icone: iconeCasa },
 		{ texto: 'Perfil', onClick: () => navigate('/perfil'), icone: iconeUsuario },
@@ -42,21 +50,22 @@ export default function CadastroBeneficiadoCompleto2() {
 	];
 	const nomeUsuario = sessionStorage.getItem('nomeUsuario') || 'Usuário';
 
-		function handleChange(e) {
-			const { name, value } = e.target;
-			console.log('handleChange - name:', name, 'value:', value); // Debug
-			// Bloquear números nos campos texto (exceto estadoCivil que agora é select)
-			const onlyTextFields = ["nome", "escolaridade", "religiao"];
-			if (onlyTextFields.includes(name)) {
-				// Remove números
-				const newValue = value.replace(/[0-9]/g, "");
-				setForm({ ...form, [name]: newValue });
-			} else {
-				setForm({ ...form, [name]: value });
-			}
-		}
+	function handleChange(e) {
+		const { name, value } = e.target;
+		console.log('handleChange - name:', name, 'value:', value); // Debug
 		
-	function formatCPF(value) {
+		// Validação especial para campos que devem ter apenas letras e espaços simples
+		const textOnlyFields = ["nome", "escolaridade", "religiao"];
+		if (textOnlyFields.includes(name)) {
+			// Remove números e caracteres especiais, mantém apenas letras e espaços
+			let newValue = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+			// Remove dois espaços seguidos
+			newValue = newValue.replace(/\s{2,}/g, " ");
+			setForm({ ...form, [name]: newValue });
+		} else {
+			setForm({ ...form, [name]: value });
+		}
+	}	function formatCPF(value) {
 		let numbers = value.replace(/\D/g, "");
 		if (numbers.length > 11) numbers = numbers.slice(0, 11);
 		let formatted = numbers;
@@ -156,133 +165,160 @@ export default function CadastroBeneficiadoCompleto2() {
 	}
 
 	return (
-		<div className="cadastro-beneficiado-bg">
-			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
-			<div className="cadastro-beneficiado-container">
-				<div className="cadastro-beneficiado-voltar">
-					<Voltar onClick={() => navigate('/cadastro-beneficiado-completo1')} />
-				</div>
-				<div className="cadastro-beneficiado-header">
-					<h1 className="cadastro-beneficiado-title">Cadastro de Beneficiado</h1>
-					<span className="cadastro-beneficiado-passo">Passo: 2/3</span>
-				</div>
-				<form className="cadastro-beneficiado-form" onSubmit={handleSubmit} autoComplete="off">
-				{/* Modal de erro */}
-				<Modal
-					isOpen={modalErro.open}
-					onClose={() => setModalErro({ open: false, mensagem: "" })}
-					texto={modalErro.mensagem}
-					showClose={true}
+		<div className="cadastro-completo2-bg">
+			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCadastrarBeneficiadosPage={true} />
+			
+			<div className="cadastro-completo2-container">
+				<img 
+					src={iconeVoltar} 
+					alt="Voltar" 
+					className="cadastro-completo2-icone-voltar"
+					onClick={() => navigate("/cadastro-beneficiado-completo1")}
 				/>
-					<div className="cadastro-beneficiado-grid">
-						<div className="cadastro-beneficiado-col">
-							<div className="cadastro-beneficiado-field">
-								<label htmlFor="nome">Nome Completo:</label>
-								<Input
-									id="nome"
-									name="nome"
-									placeholder="Insira o nome completo"
-									value={form.nome}
-									onChange={handleChange}
-									className="cadastro-beneficiado-input"
-								/>
-							</div>
-							<div className="cadastro-beneficiado-field">
-								<label htmlFor="rg">RG:</label>
-								<Input
-									id="rg"
-									name="rg"
-									placeholder="Insira o RG"
-									value={form.rg}
-									onChange={handleRGChange}
-									className="cadastro-beneficiado-input"
-								/>
-							</div>
-							<div className="cadastro-beneficiado-field">
-								<label htmlFor="telefone">Telefone:</label>
-								<Input
-									id="telefone"
-									name="telefone"
-									placeholder="(99) 99999-9999"
-									value={form.telefone}
-									onChange={handlePhoneChange}
-									className="cadastro-beneficiado-input"
-									maxLength={15}
-								/>
-							</div>
-							<div className="cadastro-beneficiado-field">
-								<label htmlFor="escolaridade">Escolaridade:</label>
-								<Input
-									id="escolaridade"
-									name="escolaridade"
-									placeholder="Insira seu nível de Escolaridade"
-									value={form.escolaridade}
-									onChange={handleChange}
-									className="cadastro-beneficiado-input"
-								/>
-							</div>
-						</div>
-						<div className="cadastro-beneficiado-col">
-							<div className="cadastro-beneficiado-field">
-								<label htmlFor="cpf">CPF:</label>
-								<Input
-									id="cpf"
-									name="cpf"
-									placeholder="000.000.000-00"
-									value={form.cpf}
-									onChange={handleCPFChange}
-									className="cadastro-beneficiado-input"
-									maxLength={14}
-								/>
-							</div>
-							<div className="cadastro-beneficiado-field" style={{ position: 'relative' }}>
-								<label htmlFor="nascimento">Data de Nascimento:</label>
-								<Input
-									id="nascimento"
-									name="nascimento"
-									placeholder="dd/mm/aaaa"
-									value={form.nascimento}
-									onChange={handleDateChange}
-									className="cadastro-beneficiado-input"
-								/>
-								<span style={{ position: 'absolute', right: 18, top: 38 }}><Calendar size={24} /></span>
-							</div>
-							<div className="cadastro-beneficiado-field">
-								<label htmlFor="estadoCivil">Estado Civil:</label>
-								<Select
-									id="estadoCivil"
-									name="estadoCivil"
-									value={form.estadoCivil}
-									onChange={handleChange}
-									placeholder="Selecione seu estado civil"
-									className="cadastro-beneficiado-input"
-									options={[
-										{ value: 'SOLTEIRO', label: 'Solteiro(a)' },
-										{ value: 'CASADO', label: 'Casado(a)' },
-										{ value: 'DIVORCIADO', label: 'Divorciado(a)' },
-										{ value: 'VIUVO', label: 'Viúvo(a)' },
-										{ value: 'SEPARADO', label: 'Separado(a)' }
-									]}
-								/>
-							</div>
-							<div className="cadastro-beneficiado-field">
-								<label htmlFor="religiao">Religião:</label>
-								<Input
-									id="religiao"
-									name="religiao"
-									placeholder="Insira sua Religião"
-									value={form.religiao}
-									onChange={handleChange}
-									className="cadastro-beneficiado-input"
-								/>
-							</div>
-						</div>
+				
+				<h1 className="cadastro-completo2-title">Cadastro de Beneficiado</h1>
+				
+				{/* Indicador de progresso */}
+				<div className="cadastro-completo2-progress-container">
+					<div className="cadastro-completo2-progress-step completed">
+						<div className="cadastro-completo2-progress-circle"></div>
+						<span className="cadastro-completo2-progress-label">Passo 1</span>
 					</div>
-					<div className="cadastro-beneficiado-btn-row">
-						<Botao texto="Próximo" type="submit" className="cadastrobeneficiado-botao" />
+					<div className="cadastro-completo2-progress-line completed"></div>
+					<div className="cadastro-completo2-progress-step active">
+						<div className="cadastro-completo2-progress-circle"></div>
+						<span className="cadastro-completo2-progress-label">Passo 2</span>
+					</div>
+					<div className="cadastro-completo2-progress-line"></div>
+					<div className="cadastro-completo2-progress-step">
+						<div className="cadastro-completo2-progress-circle"></div>
+						<span className="cadastro-completo2-progress-label">Passo 3</span>
+					</div>
+				</div>
+
+			<form className="cadastro-completo2-form" onSubmit={handleSubmit} autoComplete="off">
+				{/* Primeira linha - Nome, RG, CPF */}
+				<div className="cadastro-completo2-row-triple">
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">Nome Completo:</label>
+						<Input
+							name="nome"
+							placeholder="Insira o nome completo"
+							value={form.nome}
+							onChange={handleChange}
+							className="cadastro-completo2-input"
+						/>
+					</div>
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">RG:</label>
+						<Input
+							name="rg"
+							placeholder="Insira o RG"
+							value={form.rg}
+							onChange={handleRGChange}
+							className="cadastro-completo2-input"
+						/>
+					</div>
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">CPF:</label>
+						<Input
+							name="cpf"
+							placeholder="000.000.000-00"
+							value={form.cpf}
+							onChange={handleCPFChange}
+							className="cadastro-completo2-input"
+							maxLength={14}
+						/>
+					</div>
+				</div>
+
+				{/* Segunda linha - Telefone, Data de Nascimento, Estado Civil */}
+				<div className="cadastro-completo2-row-triple">
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">Telefone:</label>
+						<Input
+							name="telefone"
+							placeholder="(99) 99999-9999"
+							value={form.telefone}
+							onChange={handlePhoneChange}
+							className="cadastro-completo2-input"
+							maxLength={15}
+						/>
+					</div>
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">Data de Nascimento:</label>
+						<Input
+							name="nascimento"
+							placeholder="dd/mm/aaaa"
+							value={form.nascimento}
+							onChange={handleDateChange}
+							className="cadastro-completo2-input"
+						/>
+					</div>
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">Estado Civil:</label>
+						<Select
+							name="estadoCivil"
+							value={form.estadoCivil}
+							onChange={handleChange}
+							placeholder="Selecione seu estado civil"
+							className="cadastro-completo2-input"
+							options={[
+								{ value: 'SOLTEIRO', label: 'Solteiro(a)' },
+								{ value: 'CASADO', label: 'Casado(a)' },
+								{ value: 'DIVORCIADO', label: 'Divorciado(a)' },
+								{ value: 'VIUVO', label: 'Viúvo(a)' },
+								{ value: 'SEPARADO', label: 'Separado(a)' }
+							]}
+						/>
+					</div>
+				</div>
+
+				{/* Terceira linha - Religião, Escolaridade */}
+				<div className="cadastro-completo2-row-triple">
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">Religião:</label>
+						<Input
+							name="religiao"
+							placeholder="Insira sua Religião"
+							value={form.religiao}
+							onChange={handleChange}
+							className="cadastro-completo2-input"
+						/>
+					</div>
+					<div className="cadastro-completo2-field">
+						<label className="cadastro-completo2-label">Escolaridade:</label>
+						<Input
+							name="escolaridade"
+							placeholder="Insira seu nível de Escolaridade"
+							value={form.escolaridade}
+							onChange={handleChange}
+							className="cadastro-completo2-input"
+						/>
+					</div>
+					<div className="cadastro-completo2-field">
+						{/* Campo vazio para manter o layout 3x3 */}
+					</div>
+				</div>
+
+					<div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '-5px', width: 'calc(100% + 55px)' }}>
+						<Botao 
+							texto="Voltar" 
+							onClick={() => navigate("/cadastro-beneficiado-completo1")}
+							className="cadastro-simples-btn" 
+							style={{ position: 'relative', left: '-275px' }}
+						/>
+						<Botao texto="Próximo" type="submit" className="cadastro-simples-btn" />
 					</div>
 				</form>
 			</div>
+
+			<Modal
+				isOpen={modalErro.open}
+				onClose={() => setModalErro({ open: false, mensagem: "" })}
+				texto={modalErro.mensagem}
+				showClose={false}
+			/>
 		</div>
 	);
 }

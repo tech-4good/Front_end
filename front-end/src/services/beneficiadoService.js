@@ -10,9 +10,9 @@ export const beneficiadoService = {
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao buscar beneficiado:', error);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       if (error.response?.status === 404) {
         mensagem = 'Beneficiado não encontrado com este CPF.';
       } else if (error.response?.data?.message) {
@@ -20,7 +20,7 @@ export const beneficiadoService = {
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -36,7 +36,7 @@ export const beneficiadoService = {
       console.log('dadosFilho.isEstudante:', dadosFilho.isEstudante);
       console.log('dadosFilho.hasCreche:', dadosFilho.hasCreche);
       console.log('dadosFilho.enderecoId:', dadosFilho.enderecoId);
-      
+
       // Validar campos obrigatórios conforme documentação do backend
       if (!dadosFilho.nome || dadosFilho.nome.trim() === '') {
         console.error('ERRO: Nome vazio ou inválido');
@@ -62,7 +62,7 @@ export const beneficiadoService = {
         console.error('ERRO: enderecoId é obrigatório');
         return { success: false, error: 'Endereço é obrigatório' };
       }
-      
+
       // Payload completo conforme documentação do backend
       const payload = {
         nome: dadosFilho.nome.trim(),
@@ -76,7 +76,7 @@ export const beneficiadoService = {
       console.log('🚀 Tentando POST para:', '/filhos-beneficiados');
       console.log('Payload completo para cadastro de filho:', payload);
       console.log('Payload JSON:', JSON.stringify(payload, null, 2));
-      
+
       // Fazer a requisição para o endpoint correto
       const response = await apiClient.post('/filhos-beneficiados', payload);
       console.log('✅ Sucesso! Resposta do servidor:', response.data);
@@ -87,9 +87,9 @@ export const beneficiadoService = {
       console.error('Dados completos do erro:', error.response?.data);
       console.error('Mensagem do erro:', error.response?.data?.message || error.message);
       console.error('Stack trace:', error.response?.data?.trace);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       if (error.response?.status === 400) {
         mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
       } else if (error.response?.status === 404) {
@@ -101,7 +101,7 @@ export const beneficiadoService = {
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -121,21 +121,21 @@ export const beneficiadoService = {
   listarFilhosPorBeneficiado: async (beneficiadoId) => {
     try {
       const response = await apiClient.get(`/filhos-beneficiados?beneficiadoId=${beneficiadoId}`);
-      
+
       // Verificar se é paginado
       if (response.data?.content) {
         return { success: true, data: response.data.content };
       }
-      
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao listar filhos:', error);
-      
+
       // Se 404, significa que não tem filhos
       if (error.response?.status === 404) {
         return { success: true, data: [] };
       }
-      
+
       return { success: false, error: 'Erro ao carregar lista de filhos' };
     }
   },
@@ -155,13 +155,13 @@ export const beneficiadoService = {
     } catch (error) {
       console.error('Erro ao atualizar filho:', error);
       let mensagem = 'Erro ao atualizar dados';
-      
+
       if (error.response?.status === 400) {
         mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -182,7 +182,7 @@ export const beneficiadoService = {
     try {
       console.log('=== INICIANDO CADASTRO NO SERVICE ===');
       console.log('Dados recebidos:', dadosBeneficiado);
-      
+
       // Payload conforme documentação API para endpoint cadastro-simples
       const payload = {
         nome: dadosBeneficiado.nome,
@@ -195,7 +195,7 @@ export const beneficiadoService = {
       console.log('Payload para cadastro simples:', payload);
       console.log('Tipo do enderecoId:', typeof payload.enderecoId);
       console.log('Valor do enderecoId:', payload.enderecoId);
-      
+
       // Validações antes de enviar
       if (!payload.nome || payload.nome.trim().length === 0) {
         console.error('Validação falhou: Nome vazio');
@@ -213,7 +213,7 @@ export const beneficiadoService = {
         console.error('Validação falhou: EnderecoId vazio -', payload.enderecoId);
         return { success: false, error: 'ID do endereço é obrigatório' };
       }
-      
+
       // Converter enderecoId para número se for string numérica
       if (typeof payload.enderecoId === 'string' && /^\d+$/.test(payload.enderecoId)) {
         payload.enderecoId = parseInt(payload.enderecoId, 10);
@@ -222,29 +222,29 @@ export const beneficiadoService = {
         console.error('Validação falhou: EnderecoId não é número nem string numérica -', payload.enderecoId, typeof payload.enderecoId);
         return { success: false, error: 'ID do endereço deve ser um número válido' };
       }
-      
+
       console.log('Payload final após validações:', payload);
       console.log('Enviando requisição para: /beneficiados/cadastro-simples');
-      
+
       const response = await apiClient.post('/beneficiados/cadastro-simples', payload);
-      
+
       console.log('Resposta do servidor - Status:', response.status);
       console.log('Resposta do servidor - Data:', response.data);
       console.log('Cadastro realizado com sucesso!');
-      
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error('=== ERRO NO CADASTRO ===');
       console.error('Erro completo:', error);
       console.error('Resposta completa do erro:', error.response);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       if (error.response) {
         console.error('Status do erro:', error.response.status);
         console.error('Headers do erro:', error.response.headers);
         console.error('Dados do erro:', error.response.data);
-        
+
         if (error.response.status === 400) {
           // Tentar extrair mensagem específica do backend
           if (error.response.data?.message) {
@@ -276,9 +276,9 @@ export const beneficiadoService = {
       } else if (error.message) {
         mensagem = error.message;
       }
-      
+
       console.error('Mensagem de erro final:', mensagem);
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -289,17 +289,17 @@ export const beneficiadoService = {
       console.log('=== DEBUG CADASTRO COMPLETO ===');
       console.log('Dados recebidos:', dadosBeneficiado);
       console.log('Estado Civil original:', dadosBeneficiado.estadoCivil);
-      
+
       // Função para validar e converter estado civil para enum válido
       const validarEstadoCivil = (estadoCivil) => {
         const estadosValidos = ['SOLTEIRO', 'CASADO', 'DIVORCIADO', 'VIUVO', 'SEPARADO'];
         const estadoUpper = (estadoCivil || '').toUpperCase().trim();
-        
+
         // Mapeamento de valores comuns para enum
         const mapeamento = {
           'SOLTEIRO': 'SOLTEIRO',
           'SOLTEIRA': 'SOLTEIRO',
-          'CASADO': 'CASADO', 
+          'CASADO': 'CASADO',
           'CASADA': 'CASADO',
           'DIVORCIADO': 'DIVORCIADO',
           'DIVORCIADA': 'DIVORCIADO',
@@ -309,52 +309,52 @@ export const beneficiadoService = {
           'SEPARADO': 'SEPARADO',
           'SEPARADA': 'SEPARADO'
         };
-        
+
         const estadoMapeado = mapeamento[estadoUpper];
         if (estadoMapeado && estadosValidos.includes(estadoMapeado)) {
           console.log(`Estado civil mapeado: "${estadoCivil}" -> "${estadoMapeado}"`);
           return estadoMapeado;
         }
-        
+
         console.warn(`Estado civil inválido: "${estadoCivil}", usando padrão: "SOLTEIRO"`);
         return 'SOLTEIRO';
       };
-      
+
       // ========================================
       // PASSO 1: Upload da foto (se existir)
       // ========================================
       let fotoId = null;
-      
+
       if (dadosBeneficiado.fotoBeneficiado) {
         try {
           console.log('📸 Foto detectada! Iniciando upload separado...');
           console.log('   Tamanho da string Base64:', dadosBeneficiado.fotoBeneficiado.length, 'caracteres');
-          
+
           // Fazer upload da foto para POST /files
           fotoId = await fileService.uploadFoto(dadosBeneficiado.fotoBeneficiado, 'foto_beneficiado.jpg');
-          
+
           console.log('✅ Foto enviada com sucesso!');
           console.log('   ID da foto recebido:', fotoId);
-          
+
         } catch (fotoError) {
           console.error('❌ Erro ao fazer upload da foto:', fotoError);
-          
+
           // Decidir se o erro de foto deve bloquear o cadastro ou não
           // Por enquanto, vamos continuar sem foto e avisar o usuário
           console.warn('⚠️ Continuando cadastro sem foto...');
           fotoId = null;
-          
+
           // Você pode descomentar a linha abaixo para bloquear o cadastro se a foto falhar
           // throw new Error(`Falha no upload da foto: ${fotoError.message}`);
         }
       } else {
         console.log('ℹ️ Nenhuma foto fornecida, continuando cadastro sem foto');
       }
-      
+
       // ========================================
       // PASSO 2: Cadastrar beneficiado com fotoId
       // ========================================
-      
+
       // Payload conforme BeneficiadoRequestDto para cadastro completo
       const payload = {
         nome: dadosBeneficiado.nome,
@@ -385,21 +385,19 @@ export const beneficiadoService = {
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao cadastrar beneficiado completo:', error);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       if (error.response?.status === 400) {
         mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
       } else if (error.response?.status === 409) {
         mensagem = 'CPF já cadastrado no sistema.';
       } else if (error.response?.status === 404) {
         mensagem = 'Endereço não encontrado.';
-      } else if (error.response?.data?.message) {
-        mensagem = error.response.data.message;
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -440,9 +438,9 @@ export const beneficiadoService = {
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao atualizar beneficiado:', error);
-      
+
       let mensagem = 'Erro ao atualizar beneficiado';
-      
+
       if (error.response?.status === 400) {
         mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
       } else if (error.response?.status === 404) {
@@ -450,7 +448,7 @@ export const beneficiadoService = {
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -462,15 +460,15 @@ export const beneficiadoService = {
       return { success: true };
     } catch (error) {
       console.error('Erro ao remover beneficiado:', error);
-      
+
       let mensagem = 'Erro ao remover beneficiado';
-      
+
       if (error.response?.status === 404) {
         mensagem = 'Beneficiado não encontrado.';
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -502,7 +500,7 @@ export const beneficiadoService = {
           // Extrair endereços únicos dos beneficiados
           const enderecosUnicos = [];
           const enderecosVistos = new Set();
-          
+
           response.data.forEach(beneficiado => {
             if (beneficiado.endereco) {
               const chaveUnica = `${beneficiado.endereco.logradouro || beneficiado.endereco.rua}_${beneficiado.endereco.numero}`;
@@ -515,7 +513,7 @@ export const beneficiadoService = {
               }
             }
           });
-          
+
           response.data = enderecosUnicos;
           console.log('Endereços extraídos de beneficiados:', response.data);
         } catch (beneficiadosError) {
@@ -523,19 +521,19 @@ export const beneficiadoService = {
           return { success: false, error: 'Erro ao buscar endereços' };
         }
       }
-      
+
       console.log('Primeiro endereço da lista:', response.data[0]); // Debug log para ver estrutura
-      
+
       // Filtrar localmente se necessário
       if (busca && busca.trim()) {
-        const enderecosFiltrados = response.data.filter(endereco => 
+        const enderecosFiltrados = response.data.filter(endereco =>
           endereco.logradouro?.toLowerCase().includes(busca.toLowerCase()) ||
           endereco.rua?.toLowerCase().includes(busca.toLowerCase()) ||
           endereco.bairro?.toLowerCase().includes(busca.toLowerCase()) ||
           endereco.cidade?.toLowerCase().includes(busca.toLowerCase())
         );
         console.log('Endereços filtrados:', enderecosFiltrados); // Debug log
-        
+
         // Verificar se tem campo id, senão usar outro identificador
         const enderecosComId = enderecosFiltrados.map(endereco => {
           // Tentar encontrar ID em diferentes campos possíveis
@@ -555,11 +553,11 @@ export const beneficiadoService = {
             };
           }
         });
-        
+
         console.log('Endereços com ID ajustado:', enderecosComId); // Debug log
         return { success: true, data: enderecosComId };
       }
-      
+
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao buscar endereços:', error);
@@ -574,7 +572,7 @@ export const beneficiadoService = {
       console.log('dadosEndereco recebidos:', dadosEndereco);
       console.log('dadosEndereco.rua:', dadosEndereco.rua, '(tipo:', typeof dadosEndereco.rua, ')');
       console.log('dadosEndereco.numero:', dadosEndereco.numero, '(tipo:', typeof dadosEndereco.numero, ')');
-      
+
       // Payload conforme EnderecoRequestDto do backend
       const payload = {
         logradouro: dadosEndereco.rua || '',
@@ -599,16 +597,16 @@ export const beneficiadoService = {
       console.log('payload.dataSaida:', payload.dataSaida);
       console.log('Payload completo:', payload);
       console.log('Dados originais recebidos:', dadosEndereco);
-      
+
       const response = await apiClient.post('/enderecos', payload);
       return { success: true, data: response.data };
       return { success: true, data: response.data };
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao cadastrar endereço:', error);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       if (error.response?.status === 400) {
         mensagem = 'Dados inválidos. Verifique os campos preenchidos.';
       } else if (error.response?.status === 409) {
@@ -618,7 +616,7 @@ export const beneficiadoService = {
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -638,25 +636,25 @@ export const beneficiadoService = {
   buscarTipoMoradorPorCpf: async (cpf) => {
     try {
       console.log('🏠 Iniciando busca de tipo_morador para CPF:', cpf);
-      
+
       // PASSO 1: Buscar o beneficiado para obter o ID
       const beneficiadoResponse = await apiClient.get(`/beneficiados/cpf/${cpf}`);
       if (!beneficiadoResponse.data || !beneficiadoResponse.data.id) {
         console.log('🏠 ❌ Beneficiado não encontrado para CPF:', cpf);
         return { success: false, error: 'Beneficiado não encontrado' };
       }
-      
+
       const beneficiadoId = beneficiadoResponse.data.id;
       console.log('🏠 ✅ Beneficiado encontrado com ID:', beneficiadoId);
-      
+
       // PASSO 2: Buscar todos os tipos de morador e filtrar por beneficiado (ENDPOINT REAL)
       try {
         console.log('🏠 Buscando todos os tipos de morador via GET /tipo-moradores');
         const tiposMoradorResponse = await apiClient.get('/tipo-moradores');
-        
+
         if (tiposMoradorResponse.data && Array.isArray(tiposMoradorResponse.data)) {
           console.log('🏠 📋 Total de tipos de morador encontrados:', tiposMoradorResponse.data.length);
-          
+
           // Filtrar pelo beneficiado ID
           const tipoMoradorEncontrado = tiposMoradorResponse.data.find(tm => {
             console.log('🏠 🔍 Comparando:', {
@@ -664,13 +662,13 @@ export const beneficiadoService = {
               tm_beneficiadoId: tm.beneficiadoId,
               beneficiadoId_procurado: beneficiadoId
             });
-            
-            return tm.fk_beneficiado === beneficiadoId || 
-                   tm.beneficiadoId === beneficiadoId ||
-                   tm.fk_beneficiado === beneficiadoId.toString() ||
-                   tm.beneficiadoId === beneficiadoId.toString();
+
+            return tm.fk_beneficiado === beneficiadoId ||
+              tm.beneficiadoId === beneficiadoId ||
+              tm.fk_beneficiado === beneficiadoId.toString() ||
+              tm.beneficiadoId === beneficiadoId.toString();
           });
-          
+
           if (tipoMoradorEncontrado) {
             console.log('🏠 ✅ Tipo morador encontrado via filtro:', tipoMoradorEncontrado);
             return { success: true, data: tipoMoradorEncontrado };
@@ -686,7 +684,7 @@ export const beneficiadoService = {
       } catch (listagemError) {
         console.log('🏠 ⚠️ Erro ao buscar lista de tipos de morador:', listagemError.response?.status || listagemError.message);
       }
-      
+
       // PASSO 3: Tentar buscar por ID específico (caso exista registro com ID = beneficiadoId)
       try {
         console.log('🏠 Tentando buscar tipo morador por ID:', beneficiadoId);
@@ -696,20 +694,20 @@ export const beneficiadoService = {
       } catch (directError) {
         console.log('🏠 ⚠️ Busca por ID específico falhou:', directError.response?.status || directError.message);
       }
-      
+
       // Se chegou aqui, não encontrou dados na API
       console.log('🏠 ❌ Nenhum dado de tipo_morador encontrado na API para este beneficiado');
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Dados de tipo_morador não encontrados na API',
         warning: 'NOT_FOUND',
         beneficiadoId: beneficiadoId
       };
-      
+
     } catch (error) {
       console.error('🏠 💥 Erro inesperado ao buscar tipo_morador:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Erro inesperado ao buscar dados de tipo_morador',
         warning: 'UNEXPECTED_ERROR'
       };
@@ -725,9 +723,9 @@ export const beneficiadoService = {
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Erro ao buscar tipo_morador por beneficiado:', error);
-      
+
       let mensagem = 'Erro interno do servidor';
-      
+
       if (error.response?.status === 404) {
         mensagem = 'Dados de tipo de morador não encontrados para este beneficiado.';
         console.log('⚠️ Tipo de morador não encontrado para beneficiado ID:', beneficiadoId);
@@ -736,7 +734,7 @@ export const beneficiadoService = {
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -745,7 +743,7 @@ export const beneficiadoService = {
   cadastrarTipoMorador: async (dadosTipoMorador) => {
     try {
       console.log('🏠 Cadastrando dados de tipo_morador com dados:', dadosTipoMorador);
-      
+
       // Payload conforme estrutura EXATA fornecida pelo backend
       const payload = {
         quantidade_crianca: parseInt(dadosTipoMorador.quantidade_crianca) || 0,
@@ -758,20 +756,20 @@ export const beneficiadoService = {
         fk_beneficiado: dadosTipoMorador.fk_beneficiado,
         fk_endereco: dadosTipoMorador.fk_endereco
       };
-      
+
       console.log('🏠 Payload preparado para API:', payload);
-      
+
       // Validações obrigatórias conforme backend
       if (!payload.fk_beneficiado) {
         console.log('🏠 ❌ fk_beneficiado é obrigatório');
         return { success: false, error: 'ID do beneficiado é obrigatório' };
       }
-      
+
       if (!payload.fk_endereco) {
-        console.log('🏠 ❌ fk_endereco é obrigatório');  
+        console.log('🏠 ❌ fk_endereco é obrigatório');
         return { success: false, error: 'ID do endereço é obrigatório' };
       }
-      
+
       // USAR ENDPOINT REAL: POST /tipo-moradores
       try {
         console.log('🏠 Tentando cadastrar via endpoint REAL: POST /tipo-moradores');
@@ -780,43 +778,43 @@ export const beneficiadoService = {
         return { success: true, data: response.data };
       } catch (apiError) {
         console.log('🏠 ⚠️ Erro ao cadastrar na API:', apiError.response?.status, apiError.response?.data);
-        
+
         // Se for erro 400, mostrar detalhes
         if (apiError.response?.status === 400) {
           console.log('🏠 ❌ Erro de validação no backend:', apiError.response.data);
-          return { 
-            success: false, 
-            error: `Erro de validação: ${apiError.response.data.message || 'Dados inválidos'}` 
+          return {
+            success: false,
+            error: `Erro de validação: ${apiError.response.data.message || 'Dados inválidos'}`
           };
         }
-        
+
         // Para outros erros, salvar localmente como fallback
         console.log('🏠 💾 API indisponível, salvando localmente como fallback...');
-        
+
         const dadosParaSalvar = {
           ...payload,
           id: Date.now(), // ID temporário
           dataHoraCadastro: new Date().toISOString(),
           status: 'PENDENTE_SINCRONIZACAO'
         };
-        
+
         const tiposMoradorSalvos = JSON.parse(localStorage.getItem('tiposMoradorLocal') || '[]');
         tiposMoradorSalvos.push(dadosParaSalvar);
         localStorage.setItem('tiposMoradorLocal', JSON.stringify(tiposMoradorSalvos));
-        
+
         console.log('🏠 💾 Dados salvos localmente:', dadosParaSalvar);
-        
-        return { 
-          success: true, 
-          data: dadosParaSalvar, 
+
+        return {
+          success: true,
+          data: dadosParaSalvar,
           warning: 'Dados salvos localmente - API indisponível no momento'
         };
       }
-      
+
     } catch (error) {
       console.error('🏠 💥 Erro inesperado ao cadastrar tipo_morador:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Erro inesperado ao cadastrar dados de tipo_morador'
       };
     }
@@ -831,13 +829,13 @@ export const beneficiadoService = {
     } catch (error) {
       console.error('Erro ao buscar endereço por CEP:', error);
       let mensagem = 'Erro ao buscar CEP';
-      
+
       if (error.response?.status === 404) {
         mensagem = 'CEP não encontrado';
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -846,7 +844,7 @@ export const beneficiadoService = {
   atualizarTipoMorador: async (id, dadosTipoMorador) => {
     try {
       console.log('🏠 Atualizando tipo_morador ID:', id, 'com dados:', dadosTipoMorador);
-      
+
       // Payload conforme estrutura do backend
       const payload = {
         quantidade_crianca: parseInt(dadosTipoMorador.quantidade_crianca) || 0,
@@ -859,19 +857,19 @@ export const beneficiadoService = {
         fk_beneficiado: dadosTipoMorador.fk_beneficiado,
         fk_endereco: dadosTipoMorador.fk_endereco
       };
-      
+
       console.log('🏠 Payload para atualização:', payload);
-      
+
       // USAR ENDPOINT REAL: PATCH /tipo-moradores/{id}
       const response = await apiClient.patch(`/tipo-moradores/${id}`, payload);
       console.log('🏠 ✅ Tipo morador atualizado com sucesso:', response.data);
       return { success: true, data: response.data };
-      
+
     } catch (error) {
       console.error('🏠 ❌ Erro ao atualizar tipo_morador:', error);
-      
+
       let mensagem = 'Erro ao atualizar dados';
-      
+
       if (error.response?.status === 404) {
         mensagem = 'Tipo de morador não encontrado';
       } else if (error.response?.status === 400) {
@@ -879,7 +877,7 @@ export const beneficiadoService = {
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -888,23 +886,23 @@ export const beneficiadoService = {
   excluirTipoMorador: async (id) => {
     try {
       console.log('🏠 Excluindo tipo_morador ID:', id);
-      
+
       // USAR ENDPOINT REAL: DELETE /tipo-moradores/{id}
       const response = await apiClient.delete(`/tipo-moradores/${id}`);
       console.log('🏠 ✅ Tipo morador excluído com sucesso');
       return { success: true, data: response.data };
-      
+
     } catch (error) {
       console.error('🏠 ❌ Erro ao excluir tipo_morador:', error);
-      
+
       let mensagem = 'Erro ao excluir dados';
-      
+
       if (error.response?.status === 404) {
         mensagem = 'Tipo de morador não encontrado';
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
       }
-      
+
       return { success: false, error: mensagem };
     }
   },
@@ -913,26 +911,26 @@ export const beneficiadoService = {
   sincronizarTiposMoradorLocais: async () => {
     try {
       console.log('🔄 Iniciando sincronização de tipos de morador locais...');
-      
+
       const tiposMoradorLocais = JSON.parse(localStorage.getItem('tiposMoradorLocal') || '[]');
-      
+
       if (tiposMoradorLocais.length === 0) {
         console.log('🔄 Nenhum dado local para sincronizar');
         return { success: true, sincronizados: 0 };
       }
-      
+
       console.log('🔄 Encontrados', tiposMoradorLocais.length, 'registros locais para sincronizar');
-      
+
       let sincronizados = 0;
       const falhas = [];
-      
+
       for (const tipoMorador of tiposMoradorLocais) {
         try {
           // Remover campos temporários
           const { id, dataHoraCadastro, status, ...dadosParaEnviar } = tipoMorador;
-          
+
           const response = await this.cadastrarTipoMorador(dadosParaEnviar);
-          
+
           if (response.success && !response.warning) {
             sincronizados++;
             console.log('🔄 ✅ Registro sincronizado:', dadosParaEnviar.fk_cpf);
@@ -943,25 +941,25 @@ export const beneficiadoService = {
           falhas.push({ cpf: tipoMorador.fk_cpf, erro: error.message });
         }
       }
-      
+
       // Remover registros sincronizados com sucesso
       if (sincronizados > 0) {
         const registrosRestantes = tiposMoradorLocais.slice(sincronizados);
         localStorage.setItem('tiposMoradorLocal', JSON.stringify(registrosRestantes));
         console.log('🔄 ✅', sincronizados, 'registros sincronizados com sucesso');
       }
-      
+
       if (falhas.length > 0) {
         console.log('🔄 ⚠️', falhas.length, 'registros falharam na sincronização:', falhas);
       }
-      
-      return { 
-        success: true, 
-        sincronizados, 
+
+      return {
+        success: true,
+        sincronizados,
         falhas: falhas.length,
-        detalhes: falhas 
+        detalhes: falhas
       };
-      
+
     } catch (error) {
       console.error('🔄 ❌ Erro geral na sincronização:', error);
       return { success: false, error: error.message };

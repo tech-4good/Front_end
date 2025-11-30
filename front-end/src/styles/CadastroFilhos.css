@@ -1,125 +1,246 @@
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
+}
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+}
+
 .cadastro-filhos-bg {
   min-height: 100vh;
-  background: #74bec9;
+  width: 100vw;
+  background: #F2F2F2 !important;
+  margin: 0;
+  padding: 0;
 }
 
 .cadastro-filhos-container {
-  max-width: 100vw;
-  margin: 0 auto;
-  padding-top: 60px;
+  width: 100%;
+  min-height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  padding: 32px 40px 0 40px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-.cadastro-filhos-voltar {
-  width: 100%;
-  max-width: 1200px;
-  margin-left: 30px;
-  margin-top: -50px;
-  align-self: flex-start;
+.cadastro-filhos-icone-voltar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
 .cadastro-filhos-title {
-  font-size: 3.2rem;
-  font-weight: 400;
-  margin: 30px 0 40px 0;
-  margin-top: 50px;
+  font-family: 'AdventSans-Logo', sans-serif !important;
   text-align: center;
+  font-size: 48px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 50px auto 30px auto !important;
+  margin-top: 25px !important;
+  line-height: 1.1;
+  background: #D9C27E !important;
+  padding: 20px 40px !important;
+  border-radius: 20px !important;
+  max-width: 735px !important;
+  width: 60% !important;
 }
 
 .cadastro-filhos-form {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
+  margin: 0;
+  padding: 0;
+  gap: 10px;
 }
 
-.cadastro-filhos-input {
-  width: 480px;
-  height: 60px;
-  border-radius: 24px;
-  border: none;
-  background: #fff;
-  font-size: 1.3rem;
-  padding: 0 28px;
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
-  outline: none;
-  transition: box-shadow 0.2s;
-}
-.cadastro-filhos-input:focus {
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.13);
+/* Estilos para inputs usando o componente Input */
+.cadastro-filhos-form .input-container {
+  width: 100%;
+  max-width: 550px;
+  margin: 0 auto;
 }
 
-.cadastro-filhos-radio-row {
+.cadastro-filhos-form .input-container label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 8px !important;
+  display: block;
+}
+
+.cadastro-filhos-form .input-container input {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+  margin: 0;
+  display: block;
+}
+
+.cadastro-filhos-form .input-container input:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-filhos-form .input-container input::placeholder {
+  color: #999999 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+}
+
+/* Layout 2x2 */
+.cadastro-filhos-row-double {
   display: flex;
-  align-items: center;
-  gap: 18px;
-  margin: 0 0 32px 0;
-  font-size: 22px;
-  font-weight: 500;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0;
 }
 
-.cadastro-filhos-radio-label {
-  font-size: 22px;
-  font-weight: 500;
-  margin-right: 8px;
-  color: #222;
+.cadastro-filhos-input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 5px;
+}
+
+.cadastro-filhos-input-group .input-container {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.cadastro-filhos-slider-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  align-items: center;
+}
+
+.cadastro-filhos-slider-label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 0;
 }
 
 .cadastro-filhos-erro {
-  display: block;
-  color: #e74c3c;
-  font-size: 14px;
-  margin-top: -16px;
-  margin-bottom: 16px;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 14px !important;
+  color: #e74c3c !important;
+  margin-top: 5px;
+  display: none !important;
 }
 
-.cadastro-filhos-salvar {
+/* Toggle Switch Styles */
+.cadastro-filhos-toggle-container {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: #000;
-  color: #fff;
-  border: none;
-  border-radius: 16px;
-  height: 60px;
-  padding: 0 32px;
-  font-size: 1.2rem;
-  font-weight: 500;
+  gap: 12px;
+}
+
+.cadastro-filhos-toggle-option {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  color: #999999 !important;
+  transition: all 0.3s ease !important;
+  user-select: none;
+}
+
+.cadastro-filhos-toggle-option.active {
+  color: #264040 !important;
+  font-weight: 600 !important;
+}
+
+.cadastro-filhos-toggle-switch {
+  position: relative;
+  width: 60px;
+  height: 30px;
+  background: #D9D9D9;
+  border-radius: 15px;
   cursor: pointer;
-  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.13);
-  transition: background 0.2s, box-shadow 0.2s;
+  transition: all 0.3s ease;
 }
 
-.cadastro-filhos-salvar:hover {
-  background: #222;
-  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.18);
+.cadastro-filhos-toggle-switch:hover {
+  background: #CCCCCC;
 }
 
-.cadastro-filhos-radio-container {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  width: 100%;
+.cadastro-filhos-toggle-slider {
+  position: absolute;
+  top: 3px;
+  width: 24px;
+  height: 24px;
+  background: #264040;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cadastro-filhos-toggle-slider.left {
+  left: 3px;
+}
+
+.cadastro-filhos-toggle-slider.right {
+  left: 33px;
 }
 
 .cadastro-filhos-btn-row {
-  margin: 0 auto;
-  padding: 18px 48px;
-  font-size: 28px;
-  border-radius: 12px;
-  border: 2px solid #222;
-  background: #e5e5e5;
-  color: #222;
-  box-shadow: 2px 3px 8px #2222;
-  cursor: pointer;
-  transition: background 0.2s;
-  display: inline-block;      
+  height: 60px !important;
+  background: #264040 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: #F2F2F2 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.8s ease !important;
+  margin: 20px 0;
+  padding: 18px 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
 }
 
 .cadastro-filhos-btn-row:hover {
-  background: #d5d5d5;
+  color: #264040 !important;
+  background-color: #D9C27E !important;
+}
+
+.cadastro-filhos-btn-row:disabled {
+  background: #999999 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.cadastro-filhos-btn-row:disabled:hover {
+  background: #999999 !important;
+  color: #F2F2F2 !important;
+  transform: none !important;
 }

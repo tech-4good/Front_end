@@ -2,16 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Modal from "../components/Modal";
-import Voltar from "../components/Voltar";
-import Botao from "../components/Botao";
-import Input from "../components/Input";
-import Select from "../components/Select";
 import { voluntarioService } from "../services/voluntarioService";
 import "../styles/VoluntariosCadastro.css";
 import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
+import iconeOlhoAberto from "../assets/icone-olho-aberto.png";
+import iconeOlhoFechado from "../assets/icone-olho-fechado.png";
 
 const tipos = [
   { label: "Administrador", value: 2 },
@@ -44,6 +43,17 @@ export default function VoluntariosCadastro() {
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
   const [modalSucesso, setModalSucesso] = useState({ open: false, mensagem: "" });
   const [modalTimeout, setModalTimeout] = useState(null);
+
+  // Auto-close modal de sucesso após 3 segundos e redirecionar para home
+  React.useEffect(() => {
+    if (modalSucesso.open) {
+      const timer = setTimeout(() => {
+        setModalSucesso({ open: false, mensagem: "" });
+        navigate("/home");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalSucesso.open, navigate]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -186,15 +196,140 @@ export default function VoluntariosCadastro() {
   };
 
   return (
-    <div className="voluntarios-cadastro-page">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
-      <div className="cadastro-container">
+    <div>
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isVoluntariosPage={true} />
+      <div className="voluntarios-cadastro-container">
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="voluntarios-cadastro-icone-voltar"
+          onClick={() => navigate("/voluntarios-menu")}
+        />
+        <h1 className="voluntarios-cadastro-title">Cadastrar Voluntário</h1>
+        
+        <form className="voluntarios-cadastro-form" onSubmit={handleCadastro}>
+          {/* Primeira linha - Nome Completo e E-mail (2 campos) */}
+          <div className="voluntarios-cadastro-row voluntarios-cadastro-row-double">
+            <div className="voluntarios-cadastro-field">
+              <label className="voluntarios-cadastro-label">Nome Completo:</label>
+              <input
+                type="text"
+                name="nomeCompleto"
+                value={formData.nomeCompleto}
+                onChange={e => {
+                  let nome = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ''); // Somente letras e espaços
+                  nome = nome.replace(/\s{2,}/g, ' '); // Não permitir espaços duplos
+                  if (nome.startsWith(' ')) nome = nome.substring(1); // Não permitir espaço no início
+                  handleInputChange("nomeCompleto", nome);
+                }}
+                placeholder="Digite seu nome completo"
+                autoComplete="off"
+                maxLength={200}
+                className="voluntarios-cadastro-input"
+              />
+            </div>
+            <div className="voluntarios-cadastro-field">
+              <label className="voluntarios-cadastro-label">E-mail:</label>
+              <input
+                type="text"
+                name="email"
+                value={formData.email}
+                onChange={e => {
+                  const email = e.target.value.replace(/\s/g, ''); // Remove todos os espaços
+                  handleInputChange("email", email);
+                }}
+                placeholder="email@dominio.com"
+                autoComplete="off"
+                className="voluntarios-cadastro-input"
+              />
+            </div>
+          </div>
+
+          {/* Segunda linha - CPF, Telefone e Senha (3 campos) */}
+          <div className="voluntarios-cadastro-row voluntarios-cadastro-row-triple">
+            <div className="voluntarios-cadastro-field">
+              <label className="voluntarios-cadastro-label">CPF:</label>
+              <input
+                type="text"
+                name="cpf"
+                value={formData.cpf}
+                onChange={handleCPFChange}
+                placeholder="000.000.000-00"
+                autoComplete="off"
+                maxLength={14}
+                className="voluntarios-cadastro-input"
+              />
+            </div>
+            <div className="voluntarios-cadastro-field">
+              <label className="voluntarios-cadastro-label">Telefone:</label>
+              <input
+                type="text"
+                name="telefone"
+                value={formData.telefone}
+                onChange={handlePhoneChange}
+                placeholder="(00) 00000-0000"
+                autoComplete="off"
+                maxLength={15}
+                className="voluntarios-cadastro-input"
+              />
+            </div>
+            <div className="voluntarios-cadastro-field">
+              <label className="voluntarios-cadastro-label">Senha:</label>
+              <div className="voluntarios-cadastro-senha-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="senha"
+                  value={formData.senha}
+                  onChange={e => {
+                    const senha = e.target.value.replace(/\s/g, ''); // Remove todos os espaços
+                    handleInputChange("senha", senha);
+                  }}
+                  placeholder="******************"
+                  autoComplete="off"
+                  minLength={5}
+                  maxLength={12}
+                  className="voluntarios-cadastro-input voluntarios-cadastro-senha-input"
+                />
+                <img
+                  src={showPassword ? iconeOlhoFechado : iconeOlhoAberto}
+                  alt={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="voluntarios-cadastro-senha-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Terceira linha - Categoria de Voluntário (1 campo) */}
+          <div className="voluntarios-cadastro-row voluntarios-cadastro-row-single">
+            <div className="voluntarios-cadastro-field">
+              <label className="voluntarios-cadastro-label">Categoria de Voluntário:</label>
+              <select
+                name="tipo"
+                value={formData.tipo}
+                onChange={e => handleInputChange("tipo", Number(e.target.value))}
+                className="voluntarios-cadastro-input"
+              >
+                {tipos.map(tipo => (
+                  <option key={tipo.value} value={tipo.value}>
+                    {tipo.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <button className="voluntarios-cadastro-btn" type="submit">
+            Cadastrar Voluntário
+          </button>
+        </form>
+        
         <div style={{ position: "fixed", top: 24, right: 24, zIndex: 2000 }}>
           <Modal
             isOpen={modalErro.open}
             onClose={() => setModalErro({ open: false, mensagem: "" })}
             texto={modalErro.mensagem}
-            showClose={true}
+            showClose={false}
           />
         </div>
         <div style={{ position: "fixed", top: 80, left: 0, right: 0, margin: "0 auto", zIndex: 2000, display: "flex", justifyContent: "center" }}>
@@ -202,79 +337,12 @@ export default function VoluntariosCadastro() {
             isOpen={modalSucesso.open}
             onClose={() => {
               setModalSucesso({ open: false, mensagem: "" });
-              navigate("/voluntarios-menu");
+              navigate("/home");
             }}
             texto={modalSucesso.mensagem}
-            showClose={true}
+            showClose={false}
           />
         </div>
-        <form className="voluntario-card" onSubmit={handleCadastro} autoComplete="off">
-          <div style={{ position: 'absolute', top: 60, left: 24 }}>
-            <Voltar onClick={() => navigate("/voluntarios-menu")} />
-          </div>
-          <h2 className="cadastro-title">CADASTRO</h2>
-          <div className="form-row">
-            <div className="form-col">
-              <div className="input-group">
-                <label className="input-label">Nome Completo:</label>
-                <Input
-                  placeholder="Digite seu nome completo"
-                  value={formData.nomeCompleto}
-                  onChange={e => handleInputChange("nomeCompleto", e.target.value)}
-                />
-              </div>
-              <div className="input-group">
-                <label className="input-label">CPF:</label>
-                <Input
-                  placeholder="000.000.000-00"
-                  value={formData.cpf}
-                  onChange={handleCPFChange}
-                />
-              </div>
-              <div className="input-group">
-                <label className="input-label">E-mail:</label>
-                <Input
-                  placeholder="email@dominio.com"
-                  value={formData.email}
-                  onChange={e => handleInputChange("email", e.target.value)}
-                  type="text"
-                />
-              </div>
-            </div>
-            <div className="form-col">
-              <div className="input-group">
-                <label className="input-label">Telefone:</label>
-                <Input
-                  placeholder="(00) 00000-0000"
-                  value={formData.telefone}
-                  onChange={handlePhoneChange}
-                />
-              </div>
-              <div className="input-group">
-                <label className="input-label">Senha:</label>
-                <Input
-                  placeholder="******************"
-                  value={formData.senha}
-                  onChange={e => handleInputChange("senha", e.target.value)}
-                  type="password"
-                  isPassword={true}
-                  style={{ paddingRight: 40 }}
-                />
-              </div>
-              <div className="input-group">
-                <Select
-                  label="Categoria de Voluntário:"
-                  options={tipos}
-                  value={formData.tipo}
-                  onChange={e => handleInputChange("tipo", Number(e.target.value))}
-                />
-              </div>
-            </div>
-          </div>
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 0 }}>
-            <Botao texto="Cadastrar" type="submit" />
-          </div>
-        </form>
       </div>
     </div>
   );

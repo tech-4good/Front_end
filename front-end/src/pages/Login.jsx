@@ -1,11 +1,9 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Login.css";
-import logoTech from "../assets/icone-logo-tech.png";
+import brandAsa from "../assets/brand-asa.png";
 import Input from "../components/Input";
 import Botao from "../components/Botao";
-import iconeUsuario from "../assets/icone-usuario.png";
-import iconeCadeado from "../assets/icone-cadeado.png";
 import Modal from "../components/Modal";
 import { voluntarioService } from "../services/voluntarioService";
 
@@ -27,15 +25,19 @@ const Login = () => {
   const bloqueioTimeout = useRef(null);
   const [tipoUsuario, setTipoUsuario] = useState("2");
 
+  const mostrarModal = (mensagem) => {
+    setModalErro({ open: true, mensagem });
+    if (modalTimeout) clearTimeout(modalTimeout);
+    const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 3000);
+    setModalTimeout(timeout);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     
     if (bloqueado || carregando) {
       if (bloqueado) {
-        setModalErro({ open: true, mensagem: "Você excedeu o número de tentativas. Tente novamente em 10 minutos." });
-        if (modalTimeout) clearTimeout(modalTimeout);
-        const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-        setModalTimeout(timeout);
+        mostrarModal("Você excedeu o número de tentativas. Tente novamente em 10 minutos.");
       }
       return;
     }
@@ -49,10 +51,7 @@ const Login = () => {
     if (email && emailMsg) erros.push(emailMsg);
     
     if (erros.length > 0) {
-      setModalErro({ open: true, mensagem: erros.join("\n") });
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-      setModalTimeout(timeout);
+      mostrarModal(erros.join("\n"));
       return;
     }
 
@@ -82,27 +81,17 @@ const Login = () => {
           bloqueioTimeout.current = setTimeout(() => {
             setBloqueado(false);
             setTentativas(0);
-            setModalErro({ open: true, mensagem: "Você pode tentar novamente agora." });
-            setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
+            mostrarModal("Você pode tentar novamente agora.");
           }, 10 * 60 * 1000);
         } else {
           mensagem += ` Você ainda tem ${5 - novasTentativas} tentativa(s).`;
         }
         
-        setModalErro({ open: true, mensagem });
-        if (modalTimeout) clearTimeout(modalTimeout);
-        const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-        setModalTimeout(timeout);
+        mostrarModal(mensagem);
       }
     } catch (error) {
       console.error('Erro inesperado no login:', error);
-      setModalErro({ 
-        open: true, 
-        mensagem: "Erro inesperado. Tente novamente." 
-      });
-      if (modalTimeout) clearTimeout(modalTimeout);
-      const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 8000);
-      setModalTimeout(timeout);
+      mostrarModal("Erro inesperado. Tente novamente.");
     } finally {
       setCarregando(false);
     }
@@ -116,14 +105,13 @@ const Login = () => {
           isOpen={modalErro.open}
           onClose={() => setModalErro({ open: false, mensagem: "" })}
           texto={modalErro.mensagem}
-          showClose={true}
+          showClose={false}
         />
       </div>
       <div className="login-card">
         <div className="login-logo-row">
-          <img src={logoTech} alt="Tech4Good" className="login-logo" />
+          <img src={brandAsa} alt="ASA - Ação Solidária Adventista" className="login-logo" />
         </div>
-        <h2 className="login-header">LOGIN</h2>
   <form onSubmit={handleLogin} className="login-form">
           <Input
             label="E-mail:"

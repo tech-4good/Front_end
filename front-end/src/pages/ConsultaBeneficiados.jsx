@@ -5,12 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { beneficiadoService } from '../services/beneficiadoService';
 import '../styles/ConsultaBeneficiados.css';
-import { FaSearch } from 'react-icons/fa';
 import iconeCasa from '../assets/icone-casa.png';
 import iconeUsuario from '../assets/icone-usuario.png';
 import iconeRelogio from '../assets/icone-relogio.png';
 import iconeSair from '../assets/icone-sair.png';
-import Voltar from '../components/Voltar';
+import iconeVoltar from '../assets/icone-voltar.png';
 
 export default function ConsultaBeneficiados() {
 	const [cpf, setCpf] = useState('');
@@ -41,6 +40,16 @@ export default function ConsultaBeneficiados() {
 	useEffect(() => {
 		carregarBeneficiados();
 	}, []);
+
+	// Auto-close modal de campos após 3 segundos
+	useEffect(() => {
+		if (modalCampos) {
+			const timer = setTimeout(() => {
+				setModalCampos(false);
+			}, 3000);
+			return () => clearTimeout(timer);
+		}
+	}, [modalCampos]);
 
 	async function carregarBeneficiados() {
 		setCarregando(true);
@@ -86,11 +95,25 @@ export default function ConsultaBeneficiados() {
 		}
 	}
 
+	const formatCPF = (value) => {
+		let numbers = value.replace(/\D/g, "");
+		if (numbers.length > 11) numbers = numbers.slice(0, 11);
+		let formatted = numbers;
+		if (numbers.length > 9) {
+			formatted = numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+		} else if (numbers.length > 6) {
+			formatted = numbers.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
+		} else if (numbers.length > 3) {
+			formatted = numbers.replace(/(\d{3})(\d{0,3})/, "$1.$2");
+		}
+		return formatted;
+	};
+
 	function handleCpfChange(e) {
-		let valor = e.target.value.replace(/\D/g, '');
-		if (valor.length > 11) valor = valor.slice(0, 11);
-		
-		setCpf(valor);
+		const raw = e.target.value;
+		const formatted = formatCPF(raw);
+		setCpf(formatted);
+		const valor = formatted.replace(/\D/g, '');
 		
 		if (valor.length > 0 && valor.length < 11) {
 			// Filtrar beneficiados por CPF que contém os dígitos digitados
@@ -104,73 +127,99 @@ export default function ConsultaBeneficiados() {
 	}
 
 	function selecionarBeneficiado(beneficiado) {
-		setCpf(beneficiado.cpf.replace(/\D/g, ''));
+		setCpf(formatCPF(beneficiado.cpf));
 		setResultados([]);
 	}
 
 	return (
-		<div className="consulta-beneficiados-bg">
-			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+		<div>
+			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isConsultaBeneficiadosPage={true} />
 			<div className="consulta-beneficiados-container">
-				<div className="consulta-beneficiados-voltar">
-					<Voltar onClick={() => navigate('/home')} />
-				</div>
+				<img 
+					src={iconeVoltar} 
+					alt="Voltar" 
+					className="consulta-beneficiados-icone-voltar"
+					onClick={() => navigate('/home')}
+				/>
 				<h1 className="consulta-beneficiados-title">Consulta de Beneficiados</h1>
 				
-				{carregando && (
-					<p style={{ textAlign: 'center', color: '#666' }}>Carregando beneficiados...</p>
-				)}
-				
-				<form className="consulta-beneficiados-form" onSubmit={handleBuscar} autoComplete="off">
-					<input
-						className="consulta-beneficiados-input"
-						type="text"
-						placeholder="Insira o CPF (somente números)"
-						value={cpf}
-						onChange={handleCpfChange}
-						maxLength={11}
-						autoFocus
-						disabled={carregando || carregandoBusca}
-					/>
-					{cpf && cpf.length < 11 && resultados.length > 0 && (
+				<div className="consulta-beneficiados-form">
+					{/* Campo de busca por CPF e Botão */}
+					<div className="consulta-beneficiados-row consulta-beneficiados-row-busca">
+						<div className="consulta-beneficiados-field">
+							<label className="consulta-beneficiados-label">CPF:</label>
+							<input
+								type="text"
+								name="cpfBusca"
+								value={cpf}
+								onChange={handleCpfChange}
+								placeholder="Digite o CPF para buscar"
+								autoComplete="off"
+								maxLength={14}
+								className="consulta-beneficiados-input"
+								disabled={carregando || carregandoBusca}
+							/>
+						</div>
+						<button 
+							type="button"
+							className="consulta-beneficiados-btn" 
+							onClick={handleBuscar}
+							disabled={carregando || carregandoBusca}
+						>
+							{carregandoBusca ? 'Buscando...' : 'Buscar'}
+						</button>
+					</div>
+
+					{/* Resultados da busca */}
+					{carregando && (
 						<div className="consulta-beneficiados-resultados">
+							<div className="consulta-beneficiados-resultado-loading">Carregando beneficiados...</div>
+						</div>
+					)}
+					
+					{!carregando && cpf && resultados.length > 0 && (
+						<div className="consulta-beneficiados-resultados">
+							<div className="consulta-beneficiados-resultados-header">Beneficiados encontrados:</div>
 							{resultados.map((beneficiado, idx) => (
 								<div
-									className="consulta-beneficiados-resultado"
+									className="consulta-beneficiados-resultado-item"
 									key={idx}
-									style={{ cursor: "pointer" }}
 									onClick={() => selecionarBeneficiado(beneficiado)}
 								>
-									<strong>{beneficiado.nome}</strong><br />
-									<small>CPF: {beneficiado.cpf}</small>
+									<div className="consulta-beneficiados-resultado-nome">{beneficiado.nome}</div>
+									<div className="consulta-beneficiados-resultado-cpf">CPF: {beneficiado.cpf}</div>
 								</div>
 							))}
 						</div>
 					)}
-					<button 
-						className="consulta-beneficiados-buscar" 
-						type="submit"
-						disabled={carregando || carregandoBusca}
-					>
-						<FaSearch className="consulta-beneficiados-search-icon" /> 
-						{carregandoBusca ? 'Buscando...' : 'Buscar'}
-					</button>
-				</form>
+				</div>
+				
+				{/* Modals */}
 				<Modal
 					isOpen={modalNaoEncontrado}
 					onClose={() => setModalNaoEncontrado(false)}
 					texto="Beneficiado com esse CPF não está cadastrado. Deseja cadastrar?"
-					showClose={true}
-					botoes={[{
-						texto: 'Cadastrar',
-						onClick: () => { setModalNaoEncontrado(false); navigate('/cadastro-beneficiado-menu'); }
-					}]}
+					showClose={false}
+					botoes={[
+						{
+							texto: "Sim",
+							onClick: () => {
+								setModalNaoEncontrado(false);
+								navigate('/cadastro-beneficiado-menu');
+							}
+						},
+						{
+							texto: "Não",
+							onClick: () => setModalNaoEncontrado(false)
+						}
+						
+					]}
 				/>
 				<Modal
 					isOpen={modalCampos}
 					onClose={() => setModalCampos(false)}
-					texto="Os campos devem estar preenchidos."
-					showClose={true}
+					texto="O campo CPF deve estar preenchido."
+					showClose={false}
 				/>
 			</div>
 		</div>

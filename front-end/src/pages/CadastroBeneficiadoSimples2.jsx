@@ -1,34 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Voltar from '../components/Voltar';
-import Modal from '../components/Modal';
-import Botao from '../components/Botao';
 import Input from '../components/Input';
+import Botao from '../components/Botao';
+import Modal from '../components/Modal';
+import { enderecoService } from '../services/enderecoService';
+import { beneficiadoService } from '../services/beneficiadoService';
 import '../styles/CadastroBeneficiadoSimples2.css';
 import iconeCasa from '../assets/icone-casa.png';
 import iconeUsuario from '../assets/icone-usuario.png';
 import iconeRelogio from '../assets/icone-relogio.png';
 import iconeSair from '../assets/icone-sair.png';
-import { FaSearch } from 'react-icons/fa';
-import { beneficiadoService } from '../services/beneficiadoService';
+import iconeVoltar from '../assets/icone-voltar.png';
 
 
 export default function CadastroBeneficiadoSimples2() {
-    const [rua, setRua] = useState("");
-    const [numero, setNumero] = useState("");
-    const [tipoUsuario, setTipoUsuario] = useState("2");
-    const [resultados, setResultados] = useState([]);
-    const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
-    const [modalErro, setModalErro] = useState({ aberto: false, mensagem: 'Todas as informações devem estar preenchidas.' });
-    const [modalSucesso, setModalSucesso] = useState(false);
-    const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [cadastrando, setCadastrando] = useState(false);
-    const navigate = useNavigate();    useEffect(() => {
-        const tipo = sessionStorage.getItem("tipoUsuario") || "2";
-        setTipoUsuario(tipo);
-    }, []);
+    const navigate = useNavigate();
+    const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
+    const tipoUsuario = sessionStorage.getItem("tipoUsuario") || "2";
 
     const botoesNavbar = [
         { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -36,70 +25,61 @@ export default function CadastroBeneficiadoSimples2() {
         ...(tipoUsuario === "2"
             ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }]
             : []),
-        { texto: "Sair", onClick: () => navigate("/"), icone: iconeSair },
+        { texto: "Sair", onClick: () => navigate("/"), icone: iconeSair }
     ];
-    const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 
-    // Função para converter data DD/MM/AAAA para YYYY-MM-DD
-    function convertDateToISO(dateStr) {
-        if (!dateStr || dateStr.length !== 10) {
-            console.error('Data inválida:', dateStr);
-            return null;
-        }
-        const [day, month, year] = dateStr.split('/');
-        const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-        console.log('Convertendo data:', dateStr, 'para ISO:', isoDate);
-        return isoDate;
-    }
+    // Estados do formulário
+    const [rua, setRua] = useState("");
+    const [numero, setNumero] = useState("");
+    const [resultados, setResultados] = useState([]);
+    const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [cadastrando, setCadastrando] = useState(false);
 
-    function validarDados(nome, cpf, dataNascimento) {
-        const erros = [];
-        
-        if (!nome || nome.trim().length === 0) {
-            erros.push('Nome é obrigatório');
-        }
-        if (nome && nome.trim().length > 200) {
-            erros.push('Nome deve ter no máximo 200 caracteres');
-        }
-        
-        if (!cpf || !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpf)) {
-            erros.push('CPF deve estar no formato 000.000.000-00');
-        } else {
-            // Validar se o CPF tem exatamente 11 dígitos quando limpo
-            const cpfLimpo = cpf.replace(/\D/g, '');
-            if (cpfLimpo.length !== 11) {
-                erros.push('CPF deve ter exatamente 11 dígitos');
-            }
-            // Verificar se não é um CPF inválido (todos os dígitos iguais)
-            if (/^(\d)\1{10}$/.test(cpfLimpo)) {
-                erros.push('CPF inválido (todos os dígitos são iguais)');
-            }
-        }
-        
-        if (!dataNascimento || !/^\d{2}\/\d{2}\/\d{4}$/.test(dataNascimento)) {
-            erros.push('Data de nascimento deve estar no formato DD/MM/AAAA');
-        } else {
-            // Validar se a data é válida
-            const [day, month, year] = dataNascimento.split('/').map(Number);
-            const date = new Date(year, month - 1, day);
-            if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
-                erros.push('Data de nascimento é inválida');
-            }
-            if (year < 1900 || year > new Date().getFullYear()) {
-                erros.push('Ano de nascimento deve ser entre 1900 e ' + new Date().getFullYear());
-            }
-            // Verificar se a pessoa não é do futuro
-            if (date > new Date()) {
-                erros.push('Data de nascimento não pode ser no futuro');
-            }
-        }
-        
-        return erros;
-    }
+    // Estados de controle
+    const [modalGeral, setModalGeral] = useState({ open: false, mensagem: "" });
+    const [modalTimeout, setModalTimeout] = useState(null);
+    const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
+    const [modalSucesso, setModalSucesso] = useState(false);    // Sistema de modal unificado com timeout
+    const mostrarModal = (mensagem) => {
+        setModalGeral({ open: true, mensagem });
+        if (modalTimeout) clearTimeout(modalTimeout);
+        const timeout = setTimeout(() => setModalGeral({ open: false, mensagem: "" }), 3000);
+        setModalTimeout(timeout);
+    };
 
+    // Timeouts automáticos para modais (3 segundos) - exceto sucesso
+    useEffect(() => {
+        if (modalNaoEncontrado) {
+            const timeout = setTimeout(() => setModalNaoEncontrado(false), 3000);
+            return () => clearTimeout(timeout);
+        }
+    }, [modalNaoEncontrado]);
+
+    // Modal de sucesso NÃO tem timeout automático
+
+    // Cleanup do timeout
+    useEffect(() => {
+        return () => {
+            if (modalTimeout) clearTimeout(modalTimeout);
+        };
+    }, [modalTimeout]);
+
+    // Buscar endereços conforme o usuário digita na rua
     async function handleRuaChange(e) {
         const valor = e.target.value;
         setRua(valor);
+        
+        // Limpar endereço selecionado quando o usuário digita algo diferente
+        if (enderecoSelecionado && valor !== (enderecoSelecionado.logradouro || enderecoSelecionado.rua)) {
+            setEnderecoSelecionado(null);
+        }
+        
+        // Limpar último endereço válido se a rua foi completamente alterada
+        if (ultimoEnderecoValido && valor !== (ultimoEnderecoValido.logradouro || ultimoEnderecoValido.rua)) {
+            setUltimoEnderecoValido(null);
+        }
+        
         if (valor.length > 2) {
             setLoading(true);
             const response = await beneficiadoService.buscarEnderecos(valor);
@@ -114,22 +94,65 @@ export default function CadastroBeneficiadoSimples2() {
         }
     }
 
+    // Selecionar endereço da lista
     function handleSelectEndereco(endereco) {
-        console.log('Endereço selecionado:', endereco); // Debug log
         setRua(endereco.logradouro || endereco.rua);
         setNumero(endereco.numero);
         setEnderecoSelecionado(endereco);
+        setUltimoEnderecoValido(endereco);
         setResultados([]);
     }
 
+    // Estado para guardar o último endereço válido selecionado
+    const [ultimoEnderecoValido, setUltimoEnderecoValido] = useState(null);
+
+    // Função para lidar com mudança no número
+    function handleNumeroChange(e) {
+        const novoNumero = e.target.value.replace(/[^0-9]/g, "");
+        setNumero(novoNumero);
+        
+        // Se há um endereço selecionado e o número foi alterado
+        if (enderecoSelecionado) {
+            if (novoNumero !== enderecoSelecionado.numero) {
+                // Número diferente - limpar seleção mas guardar referência
+                setUltimoEnderecoValido(enderecoSelecionado);
+                setEnderecoSelecionado(null);
+            }
+        } else if (ultimoEnderecoValido) {
+            // Se não há endereço selecionado mas temos um último válido
+            // Verificar se o número voltou ao correto e a rua ainda corresponde
+            if (novoNumero === ultimoEnderecoValido.numero && 
+                rua === (ultimoEnderecoValido.logradouro || ultimoEnderecoValido.rua)) {
+                // Restaurar seleção
+                setEnderecoSelecionado(ultimoEnderecoValido);
+            }
+        }
+    }
+
+    // Buscar/validar endereço
     async function handleBuscar(e) {
         e.preventDefault();
         if (!rua || !numero) {
-            setModalErro({ aberto: true, mensagem: 'Todas as informações devem estar preenchidas.' });
+            mostrarModal('Todas as informações devem estar preenchidas.');
             return;
         }
         
+        // Verificar se um endereço foi realmente selecionado da lista
         if (!enderecoSelecionado) {
+            setModalNaoEncontrado(true);
+            return;
+        }
+        
+        // Verificar se o número corresponde ao endereço selecionado
+        if (numero !== enderecoSelecionado.numero) {
+            setModalNaoEncontrado(true);
+            return;
+        }
+        
+        // Verificar se o endereço selecionado tem um ID válido
+        const enderecoId = enderecoSelecionado.id || enderecoSelecionado.enderecoId || enderecoSelecionado.codigo || enderecoSelecionado.idEndereco;
+        
+        if (!enderecoId) {
             setModalNaoEncontrado(true);
             return;
         }
@@ -137,6 +160,7 @@ export default function CadastroBeneficiadoSimples2() {
         setModalSucesso(true);
     }
 
+    // Função para cadastrar beneficiado com endereço selecionado
     async function handleCadastrarBeneficiado() {
         setCadastrando(true);
         
@@ -146,64 +170,36 @@ export default function CadastroBeneficiadoSimples2() {
             const cpf = sessionStorage.getItem("cpfBeneficiado");
             const dataNascimento = sessionStorage.getItem("dataNascimentoBeneficiado");
             
-            console.log('Dados recuperados do sessionStorage:');
-            console.log('Nome:', nome);
-            console.log('CPF:', cpf);
-            console.log('Data Nascimento:', dataNascimento);
-            console.log('Endereço selecionado:', enderecoSelecionado);
-            
-            // Validar dados básicos
-            const errosValidacao = validarDados(nome, cpf, dataNascimento);
-            if (errosValidacao.length > 0) {
-                setModalErro({ aberto: true, mensagem: 'Erros de validação: ' + errosValidacao.join(', ') });
-                setModalSucesso(false);
+            if (!nome || !cpf || !dataNascimento) {
+                mostrarModal("Dados do beneficiado não encontrados. Refaça o cadastro.");
                 setCadastrando(false);
                 return;
             }
             
-            // Verificar se o endereço tem um ID válido (pode ser id, enderecoId, codigo, ou idEndereco)
+            // Verificar se tem endereço selecionado
             const enderecoId = enderecoSelecionado.id || enderecoSelecionado.enderecoId || enderecoSelecionado.codigo || enderecoSelecionado.idEndereco;
             
-            console.log('Verificando ID do endereço:');
-            console.log('- enderecoSelecionado.id:', enderecoSelecionado.id);
-            console.log('- enderecoSelecionado.enderecoId:', enderecoSelecionado.enderecoId);
-            console.log('- enderecoSelecionado.codigo:', enderecoSelecionado.codigo);
-            console.log('- enderecoSelecionado.idEndereco:', enderecoSelecionado.idEndereco);
-            console.log('- ID final extraído:', enderecoId);
-            
             if (!enderecoSelecionado || !enderecoId) {
-                let mensagemErro = 'Nenhum endereço foi selecionado ou endereço sem ID válido.';
-                if (enderecoSelecionado && !enderecoId) {
-                    mensagemErro = 'O endereço selecionado não possui ID válido. Estrutura do endereço: ' + JSON.stringify(enderecoSelecionado);
-                }
-                setModalErro({ aberto: true, mensagem: mensagemErro });
+                mostrarModal('Nenhum endereço foi selecionado.');
                 setModalSucesso(false);
                 setCadastrando(false);
                 return;
             }
 
-            const dataISO = convertDateToISO(dataNascimento);
-            if (!dataISO) {
-                setModalErro({ aberto: true, mensagem: 'Erro na conversão da data de nascimento.' });
-                setModalSucesso(false);
-                setCadastrando(false);
-                return;
-            }
+            // Converter data para formato ISO
+            const [day, month, year] = dataNascimento.split('/');
+            const dataISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
             const dadosBeneficiado = {
                 nome: nome.trim(),
-                cpf: cpf.replace(/\D/g, ''), // Remove pontos e hífen do CPF
+                cpf: cpf.replace(/\D/g, ''),
                 dataNascimento: dataISO,
                 enderecoId: enderecoId
             };
-
-            console.log('Dados finais para cadastro:', dadosBeneficiado);
             
             const response = await beneficiadoService.cadastrarBeneficiadoSimples(dadosBeneficiado);
             
             if (response.success) {
-                console.log('Beneficiado cadastrado com sucesso:', response.data);
-                
                 // Limpar dados temporários
                 sessionStorage.removeItem("nomeBeneficiado");
                 sessionStorage.removeItem("cpfBeneficiado");
@@ -212,13 +208,12 @@ export default function CadastroBeneficiadoSimples2() {
                 localStorage.setItem("modalSucessoBeneficiado", "true");
                 navigate("/cadastro-beneficiado-menu");
             } else {
-                console.error('Erro no cadastro:', response.error);
-                setModalErro({ aberto: true, mensagem: response.error || 'Erro ao cadastrar beneficiado.' });
+                mostrarModal(response.error || 'Erro ao cadastrar beneficiado.');
                 setModalSucesso(false);
             }
         } catch (error) {
             console.error('Erro inesperado:', error);
-            setModalErro({ aberto: true, mensagem: 'Erro inesperado. Tente novamente.' });
+            mostrarModal('Erro inesperado. Tente novamente.');
             setModalSucesso(false);
         } finally {
             setCadastrando(false);
@@ -226,106 +221,121 @@ export default function CadastroBeneficiadoSimples2() {
     }
 
     return (
-        <div className="cadastro-beneficiado-bg">
-            <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
-            <div className="cadastro-beneficiado-container">
-                <div className="cadastro-beneficiado-voltar">
-                    <Voltar onClick={() => navigate("/cadastro-beneficiado-menu")} />
+        <div className="cadastro-simples-bg">
+            <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCadastrarBeneficiadosPage={true} />
+            
+            <div className="cadastro-simples-container">
+                <img 
+                    src={iconeVoltar} 
+                    alt="Voltar" 
+                    className="cadastro-simples-icone-voltar"
+                    onClick={() => navigate("/cadastro-beneficiado-simples1")}
+                />
+                
+                <h1 className="cadastro-simples-title">Cadastro de Beneficiado</h1>
+                
+                {/* Indicador de progresso */}
+                <div className="cadastro-simples-progress-container">
+                    <div className="cadastro-simples-progress-step completed">
+                        <div className="cadastro-simples-progress-circle"></div>
+                        <span className="cadastro-simples-progress-label">Passo 1</span>
+                    </div>
+                    <div className="cadastro-simples-progress-line completed"></div>
+                    <div className="cadastro-simples-progress-step active">
+                        <div className="cadastro-simples-progress-circle"></div>
+                        <span className="cadastro-simples-progress-label">Passo 2</span>
+                    </div>
                 </div>
-                <div className="cadastro-beneficiado-header">
-                    <h1 className="cadastro-beneficiado-title">Cadastro de Beneficiado</h1>
-                    <span className="cadastro-beneficiado-passo">Passo: 2/2</span>
-                </div>
-                <form className="cadastro-beneficiado-form" onSubmit={handleBuscar} autoComplete="off">
-                    <div className="cadastro-beneficiado-row">
-                        <div className="cadastro-beneficiado-field" style={{ position: "relative" }}>
-                            <label htmlFor="rua">Rua/Avenida: *</label>
+
+                <form className="cadastro-simples-form" onSubmit={(e) => { e.preventDefault(); handleBuscar(e); }} autoComplete="off">
+                    <div className="cadastro-simples-row">
+                        <div className="cadastro-simples-field" style={{ position: "relative" }}>
+                            <label htmlFor="rua" className="cadastro-simples-label">Rua/Avenida:</label>
                             <Input
                                 id="rua"
                                 placeholder="Ex: Rua Osvaldo Cruz"
                                 value={rua}
                                 onChange={handleRuaChange}
-                                className="cadastro-beneficiado-input"
                                 autoComplete="off"
+                                className="cadastro-simples-input"
                             />
                             {rua && resultados.length > 0 && (
-                                <div className="cadastro-beneficiado-resultados">
+                                <div className="cadastro-simples-resultados">
                                     {loading ? (
-                                        <div className="cadastro-beneficiado-resultado">
+                                        <div className="cadastro-simples-resultado">
                                             Buscando endereços...
                                         </div>
                                     ) : (
-                                        resultados.map((endereco, idx) => {
-                                            const enderecoId = endereco.id || endereco.enderecoId || endereco.codigo || endereco.idEndereco;
-                                            return (
-                                                <div
-                                                    className="cadastro-beneficiado-resultado"
-                                                    key={idx}
-                                                    style={{ cursor: "pointer" }}
-                                                    onClick={() => handleSelectEndereco(endereco)}
-                                                >
-                                                    {endereco.logradouro || endereco.rua}, {endereco.numero}
-                                                        {!enderecoId && <span style={{color: 'red', fontSize: '12px'}}> (Sem ID)</span>}
-                                                </div>
-                                            );
-                                        })
+                                        resultados.map((endereco, idx) => (
+                                            <div
+                                                className="cadastro-simples-resultado"
+                                                key={idx}
+                                                style={{ cursor: "pointer" }}
+                                                onClick={() => handleSelectEndereco(endereco)}
+                                            >
+                                                {endereco.logradouro || endereco.rua}, {endereco.numero}
+                                            </div>
+                                        ))
                                     )}
                                 </div>
                             )}
                         </div>
-                        <div className="cadastro-beneficiado-field">
-                            <label htmlFor="numero">Número:</label>
+                        <div className="cadastro-simples-field">
+                            <label htmlFor="numero" className="cadastro-simples-label">Número:</label>
                             <Input
                                 id="numero"
                                 placeholder="Insira o número"
                                 value={numero}
-                                onChange={e => setNumero(e.target.value.replace(/[^0-9]/g, ""))}
-                                className="cadastro-beneficiado-input"
+                                onChange={handleNumeroChange}
                                 maxLength={6}
+                                className="cadastro-simples-input"
                             />
                         </div>
-                        <button className="cadastro-beneficiado-buscar" type="submit" disabled={loading}>
-                            <FaSearch className="cadastro-beneficiado-search-icon" /> 
-                            {loading ? 'Buscando...' : 'Buscar'}
-                        </button>
-                    </div>
-                </form>
-                {/* Modais fora do form */}
-                <Modal
-                    isOpen={modalErro.aberto}
-                    onClose={() => setModalErro({ aberto: false, mensagem: '' })}
-                    texto={modalErro.mensagem}
-                    showClose={true}
-                />
-                <Modal
-                    isOpen={modalNaoEncontrado}
-                    onClose={() => setModalNaoEncontrado(false)}
-                    texto={
-                        <>
-                            Endereço não encontrado.<br />
-                            <span style={{ textDecoration: 'underline', color: '#0077cc', cursor: 'pointer' }} onClick={() => { setModalNaoEncontrado(false); navigate('/cadastro-endereco'); }}>
-                                Clique aqui para cadastrar endereço
-                            </span>
-                        </>
-                    }
-                    showClose={true}
-                />
-                <Modal
-                    isOpen={modalSucesso}
-                    onClose={() => setModalSucesso(false)}
-                    texto={"Endereço encontrado!"}
-                    showClose={true}
-                >
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
                         <Botao
-                            texto={cadastrando ? "Cadastrando..." : "Cadastrar Beneficiado"}
-                            onClick={handleCadastrarBeneficiado}
-                            className="cadastrobeneficiado-botao"
-                            disabled={cadastrando}
+                            texto={loading ? 'Buscando...' : 'Buscar'}
+                            type="submit"
+                            disabled={loading}
+                            className="cadastro-simples-btn"
                         />
                     </div>
-                </Modal>
+                </form>
             </div>
+
+            <Modal
+                isOpen={modalGeral.open}
+                onClose={() => setModalGeral({ open: false, mensagem: "" })}
+                texto={modalGeral.mensagem}
+                showClose={false}
+            />
+            <Modal
+                isOpen={modalNaoEncontrado}
+                onClose={() => setModalNaoEncontrado(false)}
+                texto={
+                    <>
+                        Endereço não encontrado.<br />
+                        <span style={{ textDecoration: 'underline', color: '#0077cc', cursor: 'pointer' }} onClick={() => { setModalNaoEncontrado(false); navigate('/cadastro-endereco-1'); }}>
+                            Clique aqui para cadastrar endereço
+                        </span>
+                    </>
+                }
+                showClose={false}
+            />
+            <Modal
+                isOpen={modalSucesso}
+                onClose={() => setModalSucesso(false)}
+                texto={"Endereço encontrado!"}
+                showClose={false}
+            >
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+                    <button
+                        className="cadastro-endereco-botao-perfil"
+                        onClick={handleCadastrarBeneficiado}
+                        disabled={cadastrando}
+                    >
+                        {cadastrando ? "Cadastrando..." : "Cadastrar Beneficiado"}
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

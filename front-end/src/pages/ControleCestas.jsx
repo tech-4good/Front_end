@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
 import Input from "../components/Input";
 import Botao from "../components/Botao";
 import Radio from "../components/Radio";
@@ -12,6 +11,7 @@ import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 export default function ControleCestas() {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function ControleCestas() {
   const botoesNavbar = [
     { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
     { texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
+    { texto: "Cestas", onClick: () => navigate("/cestas") },
     ...(tipoUsuario === "2"
       ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }]
       : []),
@@ -38,6 +39,25 @@ export default function ControleCestas() {
   const [modalConfirmacao, setModalConfirmacao] = useState(false);
   const [modalSucesso, setModalSucesso] = useState({ open: false, tipo: "", quantidade: 0 });
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
+  
+  // Sistema de modal unificado com timeout
+  const [modalGeral, setModalGeral] = useState({ open: false, mensagem: "" });
+  const [modalTimeout, setModalTimeout] = useState(null);
+  
+  const mostrarModal = (mensagem) => {
+    setModalGeral({ open: true, mensagem });
+    if (modalTimeout) clearTimeout(modalTimeout);
+    const timeout = setTimeout(() => setModalGeral({ open: false, mensagem: "" }), 3000);
+    setModalTimeout(timeout);
+  };
+
+  // Função para permitir apenas números (máximo 3 dígitos)
+  const handleQuantidadeChange = (e) => {
+    const value = e.target.value;
+    // Remove qualquer caractere que não seja dígito e limita a 3 caracteres
+    const onlyNumbers = value.replace(/\D/g, '').slice(0, 3);
+    setQuantidadeInput(onlyNumbers);
+  };
 
   // Carregar cestas do backend sempre que a página for montada
   useEffect(() => {
@@ -89,7 +109,7 @@ export default function ControleCestas() {
       }
     } catch (error) {
       console.error("❌ Erro ao carregar cestas:", error);
-      setModalErro({ open: true, mensagem: "Erro ao carregar dados do estoque." });
+      mostrarModal("Erro ao carregar dados do estoque.");
     } finally {
       setCarregando(false);
     }
@@ -99,7 +119,7 @@ export default function ControleCestas() {
     e.preventDefault();
     
     if (!quantidadeInput || quantidadeInput <= 0) {
-      setModalErro({ open: true, mensagem: "Por favor, insira uma quantidade válida." });
+      mostrarModal("Por favor, insira uma quantidade válida.");
       return;
     }
 
@@ -135,55 +155,52 @@ export default function ControleCestas() {
         await carregarCestas();
         
         setModalConfirmacao(false);
-        setModalSucesso({ 
-          open: true, 
-          tipo: tipoCesta === "kit" ? "Kits" : "Cestas Básicas",
-          quantidade: quantidade 
-        });
+        mostrarModal(`${quantidade} ${tipoCesta === "kit" ? "Kits" : "Cestas Básicas"} adicionados com sucesso!`);
         setQuantidadeInput("");
       } else {
         console.error("Erro ao cadastrar cesta:", response.error);
         setModalConfirmacao(false);
-        setModalErro({ open: true, mensagem: response.error || "Erro ao cadastrar cesta." });
+        mostrarModal(response.error || "Erro ao cadastrar cesta.");
       }
     } catch (error) {
       console.error("Erro ao cadastrar cesta:", error);
       setModalConfirmacao(false);
-      setModalErro({ open: true, mensagem: "Erro de conexão. Tente novamente." });
+      mostrarModal("Erro de conexão. Tente novamente.");
     }
   }
 
-  function fecharModalSucesso() {
-    setModalSucesso({ open: false, tipo: "", quantidade: 0 });
-  }
+
 
   return (
     <div className="controle-cestas-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCestasPage={true} />
       <div className="controle-cestas-container">
-        <div className="controle-cestas-voltar">
-          <Voltar onClick={() => navigate("/home")} />
-        </div>
+        <img 
+          src={iconeVoltar} 
+          alt="Voltar" 
+          className="controle-cestas-icone-voltar"
+          onClick={() => navigate("/home")}
+        />
         
         <h1 className="controle-cestas-title">Cestas</h1>
         
         <div className="controle-cestas-cards">
           <div className="controle-cestas-card">
-            <h3 className="controle-cestas-card-titulo">Quantidade de<br/>Cestas Básicas</h3>
+            <h3 className="controle-cestas-card-titulo"><br/>Cestas Básicas</h3>
             <div className="controle-cestas-card-numero">
               {carregando ? "..." : quantidadeCestaBasica}
             </div>
           </div>
           
           <div className="controle-cestas-card">
-            <h3 className="controle-cestas-card-titulo">Quantidade<br/>Total de Cestas</h3>
+            <h3 className="controle-cestas-card-titulo"><br/>Total no Estoque</h3>
             <div className="controle-cestas-card-numero">
               {carregando ? "..." : quantidadeTotal}
             </div>
           </div>
           
           <div className="controle-cestas-card">
-            <h3 className="controle-cestas-card-titulo">Quantidade de<br/>Kits</h3>
+            <h3 className="controle-cestas-card-titulo"><br/>Kits</h3>
             <div className="controle-cestas-card-numero">
               {carregando ? "..." : quantidadeKits}
             </div>
@@ -191,69 +208,57 @@ export default function ControleCestas() {
         </div>
 
         <form className="controle-cestas-form" onSubmit={handleSubmit}>
-          <div className="controle-cestas-radio-row">
-            <span className="controle-cestas-radio-label">Tipo:</span>
-            <Radio
-              name="tipoCesta"
-              options={[
-                { label: "Kit", value: "kit" },
-                { label: "Cesta Básica", value: "basica" },
-              ]}
-              value={tipoCesta}
-              onChange={e => setTipoCesta(e.target.value)}
-            />
-          </div>
-
           <div className="controle-cestas-input-row">
-            <Input
-              placeholder="Insira a quantidade de novas cestas"
-              value={quantidadeInput}
-              onChange={(e) => setQuantidadeInput(e.target.value)}
-              type="number"
-              min="1"
-              className="controle-cestas-input"
-            />
+            <div className="controle-cestas-input-container">
+              <label className="controle-cestas-input-label">Quantidade de novas cestas:</label>
+              <Input
+                placeholder="0"
+                value={quantidadeInput}
+                onChange={handleQuantidadeChange}
+                type="text"
+                min="1"
+                maxLength="3"
+                className="controle-cestas-input"
+              />
+            </div>
+            <div className="controle-cestas-toggle-container">
+              <span className={`controle-cestas-toggle-option ${tipoCesta === 'kit' ? 'active' : ''}`}>Kit</span>
+              <div className="controle-cestas-toggle-switch" onClick={() => setTipoCesta(tipoCesta === 'kit' ? 'basica' : 'kit')}>
+                <div className={`controle-cestas-toggle-slider ${tipoCesta === 'basica' ? 'right' : 'left'}`}></div>
+              </div>
+              <span className={`controle-cestas-toggle-option ${tipoCesta === 'basica' ? 'active' : ''}`}>Cesta Básica</span>
+            </div>
             <Botao texto="Adicionar" type="submit" />
           </div>
         </form>
 
-        {modalSucesso.open && (
-          <div className="controle-cestas-sucesso-modal">
-            <span className="controle-cestas-sucesso-texto">
-              {modalSucesso.quantidade} {modalSucesso.tipo} adicionados com sucesso!
-            </span>
-            <button 
-              className="controle-cestas-sucesso-fechar"
-              onClick={fecharModalSucesso}
-            >
-              ×
-            </button>
-          </div>
-        )}
-
+        {/* Modal de confirmação (mantém botões) */}
         <Modal
           isOpen={modalConfirmacao}
           onClose={() => setModalConfirmacao(false)}
           texto={`Tem certeza que quer adicionar ${quantidadeInput} ${tipoCesta === "kit" ? "Kits" : "Cestas Básicas"}?`}
           botoes={[
             {
-              texto: "NÃO",
-              onClick: () => setModalConfirmacao(false)
+              texto: "Sim", 
+              onClick: confirmarAdicao
             },
             {
-              texto: "SIM", 
-              onClick: confirmarAdicao
+              texto: "Não",
+              onClick: () => setModalConfirmacao(false)
             }
           ]}
           showClose={false}
         />
 
-        <Modal
-          isOpen={modalErro.open}
-          onClose={() => setModalErro({ open: false, mensagem: "" })}
-          texto={modalErro.mensagem}
-          showClose={true}
-        />
+        {/* Modal geral unificado - sem X e com timeout */}
+        <div style={{ position: "fixed", top: 24, right: 24, zIndex: 2000 }}>
+          <Modal
+            isOpen={modalGeral.open}
+            onClose={() => setModalGeral({ open: false, mensagem: "" })}
+            texto={modalGeral.mensagem}
+            showClose={false}
+          />
+        </div>
       </div>
     </div>
   );

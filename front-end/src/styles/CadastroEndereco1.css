@@ -1,0 +1,344 @@
+@font-face {
+	font-family: 'AdventSans-Logo';
+	src: url('../assets/AdventSans-Logo.otf') format('opentype');
+	font-display: swap;
+}
+
+body {
+	background: #F2F2F2 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+}
+
+.cadastro-endereco1-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: #F2F2F2 !important;
+  margin: 0;
+  padding: 0;
+}
+
+.cadastro-endereco1-container {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 0 0;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.cadastro-endereco1-icone-voltar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.cadastro-endereco1-title {
+  font-family: 'AdventSans-Logo', sans-serif !important;
+  text-align: center;
+  font-size: 48px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin: 30px 0 50px 0 !important;
+  line-height: 1.1;
+  background: #D9C27E !important;
+  padding: 20px 40px !important;
+  border-radius: 20px !important;
+  max-width: 740px !important;
+  width: 85% !important;
+}
+
+.cadastro-endereco1-form {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 20px;
+}
+
+.cadastro-endereco1-field-group {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.cadastro-endereco1-field-group .cadastro-endereco1-field {
+  max-width: 800px !important;
+  width: 800px !important;
+  flex: none !important;
+}
+
+.cadastro-endereco1-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  margin: 0;
+}
+
+.cadastro-endereco1-row-triple {
+  gap: 10px;
+  max-width: 800px;
+  width: 800px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.cadastro-endereco1-row-triple .cadastro-endereco1-field {
+  flex: none;
+  min-width: 0;
+}
+
+.cadastro-endereco1-row-triple .cadastro-endereco1-field:nth-child(1) {
+  width: 160px !important;
+  max-width: 160px !important;
+}
+
+.cadastro-endereco1-row-triple .cadastro-endereco1-field:nth-child(2) {
+  width: 200px !important;
+  max-width: 200px !important;
+}
+
+.cadastro-endereco1-row-triple .cadastro-endereco1-field:nth-child(3) {
+  width: 420px !important;
+  max-width: 420px !important;
+}
+
+.cadastro-endereco1-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 380px;
+  margin: 0;
+}
+
+/* Ajustar largura dos campos de linha dupla para alinhamento */
+.cadastro-endereco1-row:not(.cadastro-endereco1-row-triple) {
+  max-width: 800px;
+  width: 800px;
+  margin: 0 auto;
+  gap: 10px;
+}
+
+.cadastro-endereco1-row:not(.cadastro-endereco1-row-triple) .cadastro-endereco1-field {
+  max-width: 395px !important;
+  width: 395px !important;
+  flex: none !important;
+}
+
+/* Alinhar todos os campos na mesma altura */
+.cadastro-endereco1-field {
+  transform: translateY(-8px) !important;
+}
+
+.cadastro-endereco1-label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 4px !important;
+}
+
+.cadastro-endereco1-form label,
+.cadastro-endereco1-field-group label,
+.cadastro-endereco1-row label {
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  margin-bottom: 4px !important;
+}
+
+.cadastro-endereco1-input {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.cadastro-endereco1-row .cadastro-endereco1-input,
+.cadastro-endereco1-field-group .cadastro-endereco1-input,
+.cadastro-endereco1-form input[type="text"] {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.cadastro-endereco1-form input[type="text"]:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-endereco1-input:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-endereco1-input::placeholder {
+  color: #999999 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+}
+
+.cadastro-endereco1-input-highlight {
+  border: 4px solid #D9D9D9 !important;
+  background: #FFFFFF !important;
+  height: 60px !important;
+  padding: 18px 24px !important;
+}
+
+.cadastro-endereco1-input:disabled {
+  background: #F5F5F5 !important;
+  color: #999999 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+.cadastro-endereco1-select {
+  width: 100% !important;
+  height: 60px !important;
+  padding: 15px 20px !important;
+  border: 4px solid #D9D9D9 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  color: #264040 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  line-height: 1.2 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.cadastro-endereco1-select:focus {
+  border-color: #BF7E04 !important;
+}
+
+.cadastro-endereco1-select option {
+  font-size: 20px !important;
+  color: #264040 !important;
+  padding: 8px 16px !important;
+}
+
+.cadastro-endereco1-btn {
+  margin: 20px 55px 20px auto !important;
+  margin-top: -25px !important;
+  padding: 14px 40px !important;
+  border-radius: 8px !important;
+  border: 2px solid #264040 !important;
+  background: #264040 !important;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.8s ease !important;
+  display: block !important;
+  color: #F2F2F2 !important;
+  min-width: 140px !important;
+  text-align: center !important;
+}
+
+.cadastro-endereco1-btn:hover {
+  background: #D9C27E !important;
+  border-color: #D9C27E !important;
+  color: #264040 !important;
+}
+
+.cadastro-endereco1-btn:disabled {
+  background: #cccccc !important;
+  border-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+}
+
+/* Estilos do indicador de progresso */
+.cadastro-endereco1-progress-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -10px 0 20px 0;
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cadastro-endereco1-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.cadastro-endereco1-progress-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #CCCCCC;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cadastro-endereco1-progress-step.active .cadastro-endereco1-progress-circle {
+  background: #264040;
+}
+
+.cadastro-endereco1-progress-step.completed .cadastro-endereco1-progress-circle {
+  background: #264040;
+}
+
+.cadastro-endereco1-progress-line {
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  right: 24px;
+  height: 4px;
+  background: #CCCCCC;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.cadastro-endereco1-progress-line.completed {
+  background: #264040;
+}
+
+.cadastro-endereco1-progress-label {
+  margin-top: 12px;
+  font-family: 'Noto Sans', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  color: #264040 !important;
+  white-space: nowrap;
+}
