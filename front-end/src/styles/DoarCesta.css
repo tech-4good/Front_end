@@ -41,12 +41,16 @@ body {
 .doar-cesta-title {
 	font-family: 'AdventSans-Logo', sans-serif !important;
 	text-align: center;
-	font-size: 64px !important;
+	font-size: 48px !important;
 	font-weight: 400 !important;
 	color: #264040 !important;
-	margin: 100px 0 50px 0 !important;
+	margin: 50px 0 50px 0 !important;
 	line-height: 1.1;
-	width: 100%;
+	background: #D9C27E !important;
+	padding: 20px 40px !important;
+	border-radius: 20px !important;
+	max-width: 725px !important;
+	width: 90% !important;
 }
 
 .doar-cesta-form {
@@ -59,6 +63,13 @@ body {
 	padding: 0 20px;
 }
 
+.doar-cesta-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 20px;
+	width: 100%;
+}
+
 .doar-cesta-field {
 	display: flex;
 	flex-direction: column;
@@ -66,54 +77,52 @@ body {
 	width: 100%;
 }
 
+.doar-cesta-cpf-field {
+	flex: 1;
+	max-width: 420px;
+	position: relative;
+}
+
+.doar-cesta-cpf-input {
+	width: 100% !important;
+}
+
 .doar-cesta-label {
 	font-family: 'Noto Sans', sans-serif !important;
-	font-weight: 600 !important;
-	font-size: 22px !important;
+	font-size: 24px !important;
+	font-weight: 400 !important;
 	color: #264040 !important;
 	margin-bottom: 4px !important;
 }
 
 .doar-cesta-input {
-	background: #F2F2F2 !important;
-	border: 2px solid #264040 !important;
+	width: 100% !important;
+	height: 60px !important;
+	padding: 18px 24px !important;
+	border: 4px solid #D9D9D9 !important;
 	border-radius: 8px !important;
-	padding: 14px 16px !important;
+	background: #FFFFFF !important;
 	font-family: 'Noto Sans', sans-serif !important;
 	font-size: 20px !important;
+	font-weight: 400 !important;
 	color: #264040 !important;
 	outline: none !important;
 	box-sizing: border-box !important;
-	width: 100% !important;
-	transition: all 0.8s ease !important;
+	transition: all 0.2s ease !important;
 }
 
 .doar-cesta-input:focus {
-	background: #F2F2F2 !important;
-	border-color: #D9C27E !important;
-	outline: none !important;
+	border-color: #BF7E04 !important;
 }
 
 .doar-cesta-input::placeholder {
 	color: #999999 !important;
-	font-size: 20px !important;
-	opacity: 1 !important;
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 16px !important;
+	font-weight: 400 !important;
 }
 
-/* Layout especial para o campo Tipo com label na lateral */
-.doar-cesta-field.doar-cesta-tipo-field {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
-	gap: 20px;
-}
 
-.doar-cesta-field.doar-cesta-tipo-field .doar-cesta-label {
-	text-align: left;
-	margin-bottom: 0 !important;
-	white-space: nowrap;
-}
 
 .doar-cesta-radio {
 	display: flex;
@@ -122,30 +131,31 @@ body {
 
 .doar-cesta-btn-container {
 	display: flex;
-	justify-content: center;
-	margin-top: 20px;
+	align-items: flex-end;
+	margin: 0;
 }
 
 .doar-cesta-btn {
-	padding: 14px 40px !important;
-	border-radius: 8px !important;
-	border: 2px solid #264040 !important;
+	width: auto !important;
+	min-width: 120px !important;
+	height: 60px !important;
 	background: #264040 !important;
+	border: none !important;
+	border-radius: 8px !important;
+	color: #F2F2F2 !important;
 	font-family: 'Noto Sans', sans-serif !important;
 	font-size: 18px !important;
 	font-weight: 600 !important;
 	cursor: pointer !important;
 	transition: all 0.8s ease !important;
-	display: block !important;
-	color: #F2F2F2 !important;
-	min-width: 140px !important;
-	text-align: center !important;
+	margin: 0 !important;
+	padding: 0 24px !important;
 }
 
 .doar-cesta-btn:hover {
-	background: #D9C27E !important;
-	border-color: #D9C27E !important;
 	color: #264040 !important;
+	background-color: #D9C27E !important;
+	transform: translateY(-1px) !important;
 }
 
 .doar-cesta-btn:disabled {
@@ -157,7 +167,11 @@ body {
 
 /* Resultados da busca de CPF */
 .doar-cesta-resultados {
-	width: 99,8%;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	width: 100%;
 	background: #F2F2F2 !important;
 	border: 2px solid #264040;
 	border-top: none;
@@ -167,11 +181,10 @@ body {
 	color: #264040;
 	display: flex;
 	flex-direction: column;
-	margin-top: -29px !important;
-	margin-bottom: 0;
 	padding: 0;
 	overflow: hidden;
 	z-index: 999;
+	box-sizing: border-box;
 }
 
 .doar-cesta-resultado {
@@ -189,4 +202,59 @@ body {
 
 .doar-cesta-resultado:last-child {
 	border-bottom: none;
+}
+
+/* Toggle Switch Styles */
+.doar-cesta-toggle-container {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	transform: translateY(-18px);
+}
+
+.doar-cesta-toggle-option {
+	font-family: 'Noto Sans', sans-serif !important;
+	font-size: 18px !important;
+	font-weight: 500 !important;
+	color: #999999 !important;
+	transition: all 0.3s ease !important;
+	user-select: none;
+}
+
+.doar-cesta-toggle-option.active {
+	color: #264040 !important;
+	font-weight: 600 !important;
+}
+
+.doar-cesta-toggle-switch {
+	position: relative;
+	width: 60px;
+	height: 30px;
+	background: #D9D9D9;
+	border-radius: 15px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+}
+
+.doar-cesta-toggle-switch:hover {
+	background: #CCCCCC;
+}
+
+.doar-cesta-toggle-slider {
+	position: absolute;
+	top: 3px;
+	width: 24px;
+	height: 24px;
+	background: #264040;
+	border-radius: 50%;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.doar-cesta-toggle-slider.left {
+	left: 3px;
+}
+
+.doar-cesta-toggle-slider.right {
+	left: 33px;
 }

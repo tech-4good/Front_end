@@ -123,7 +123,7 @@ body {
   align-self: flex-end;
   flex: none !important;
   min-width: 100px !important;
-  transform: translateY(-13px) !important;
+  transform: translateY(-26px) !important;
 }
 
 .cadastro-simples-label {

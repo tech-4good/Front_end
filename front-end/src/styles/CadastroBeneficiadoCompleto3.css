@@ -221,3 +221,8 @@ body {
   color: #264040 !important;
   white-space: nowrap;
 }
+
+/* Seletor específico para subir apenas o campo Foto do Beneficiado */
+.cadastro-completo3-row-triple:nth-child(2) .cadastro-completo3-field:nth-child(3) {
+  transform: translateY(-15px) !important;
+}

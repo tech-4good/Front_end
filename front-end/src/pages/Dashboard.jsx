@@ -14,7 +14,8 @@ import {
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
+import Modal from "../components/Modal";
+
 import dashboardService from "../services/dashboardService";
 import "../styles/Home.css";
 import "../styles/Dashboard.css";
@@ -23,6 +24,7 @@ import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 ChartJS.register(
   CategoryScale,
@@ -152,10 +154,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [tipoUsuario, setTipoUsuario] = useState("2");
-  const [filtroTempo, setFiltroTempo] = useState("Última Semana");
-  const [dataInicio, setDataInicio] = useState("");
-  const [dataFim, setDataFim] = useState("");
-  const [mostrarFiltroCustomizado, setMostrarFiltroCustomizado] = useState(false);
+  const [filtroAtivo, setFiltroAtivo] = useState('todos');
+  const [modalPeriodo, setModalPeriodo] = useState(false);
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   const [dadosAtuais, setDadosAtuais] = useState({
     cestasDistribuidas: { valor: 0, percentual: "0%" },
     kitsDistribuidos: { valor: 0, percentual: "0%" },
@@ -163,16 +165,37 @@ export default function Dashboard() {
     filaEspera: { valor: 0, percentual: "0%" }
   });
   const [dadosGraficoAtual, setDadosGraficoAtual] = useState({
-    labels: [],
-    datasets: []
+    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+    datasets: [{
+      label: 'Este ano',
+      data: [0, 0, 0, 0, 0, 0],
+      borderColor: '#0097a7',
+      backgroundColor: 'rgba(0, 151, 167, 0.1)',
+      tension: 0.3,
+    }]
   });
   const [dadosGraficoBairroAtual, setDadosGraficoBairroAtual] = useState({
-    labels: [],
-    datasets: []
+    labels: ['Carregando...'],
+    datasets: [{
+      data: [100],
+      backgroundColor: ['#e0e0e0'],
+      borderWidth: 0,
+    }]
   });
   const [dadosGraficoBarraAtual, setDadosGraficoBarraAtual] = useState({
-    labels: [],
-    datasets: []
+    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+    datasets: [{
+      data: [0, 0, 0, 0, 0, 0],
+      backgroundColor: [
+        '#8e24aa',
+        '#26c6da',
+        '#000000',
+        '#42a5f5',
+        '#66bb6a',
+        '#ffa726'
+      ],
+      borderRadius: 8,
+    }]
   });
   const [loading, setLoading] = useState(true);
   const [totalKilos, setTotalKilos] = useState(0);
@@ -222,53 +245,37 @@ export default function Dashboard() {
   // Recarregar quando o filtro mudar
   useEffect(() => {
     // Não carregar no mount inicial (já foi carregado acima)
-    if (filtroTempo && !loading) {
-      console.log("🔄 Filtro mudou para:", filtroTempo);
-      
-      // Se mudou para filtro customizado, não recarregar ainda
-      if (filtroTempo === "Período Customizado") {
-        setMostrarFiltroCustomizado(true);
-      } else {
-        setMostrarFiltroCustomizado(false);
-        setDataInicio("");
-        setDataFim("");
-        carregarDadosDashboard();
-      }
+    if (filtroAtivo && !loading) {
+      console.log("🔄 Filtro mudou para:", filtroAtivo);
+      carregarDadosDashboard();
     }
-  }, [filtroTempo]);
+  }, [filtroAtivo]);
   
-  // Função para aplicar filtro customizado
-  const aplicarFiltroCustomizado = () => {
-    if (!dataInicio || !dataFim) {
-      alert("Por favor, preencha ambas as datas");
-      return;
+  const handleFiltroChange = (e) => {
+    const novoFiltro = e.target.value;
+    if (novoFiltro === 'periodo-customizado') {
+      setModalPeriodo(true);
+    } else {
+      setFiltroAtivo(novoFiltro);
     }
-    
-    if (new Date(dataInicio) > new Date(dataFim)) {
-      alert("A data inicial não pode ser maior que a data final");
-      return;
-    }
-    
-    console.log("📅 Aplicando filtro customizado:", { dataInicio, dataFim });
-    carregarDadosDashboard();
   };
-  
-  const limparFiltroCustomizado = () => {
-    setDataInicio("");
-    setDataFim("");
-    setFiltroTempo("Última Semana");
-    setMostrarFiltroCustomizado(false);
+
+  const aplicarPeriodoCustomizado = () => {
+    if (dataInicio && dataFim) {
+      setFiltroAtivo('periodo-customizado');
+      setModalPeriodo(false);
+    }
   };
 
   async function carregarDadosDashboard() {
     try {
       setLoading(true);
-      console.log("📊 Carregando dados do dashboard com filtro:", filtroTempo);
+      console.log("📊 Carregando dados do dashboard com filtro:", filtroAtivo);
       console.log("📅 Datas customizadas:", { dataInicio, dataFim });
 
       // Buscar estatísticas gerais com filtro
       const estatisticas = await dashboardService.buscarEstatisticasGerais(
-        filtroTempo, 
+        filtroAtivo, 
         dataInicio, 
         dataFim
       );
@@ -375,12 +382,15 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="dashboard-bg">
-        <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+        <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isRelatoriosPage={true} />
         <div className="dashboard-container">
           <div className="dashboard-header">
-            <div className="dashboard-voltar">
-              <Voltar onClick={() => navigate('/painel-menu')} />
-            </div>
+            <img 
+              src={iconeVoltar} 
+              alt="Voltar" 
+              className="dashboard-icone-voltar"
+              onClick={() => navigate('/painel-menu')}
+            />
           </div>
           <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px', color: '#666' }}>
             Carregando dados do dashboard...
@@ -392,67 +402,29 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-bg">
-      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+      <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isRelatoriosPage={true} />
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <div className="dashboard-voltar">
-            <Voltar onClick={() => navigate('/painel-menu')} />
-          </div>
-          <div className="dashboard-filtro-container">
-            <div className="dashboard-filtro">
-              <label>Filtrar por:</label>
-              <select 
-                value={filtroTempo} 
-                onChange={(e) => setFiltroTempo(e.target.value)}
-                className="dashboard-select"
-              >
-                <option value="Última Semana">Última Semana</option>
-                <option value="Último Mês">Último Mês</option>
-                <option value="Último Ano">Último Ano</option>
-                <option value="Período Customizado">Período Customizado</option>
-              </select>
-            </div>
-            
-            {mostrarFiltroCustomizado && (
-              <div className="dashboard-filtro-customizado">
-                <div className="dashboard-filtro-data-grupo">
-                  <label>Data Início:</label>
-                  <input
-                    type="date"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
-                    className="dashboard-input-data"
-                    max={dataFim || undefined}
-                  />
-                </div>
-                
-                <div className="dashboard-filtro-data-grupo">
-                  <label>Data Fim:</label>
-                  <input
-                    type="date"
-                    value={dataFim}
-                    onChange={(e) => setDataFim(e.target.value)}
-                    className="dashboard-input-data"
-                    min={dataInicio || undefined}
-                  />
-                </div>
-                
-                <button 
-                  onClick={aplicarFiltroCustomizado}
-                  className="dashboard-btn-aplicar"
-                  disabled={!dataInicio || !dataFim}
-                >
-                  Aplicar
-                </button>
-                
-                <button 
-                  onClick={limparFiltroCustomizado}
-                  className="dashboard-btn-limpar"
-                >
-                  Limpar
-                </button>
-              </div>
-            )}
+          <img 
+            src={iconeVoltar} 
+            alt="Voltar" 
+            className="dashboard-icone-voltar"
+            onClick={() => navigate('/painel-menu')}
+          />
+          <div className="dashboard-filtro">
+            <label className="dashboard-filtro-label">Filtrar por:</label>
+            <select 
+              className="dashboard-filtro-select" 
+              value={filtroAtivo} 
+              onChange={handleFiltroChange}
+            >
+              <option value="ultimo-dia">Último Dia</option>
+              <option value="ultima-semana">Última Semana</option>
+              <option value="ultimo-mes">Último Mês</option>
+              <option value="ultimo-ano">Último Ano</option>
+              <option value="mais-antigo">Mais antigo primeiro</option>
+              <option value="periodo-customizado">Período Customizado</option>
+            </select>
           </div>
         </div>
 
@@ -491,36 +463,104 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Gráfico de Linha */}
-        <div className="dashboard-grafico-grande">
-          <div className="dashboard-grafico-header">
-            <div>
-              <h3>Total de Kilos Doados</h3>
-              <p className="dashboard-total-periodo">TOTAL NO PERÍODO = {totalKilos.toLocaleString('pt-BR')} KG</p>
+        {/* Layout com colunas */}
+        <div className="dashboard-content-wrapper">
+          <div className="dashboard-left-column">
+            {/* Gráfico de Linha */}
+            <div className="dashboard-grafico-grande">
+              <div className="dashboard-grafico-header">
+                <div>
+                  <h3>Total de Kilos Doados</h3>
+                  <p className="dashboard-total-periodo">TOTAL NO PERÍODO = {totalKilos.toLocaleString('pt-BR')} KG</p>
+                </div>
+              </div>
+              <div className="dashboard-grafico-container">
+                <Line data={dadosGraficoAtual} options={opcoesGraficoLinha} />
+              </div>
             </div>
-          </div>
-          <div className="dashboard-grafico-container">
-            <Line data={dadosGraficoAtual} options={opcoesGraficoLinha} />
-          </div>
-        </div>
 
-        {/* Gráficos Menores */}
-        <div className="dashboard-graficos-pequenos">
-          <div className="dashboard-grafico-pequeno">
-            <h3>Distribuição de Cestas (KG por Mês)</h3>
-            <div className="dashboard-grafico-container">
-              <Bar data={dadosGraficoBarraAtual} options={opcoesGraficoBarra} />
+            {/* Gráfico de Barras */}
+            <div className="dashboard-graficos-pequenos">
+              <div className="dashboard-grafico-pequeno">
+                <h3>Distribuição de Cestas (KG por Mês)</h3>
+                <div className="dashboard-grafico-container">
+                  <Bar data={dadosGraficoBarraAtual} options={opcoesGraficoBarra} />
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="dashboard-grafico-pequeno">
-            <h3>Distribuição de Beneficiados Por Bairro</h3>
-            <div className="dashboard-grafico-container">
-              <Doughnut data={dadosGraficoBairroAtual} options={opcoesGraficoPizza} />
+
+          <div className="dashboard-right-column">
+            {/* Gráfico de Pizza */}
+            <div className="dashboard-grafico-direita">
+              <h3>Distribuição de Beneficiados Por Bairro</h3>
+              <div className="dashboard-grafico-container">
+                <Doughnut data={dadosGraficoBairroAtual} options={opcoesGraficoPizza} />
+              </div>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Modal para período customizado */}
+      <Modal
+        isOpen={modalPeriodo}
+        onClose={() => {
+          setModalPeriodo(false);
+          setDataInicio('');
+          setDataFim('');
+        }}
+        texto={
+          <div style={{ textAlign: 'left' }}>
+            <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Selecione o Período</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Data Início:</label>
+              <input
+                type="date"
+                value={dataInicio}
+                onChange={(e) => setDataInicio(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '16px'
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Data Fim:</label>
+              <input
+                type="date"
+                value={dataFim}
+                onChange={(e) => setDataFim(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '16px'
+                }}
+              />
+            </div>
+        </div>
+        }
+        showClose={false}
+        botoes={[
+          {
+            texto: "Cancelar",
+            onClick: () => {
+              setModalPeriodo(false);
+              setDataInicio('');
+              setDataFim('');
+            }
+          },
+          {
+            texto: "Aplicar",
+            onClick: aplicarPeriodoCustomizado
+          }
+        ]}
+      />
     </div>
   );
 }

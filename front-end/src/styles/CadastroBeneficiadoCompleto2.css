@@ -58,7 +58,7 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 1px;
   padding: 0 20px;
 }
 
@@ -373,4 +373,9 @@ body {
   font-weight: 400 !important;
   color: #264040 !important;
   margin-bottom: 4px !important;
+}
+
+/* Seletor específico para subir apenas o campo Estado Civil */
+.cadastro-completo2-row-triple:nth-child(2) .cadastro-completo2-field:nth-child(3) {
+  transform: translateY(-18px) !important;
 }

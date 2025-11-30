@@ -58,7 +58,7 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 5px;
   padding: 0 20px;
 }
 
@@ -251,7 +251,7 @@ body {
 
 .cadastro-endereco1-btn {
   margin: 20px 55px 20px auto !important;
-  margin-top: -38px !important;
+  margin-top: -25px !important;
   padding: 14px 40px !important;
   border-radius: 8px !important;
   border: 2px solid #264040 !important;

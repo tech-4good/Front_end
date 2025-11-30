@@ -10,6 +10,7 @@ import iconeCasa from "../assets/icone-casa.png";
 import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 export default function ConsultaEndereco() {
 	const formatCEP = (value) => {
@@ -34,6 +35,20 @@ export default function ConsultaEndereco() {
 		if (maxLength) v = v.slice(0, maxLength);
 		return v;
 	};
+
+	const onlyLettersAndSpaces = (value) => {
+		// Remove caracteres que não são letras ou espaços
+		let v = value.replace(/[^a-zA-ZÀ-ÿ\u00f1\u00d1\s]/g, "");
+		// Remove espaços duplos ou múltiplos
+		v = v.replace(/\s+/g, " ");
+		return v;
+	};
+
+	const removeDoubleSpaces = (value) => {
+		// Remove apenas espaços duplos ou múltiplos, mantém todos os outros caracteres
+		return value.replace(/\s+/g, " ");
+	};
+
 	const navigate = useNavigate();
 	const [tipoUsuario, setTipoUsuario] = useState("2");
 	const [carregando, setCarregando] = useState(true);
@@ -425,7 +440,7 @@ export default function ConsultaEndereco() {
 				bairro: enderecoBeneficiado.bairro || enderecoBeneficiado.endereco?.bairro || "",
 				cidade: enderecoBeneficiado.cidade || enderecoBeneficiado.endereco?.cidade || "",
 				estado: enderecoBeneficiado.estado || enderecoBeneficiado.uf || enderecoBeneficiado.endereco?.estado || enderecoBeneficiado.endereco?.uf || "",
-				cep: enderecoBeneficiado.cep || enderecoBeneficiado.endereco?.cep || "",
+				cep: formatCEP(enderecoBeneficiado.cep || enderecoBeneficiado.endereco?.cep || ""),
 				
 				// Datas do beneficiado - EXPANDIDO com mais possibilidades
 				dataEntrada: formatarData(
@@ -908,8 +923,14 @@ export default function ConsultaEndereco() {
 			newValue = formatCEP(value);
 		} else if (name === "dataEntrada" || name === "dataSaida") {
 			newValue = formatDate(value);
-		} else if (["numero", "criancas", "jovens", "adolescentes", "idosos", "gestantes", "deficientes", "outros"].includes(name)) {
-			newValue = onlyNumbers(value, 3);
+		} else if (name === "numero") {
+			newValue = onlyNumbers(value, 4);
+		} else if (["rua", "bairro", "cidade", "estado", "moradia", "tipoMoradia", "tipoCesta", "status"].includes(name)) {
+			newValue = onlyLettersAndSpaces(value);
+		} else if (name === "complemento") {
+			newValue = removeDoubleSpaces(value);
+		} else if (["criancas", "jovens", "adolescentes", "idosos", "gestantes", "deficientes", "outros"].includes(name)) {
+			newValue = onlyNumbers(value, 2);
 		}
 		setEndereco(prev => ({ ...prev, [name]: newValue }));
 	}
@@ -997,32 +1018,16 @@ export default function ConsultaEndereco() {
 	}
 
 	return (
-		<div className="consulta-endereco-bg">
-			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+		<div>
+			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isConsultaBeneficiadosPage={true} />
 			<div className="consulta-endereco-container">
-				<div className="consulta-endereco-voltar">
-					<Voltar onClick={() => navigate("/consulta-beneficiados-menu")} />
-				</div>
+				<img 
+					src={iconeVoltar} 
+					alt="Voltar" 
+					className="consulta-endereco-icone-voltar"
+					onClick={() => navigate("/consulta-beneficiados-menu")}
+				/>
 				<h1 className="consulta-endereco-title">Endereço</h1>
-				
-				{/* Mostrar informações básicas do beneficiado */}
-				{beneficiado && (
-					<div style={{ 
-						backgroundColor: '#f8f9fa', 
-						padding: '10px', 
-						marginBottom: '20px', 
-						borderRadius: '5px',
-						fontSize: '14px',
-						color: '#666'
-					}}>
-						<strong>CPF:</strong> {sessionStorage.getItem('cpfSelecionado')} | 
-						<strong> Nome:</strong> {beneficiado.nome || 'Não informado'} | 
-						<strong> ID:</strong> {beneficiado.id || 'Não informado'}
-						{beneficiado.enderecoId && (
-							<span> | <strong>Endereço ID:</strong> {beneficiado.enderecoId}</span>
-						)}
-					</div>
-				)}
 				
 				{carregando && (
 					<div style={{ textAlign: 'center', padding: '20px' }}>
@@ -1040,142 +1045,418 @@ export default function ConsultaEndereco() {
 				)}
 				
 				{!carregando && !erro && beneficiado && (
-					<form className="consulta-endereco-form">
-					<div className="consulta-endereco-row">
-						<div className="consulta-endereco-col">
-							<label>Rua/Avenida:</label>
-							<input name="rua" value={endereco.rua} onChange={handleChange} />
-							<label>Complemento:</label>
-							<input name="complemento" value={endereco.complemento} onChange={handleChange} />
-							<label>Cidade:</label>
-							<input name="cidade" value={endereco.cidade} onChange={handleChange} />
-							<label>CEP:</label>
-							<input name="cep" value={endereco.cep} onChange={handleChange} />
-						</div>
-						<div className="consulta-endereco-col">
-							<label>Número:</label>
-							<input name="numero" value={endereco.numero} onChange={handleChange} />
-							<label>Bairro:</label>
-							<input name="bairro" value={endereco.bairro} onChange={handleChange} />
-							<label>Estado:</label>
-							<input name="estado" value={endereco.estado} onChange={handleChange} />
-						</div>
-					</div>
-					<hr className="consulta-endereco-divisor" />
-					<div className="consulta-endereco-row">
-						<div className="consulta-endereco-col">
-							<label>Data de Entrada:</label>
-							<input name="dataEntrada" value={endereco.dataEntrada} onChange={handleChange} type="text" />
-							<label>Moradia:</label>
-							<input name="moradia" value={endereco.moradia} onChange={handleChange} />
-							<label>Tipo de Cesta:</label>
-							<input name="tipoCesta" value={endereco.tipoCesta} onChange={handleChange} />
-						</div>
-						<div className="consulta-endereco-col">
-							<label>Data de Saída:</label>
-							<input name="dataSaida" value={endereco.dataSaida} onChange={handleChange} type="text" />
-							<label>Tipo de Moradia:</label>
-							<input name="tipoMoradia" value={endereco.tipoMoradia} onChange={handleChange} />
-							<label>Status:</label>
-							<input name="status" value={endereco.status} onChange={handleChange} />
-						</div>
-					</div>
-					<hr className="consulta-endereco-divisor" />
-					<div className="consulta-endereco-row">
-						<div className="consulta-endereco-col">
-							<label>Quantidade de Crianças:</label>
-							<input name="criancas" value={endereco.criancas} onChange={handleChange} />
-							<label>Quantidade de Adolescentes:</label>
-							<input name="adolescentes" value={endereco.adolescentes} onChange={handleChange} />
-							<label>Quantidade de Gestantes:</label>
-							<input name="gestantes" value={endereco.gestantes} onChange={handleChange} />
-							<label>Quantidade de Outros:</label>
-							<input name="outros" value={endereco.outros} onChange={handleChange} />
-						</div>
-						<div className="consulta-endereco-col">
-							<label>Quantidade de Jovens:</label>
-							<input name="jovens" value={endereco.jovens} onChange={handleChange} />
-							<label>Quantidade de Idosos:</label>
-							<input name="idosos" value={endereco.idosos} onChange={handleChange} />
-							<label>Quantidade de Deficientes:</label>
-							<input name="deficientes" value={endereco.deficientes} onChange={handleChange} />
-						</div>
-					</div>
-					<hr className="consulta-endereco-divisor" />
-					<div className="consulta-endereco-row">
-						<div className="consulta-endereco-col">
-							<label>Tipo de Cesta Atual:</label>
-							<input name="tipoCestaAtual" value={endereco.tipoCestaAtual} onChange={handleChange} />
-							<label>Tempo na Cesta Restante Atual:</label>
-							<input name="tempoCestaRestante" value={endereco.tempoCestaRestante} onChange={handleChange} />
-						</div>
-						<div className="consulta-endereco-col">
-							<label>Tempo na Cesta Atual:</label>
-							<input name="tempoCestaAtual" value={endereco.tempoCestaAtual} onChange={handleChange} />
-							<label>Tempo na Cadastrado na ASA:</label>
-							<input name="tempoASA" value={endereco.tempoASA} onChange={handleChange} />
-						</div>
-					</div>
-					<div className="consulta-endereco-botoes">
-						<button type="button" className="consulta-endereco-botao" onClick={handleAlterarClick}>Alterar Informações</button>
-					</div>
-			{/* Modal de confirmação de alteração */}
-			<Modal
-				isOpen={modalConfirmar}
-				onClose={handleConfirmarNao}
-				texto={"Tem certeza que deseja alterar as informações?"}
-				showClose={false}
-				botoes={[{
-					texto: "SIM",
-					onClick: handleConfirmarSim
-				}, {
-					texto: "NÃO",
-					onClick: handleConfirmarNao
-				}]}
-			/>
-			{/* Modal de feedback de alteração confirmada */}
-			<Modal
-				isOpen={alteracaoConfirmada}
-				onClose={() => setAlteracaoConfirmada(false)}
-				texto={"Informações alteradas com sucesso!"}
-				showClose={false}
-			/>
-						<button type="button" className="consulta-endereco-botao" onClick={() => setModalExcluirEndereco(true)}>Excluir Endereço</button>
-			{/* Modal de confirmação de exclusão de endereço */}
-			<Modal
-				isOpen={modalExcluirEndereco}
-				onClose={() => setModalExcluirEndereco(false)}
-				texto={"Tem certeza que deseja excluir o endereço?"}
-				showClose={false}
-				botoes={[{
-					texto: "SIM",
-					onClick: () => {
-						setModalExcluirEndereco(false);
-						setModalExcluidoSucesso(true);
-						setTimeout(() => {
-							setModalExcluidoSucesso(false);
-							navigate('/consulta-beneficiados-menu');
-						}, 2000);
-					},
-					style: { background: '#fff', color: '#111', border: '2px solid #111' }
-				}, {
-					texto: "NÃO",
-					onClick: () => setModalExcluirEndereco(false),
-					style: { background: '#111', color: '#fff', border: '2px solid #111' }
-				}]}
-			/>
-			{/* Modal de sucesso ao excluir endereço */}
-			<Modal
-				isOpen={modalExcluidoSucesso}
-				onClose={() => {
-					setModalExcluidoSucesso(false);
-					navigate('/consulta-beneficiados-menu');
-				}}
-				texto={"Endereço excluído com sucesso!"}
-				showClose={false}
-			/>
-					</form>
-				)}
+					<>
+						<form className="consulta-endereco-form" onSubmit={(e) => { e.preventDefault(); handleAlterarClick(); }}>
+							{/* Primeira linha - Rua, Número, Complemento */}
+							<div className="consulta-endereco-row consulta-endereco-row-triple">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Rua/Avenida:</label>
+									<input
+										type="text"
+										name="rua"
+										value={endereco.rua}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Insira a rua/avenida"
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Número:</label>
+									<input
+										type="text"
+										name="numero"
+										value={endereco.numero}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Número"
+										maxLength={4}
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Complemento:</label>
+									<input
+										type="text"
+										name="complemento"
+										value={endereco.complemento}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Complemento"
+									/>
+								</div>
+							</div>
+
+							{/* Segunda linha - Bairro, Cidade, Estado */}
+							<div className="consulta-endereco-row consulta-endereco-row-triple">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Bairro:</label>
+									<input
+										type="text"
+										name="bairro"
+										value={endereco.bairro}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Bairro"
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Cidade:</label>
+									<input
+										type="text"
+										name="cidade"
+										value={endereco.cidade}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Cidade"
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Estado:</label>
+									<input
+										type="text"
+										name="estado"
+										value={endereco.estado}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Estado"
+									/>
+								</div>
+							</div>
+
+							{/* Terceira linha - CEP (campo único) */}
+							<div className="consulta-endereco-row consulta-endereco-row-single">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">CEP:</label>
+									<input
+										type="text"
+										name="cep"
+										value={endereco.cep}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="00000-000"
+										maxLength={9}
+									/>
+								</div>
+							</div>
+
+							<div className="consulta-endereco-divisor"></div>
+
+							{/* Quarta linha - Data de Entrada, Data de Saída, Moradia */}
+							<div className="consulta-endereco-row consulta-endereco-row-triple">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Data de Entrada:</label>
+									<input
+										type="text"
+										name="dataEntrada"
+										value={endereco.dataEntrada}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="dd/mm/aaaa"
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Data de Saída:</label>
+									<input
+										type="text"
+										name="dataSaida"
+										value={endereco.dataSaida}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="dd/mm/aaaa"
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Moradia:</label>
+									<input
+										type="text"
+										name="moradia"
+										value={endereco.moradia}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Tipo de moradia"
+									/>
+								</div>
+							</div>
+
+							{/* Quinta linha - Tipo de Moradia, Tipo de Cesta, Status */}
+							<div className="consulta-endereco-row consulta-endereco-row-triple">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Tipo de Moradia:</label>
+									<input
+										type="text"
+										name="tipoMoradia"
+										value={endereco.tipoMoradia}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Ex: Casa, Apartamento"
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Tipo de Cesta:</label>
+									<input
+										type="text"
+										name="tipoCesta"
+										value={endereco.tipoCesta}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Tipo de cesta"
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Status:</label>
+									<input
+										type="text"
+										name="status"
+										value={endereco.status}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Status"
+									/>
+								</div>
+							</div>
+
+							<div className="consulta-endereco-divisor"></div>
+
+							{/* Sexta linha - Quantidade de Crianças, Jovens, Adolescentes */}
+							<div className="consulta-endereco-row consulta-endereco-row-triple">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Quantidade de Crianças:</label>
+									<input
+										type="text"
+										name="criancas"
+										value={endereco.criancas}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="0"
+										maxLength={2}
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Quantidade de Jovens:</label>
+									<input
+										type="text"
+										name="jovens"
+										value={endereco.jovens}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="0"
+										maxLength={2}
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Quantidade de Adolescentes:</label>
+									<input
+										type="text"
+										name="adolescentes"
+										value={endereco.adolescentes}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="0"
+										maxLength={2}
+									/>
+								</div>
+							</div>
+
+							{/* Sétima linha - Quantidade de Idosos, Gestantes, Deficientes */}
+							<div className="consulta-endereco-row consulta-endereco-row-triple">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Quantidade de Idosos:</label>
+									<input
+										type="text"
+										name="idosos"
+										value={endereco.idosos}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="0"
+										maxLength={2}
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Quantidade de Gestantes:</label>
+									<input
+										type="text"
+										name="gestantes"
+										value={endereco.gestantes}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="0"
+										maxLength={2}
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Quantidade de Deficientes:</label>
+									<input
+										type="text"
+										name="deficientes"
+										value={endereco.deficientes}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="0"
+										maxLength={2}
+									/>
+								</div>
+							</div>
+
+							{/* Oitava linha - Quantidade de Outros (campo único) */}
+							<div className="consulta-endereco-row consulta-endereco-row-single">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Quantidade de Outros:</label>
+									<input
+										type="text"
+										name="outros"
+										value={endereco.outros}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="0"
+										maxLength={2}
+									/>
+								</div>
+							</div>
+
+							<div className="consulta-endereco-divisor"></div>
+
+							{/* Nona linha - Tipo de Cesta Atual, Tempo na Cesta Atual */}
+							<div className="consulta-endereco-row consulta-endereco-row-double">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Tipo de Cesta Atual:</label>
+									<input
+										type="text"
+										name="tipoCestaAtual"
+										value={endereco.tipoCestaAtual}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Tipo de cesta atual"
+										readOnly
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Tempo na Cesta Atual:</label>
+									<input
+										type="text"
+										name="tempoCestaAtual"
+										value={endereco.tempoCestaAtual}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Tempo"
+										readOnly
+									/>
+								</div>
+							</div>
+
+							{/* Décima linha - Tempo Restante na Cesta, Tempo Cadastrado na ASA */}
+							<div className="consulta-endereco-row consulta-endereco-row-double">
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Tempo Restante na Cesta:</label>
+									<input
+										type="text"
+										name="tempoCestaRestante"
+										value={endereco.tempoCestaRestante}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Tempo restante"
+										readOnly
+									/>
+								</div>
+								<div className="consulta-endereco-field">
+									<label className="consulta-endereco-label">Tempo Cadastrado na ASA:</label>
+									<input
+										type="text"
+										name="tempoASA"
+										value={endereco.tempoASA}
+										onChange={handleChange}
+										className="consulta-endereco-input"
+										placeholder="Tempo na ASA"
+										readOnly
+									/>
+								</div>
+							</div>
+
+							<div className="consulta-endereco-botoes">
+								<button type="submit" className="consulta-endereco-botao">
+									Alterar Informações
+								</button>
+								<button
+									type="button"
+									className="consulta-endereco-botao-danger"
+									onClick={() => setModalExcluirEndereco(true)}
+								>
+									Excluir Endereço
+								</button>
+							</div>
+						</form>
+						</>
+					)}
+
+				{/* Modal de confirmação de alteração */}
+				<Modal
+					isOpen={modalConfirmar}
+					onClose={handleConfirmarNao}
+					texto={"Tem certeza que deseja alterar as informações?"}
+					showClose={false}
+					botoes={[
+						{
+							texto: "Sim",
+							onClick: handleConfirmarSim,
+						},
+						{
+							texto: "Não",
+							onClick: handleConfirmarNao,
+						},
+					]}
+				/>
+
+				{/* Modal de confirmação de exclusão de endereço */}
+				<Modal
+					isOpen={modalExcluirEndereco}
+					onClose={() => setModalExcluirEndereco(false)}
+					texto={"Tem certeza que deseja excluir o endereço?"}
+					showClose={false}
+					botoes={[
+						{
+							texto: "Sim",
+							onClick: () => {
+								setModalExcluirEndereco(false);
+								setModalExcluidoSucesso(true);
+								setTimeout(() => {
+									setModalExcluidoSucesso(false);
+									navigate('/consulta-beneficiados-menu');
+								}, 2000);
+							},
+							style: {
+								background: "#fff",
+								color: "#111",
+								border: "2px solid #111",
+							},
+						},
+						{
+							texto: "Não",
+							onClick: () => setModalExcluirEndereco(false),
+							style: {
+								background: "#111",
+								color: "#fff",
+								border: "2px solid #111",
+							},
+						},
+					]}
+				/>
+
+				{/* Modal de sucesso ao excluir endereço */}
+				<Modal
+					isOpen={modalExcluidoSucesso}
+					onClose={() => {
+						setModalExcluidoSucesso(false);
+						navigate('/consulta-beneficiados-menu');
+					}}
+					texto={"Endereço excluído com sucesso!"}
+					showClose={false}
+				/>
+
+				{/* Modal de feedback de alteração confirmada */}
+				<Modal
+					isOpen={alteracaoConfirmada}
+					onClose={() => setAlteracaoConfirmada(false)}
+					texto={"Informações alteradas com sucesso!"}
+					showClose={false}
+				/>
 			</div>
 		</div>
 	);

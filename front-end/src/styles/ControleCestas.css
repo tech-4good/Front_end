@@ -206,13 +206,12 @@ body {
 .controle-cestas-input-row .botao-personalizado:hover {
   color: #264040 !important;
   background-color: #D9C27E !important;
-  transform: translateY(-7px) !important;
 }
 
 /* Margem específica do botão apenas nesta tela */
 .controle-cestas-input-row .botao-personalizado {
   margin-top: 19px !important;
-  transform: translateY(-7px) !important;
+  transform: translateY(-22px) !important;
 }
 
 .controle-cestas-sucesso-modal {
@@ -268,7 +267,7 @@ body {
   align-items: center;
   gap: 12px;
   margin-top: 19px !important;
-  transform: translateY(-20px) !important;
+  transform: translateY(-35px) !important;
 }
 
 .controle-cestas-toggle-option {

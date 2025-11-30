@@ -10,7 +10,7 @@ import iconeUsuario from "../assets/icone-usuario.png";
 import iconeSair from "../assets/icone-sair.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 
-const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false, isCestasPage = false, isFilaEsperaPage = false, isCadastroEnderecoPage = false, isEntregarCestaPage = false, isCadastrarBeneficiadosPage = false, isConsultaBeneficiadosPage = false, isVoluntariosPage = false, isHomePage = false }) => {
+const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false, isCestasPage = false, isFilaEsperaPage = false, isCadastroEnderecoPage = false, isEntregarCestaPage = false, isCadastrarBeneficiadosPage = false, isConsultaBeneficiadosPage = false, isVoluntariosPage = false, isRelatoriosPage = false, isHomePage = false }) => {
   const navigate = useNavigate();
   
   const allMenuItems = [
@@ -122,7 +122,8 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
                 (isEntregarCestaPage && item.texto === "Entregar Cesta") ||
                 (isCadastrarBeneficiadosPage && item.texto === "Cadastrar Beneficiados") ||
                 (isConsultaBeneficiadosPage && item.texto === "Consultar Beneficiados") ||
-                (isVoluntariosPage && item.texto === "Voluntários") ? "navbar-menu-item-active" : ""
+                (isVoluntariosPage && item.texto === "Voluntários") ||
+                (isRelatoriosPage && item.texto === "Relatórios") ? "navbar-menu-item-active" : ""
               }`}
               onClick={item.onClick}
             >

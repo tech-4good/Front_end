@@ -2,14 +2,9 @@ import React, { useEffect, useState } from "react";
 import Modal from "../components/Modal";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Voltar from "../components/Voltar";
 import { beneficiadoService } from "../services/beneficiadoService";
-import "../styles/Home.css"; 
 import "../styles/ConsultaFilhos.css";
-import iconeCasa from "../assets/icone-casa.png";
-import iconeUsuario from "../assets/icone-usuario.png";
-import iconeRelogio from "../assets/icone-relogio.png";
-import iconeSair from "../assets/icone-sair.png";
+import iconeVoltar from "../assets/icone-voltar.png";
 
 export default function ConsultaFilhos() {
 	// Mascara para data: 00/00/0000
@@ -78,10 +73,10 @@ export default function ConsultaFilhos() {
 	};
 
 	const botoesNavbar = [
-		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
-		{ texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
-		...(tipoUsuario === "2" ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }] : []),
-		{ texto: "Sair", onClick: () => navigate("/"), icone: iconeSair }
+		{ texto: "Início", onClick: () => navigate("/home") },
+		{ texto: "Perfil", onClick: () => navigate("/perfil") },
+		...(tipoUsuario === "2" ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera") }] : []),
+		{ texto: "Sair", onClick: () => navigate("/") }
 	];
 	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
 
@@ -172,12 +167,15 @@ export default function ConsultaFilhos() {
 	 }
 
 	return (
-		<div className="consulta-filhos-bg">
-			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} />
+		<div>
+			<Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isConsultaBeneficiadosPage={true} />
 			<div className="consulta-filhos-container">
-				<div className="consulta-filhos-voltar">
-					<Voltar onClick={() => navigate("/consulta-beneficiados-menu")} />
-				</div>
+				<img 
+					src={iconeVoltar} 
+					alt="Voltar" 
+					className="consulta-filhos-icone-voltar"
+					onClick={() => navigate("/consulta-beneficiados-menu")}
+				/>
 				<h1 className="consulta-filhos-title">Filhos</h1>
 				
 				{carregando && (
@@ -198,119 +196,156 @@ export default function ConsultaFilhos() {
 				{!carregando && !erro && (
 					<>
 						{filhos.length === 0 && (
-							<div style={{ textAlign: 'center', padding: '20px' }}>
+							<div style={{ textAlign: 'center', padding: '20px', color: '#264040', fontSize: '18px' }}>
 								<p>Este beneficiado não possui filhos cadastrados.</p>
 							</div>
 						)}
 						
 						{filhos.length > 0 && (
-							<form className="consulta-filhos-form">
-					<div className="consulta-filhos-lista">
-						 {filhos.map((filho, idx) => (
-							 <div className="consulta-filhos-card" key={idx}>
-								 <div className="consulta-filhos-label">{filho.label}</div>
-								 <label>Data de Nascimento:</label>
-								 <input name="nascimento" value={filho.nascimento} onChange={e => handleChange(idx, e)} />
-								 <label>Usa creche?</label>
-								 <input name="creche" value={filho.creche} onChange={e => handleChange(idx, e)} />
-								 <label>Estuda?</label>
-								 <input name="estuda" value={filho.estuda} onChange={e => handleChange(idx, e)} />
-							 </div>
-						 ))}
-					</div>
-					<div className="consulta-filhos-botoes">
-						<button type="button" className="consulta-filhos-botao" onClick={handleAlterarClick}>Alterar Informações</button>
-						<button type="button" className="consulta-filhos-botao" onClick={handleCadastrarOutroFilho}>Cadastrar outro Filho</button>
-						 <button type="button" className="consulta-filhos-botao" onClick={() => setModalEscolherFilho(true)}>Excluir Filho</button>
-					</div>
-							</form>
-						)
-					}
+							<div className="consulta-filhos-form">
+								<div className="consulta-filhos-grid">
+									{filhos.map((filho, idx) => (
+										<div key={idx} className="consulta-filhos-card-item">
+											<h3 className="consulta-filhos-card-title">{filho.label}</h3>
+											<div className="consulta-filhos-card-content">
+												<div className="consulta-filhos-field">
+													<label className="consulta-filhos-field-label">Data de Nascimento:</label>
+													<input 
+														className="consulta-filhos-input"
+														name="nascimento" 
+														value={filho.nascimento} 
+														onChange={e => handleChange(idx, e)}
+														placeholder="DD/MM/AAAA"
+													/>
+												</div>
+												<div className="consulta-filhos-field">
+													<label className="consulta-filhos-field-label">Usa creche?</label>
+													<select 
+														className="consulta-filhos-input"
+														name="creche" 
+														value={filho.creche} 
+														onChange={e => handleChange(idx, e)}
+													>
+														<option value="Não">Não</option>
+														<option value="Sim">Sim</option>
+													</select>
+												</div>
+												<div className="consulta-filhos-field">
+													<label className="consulta-filhos-field-label">Estuda?</label>
+													<select 
+														className="consulta-filhos-input"
+														name="estuda" 
+														value={filho.estuda} 
+														onChange={e => handleChange(idx, e)}
+													>
+														<option value="Não">Não</option>
+														<option value="Sim">Sim</option>
+													</select>
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+								
+								<div className="consulta-filhos-botoes">
+									<button type="button" className="consulta-filhos-botao" onClick={handleAlterarClick}>
+										Alterar Informações
+									</button>
+									<button type="button" className="consulta-filhos-botao" onClick={handleCadastrarOutroFilho}>
+										Cadastrar outro Filho
+									</button>
+									<button type="button" className="consulta-filhos-botao" onClick={() => setModalEscolherFilho(true)}>
+										Excluir Filho
+									</button>
+								</div>
+							</div>
+						)}
 				
-				{/* Modal para escolher qual filho excluir */}
-				 <Modal
-					 isOpen={modalEscolherFilho}
-					 onClose={() => setModalEscolherFilho(false)}
-					 texto={"Selecione o filho que deseja excluir:"}
-					 showClose={true}
-					 botoes={filhos.map((f, i) => ({
-						 texto: f.label,
-						 onClick: () => {
-							 setFilhoParaExcluir(i);
-							 setFilhoParaExcluirDados(f);
-							 setModalEscolherFilho(false);
-							 setModalConfirmarExclusao(true);
-						 }
-					 }))}
-				 />
+						{/* Modal para escolher qual filho excluir */}
+						<Modal
+							isOpen={modalEscolherFilho}
+							onClose={() => setModalEscolherFilho(false)}
+							texto={"Selecione o filho que deseja excluir:"}
+							showClose={true}
+							botoes={filhos.map((f, i) => ({
+								texto: f.label,
+								onClick: () => {
+									setFilhoParaExcluir(i);
+									setFilhoParaExcluirDados(f);
+									setModalEscolherFilho(false);
+									setModalConfirmarExclusao(true);
+								}
+							}))}
+						/>
 
-				 {/* Modal de confirmação de exclusão do filho */}
-				 <Modal
-					isOpen={modalConfirmarExclusao}
-					onClose={() => setModalConfirmarExclusao(false)}
-					 texto={`Deseja realmente excluir ${filhoParaExcluirDados ? filhoParaExcluirDados.label : ''}?`}
-					showClose={false}
-					 botoes={[{
-						 texto: "SIM",
-						 onClick: () => {
-							 setFilhos(prev => {
-								 const idxAtual = prev.findIndex(f =>
-									 f.nascimento === filhoParaExcluirDados.nascimento &&
-									 f.creche === filhoParaExcluirDados.creche &&
-									 f.estuda === filhoParaExcluirDados.estuda
-								 );
-								 if (idxAtual !== -1) {
-									 return prev.filter((_, i) => i !== idxAtual);
-								 }
-								 return prev;
-							 });
-							 setModalConfirmarExclusao(false);
-							 setFilhoParaExcluir(null);
-							 setFilhoParaExcluirDados(null);
-							 setModalExcluidoSucesso(true);
-							 setTimeout(() => setModalExcluidoSucesso(false), 2000);
-						 },
-						 style: { background: '#fff', color: '#111', border: '2px solid #111' }
-					 }, {
-						 texto: "NÃO",
-						 onClick: () => {
-							 setModalConfirmarExclusao(false);
-							 setFilhoParaExcluir(null);
-							 setFilhoParaExcluirDados(null);
-						 },
-						 style: { background: '#111', color: '#fff', border: '2px solid #111' }
-					 }]}
-				 />
+						{/* Modal de confirmação de exclusão do filho */}
+						<Modal
+							isOpen={modalConfirmarExclusao}
+							onClose={() => setModalConfirmarExclusao(false)}
+							texto={`Deseja realmente excluir ${filhoParaExcluirDados ? filhoParaExcluirDados.label : ''}?`}
+							showClose={false}
+							botoes={[{
+								texto: "Sim",
+								onClick: () => {
+									setFilhos(prev => {
+										const idxAtual = prev.findIndex(f =>
+											f.nascimento === filhoParaExcluirDados.nascimento &&
+											f.creche === filhoParaExcluirDados.creche &&
+											f.estuda === filhoParaExcluirDados.estuda
+										);
+										if (idxAtual !== -1) {
+											return prev.filter((_, i) => i !== idxAtual);
+										}
+										return prev;
+									});
+									setModalConfirmarExclusao(false);
+									setFilhoParaExcluir(null);
+									setFilhoParaExcluirDados(null);
+									setModalExcluidoSucesso(true);
+									setTimeout(() => setModalExcluidoSucesso(false), 2000);
+								},
+								style: { background: '#fff', color: '#111', border: '2px solid #111' }
+							}, {
+								texto: "Não",
+								onClick: () => {
+									setModalConfirmarExclusao(false);
+									setFilhoParaExcluir(null);
+									setFilhoParaExcluirDados(null);
+								},
+								style: { background: '#111', color: '#fff', border: '2px solid #111' }
+							}]}
+						/>
 
-				 {/* Modal de sucesso ao excluir filho */}
-				 <Modal
-					 isOpen={modalExcluidoSucesso}
-					 onClose={() => setModalExcluidoSucesso(false)}
-					 texto={"Filho excluído com sucesso!"}
-					 showClose={false}
-				 />
+						{/* Modal de sucesso ao excluir filho */}
+						<Modal
+							isOpen={modalExcluidoSucesso}
+							onClose={() => setModalExcluidoSucesso(false)}
+							texto={"Filho excluído com sucesso!"}
+							showClose={false}
+						/>
 
-				 {/* Modal de confirmação de alteração */}
-				<Modal
-					isOpen={modalConfirmar}
-					onClose={handleConfirmarNao}
-					texto={"Tem certeza que deseja alterar as informações?"}
-					showClose={false}
-					botoes={[{
-						texto: "SIM",
-						onClick: handleConfirmarSim
-					}, {
-						texto: "NÃO",
-						onClick: handleConfirmarNao
-					}]}
-				/>
-				{/* Modal de feedback de alteração confirmada */}
-				<Modal
-					isOpen={alteracaoConfirmada}
-					onClose={() => setAlteracaoConfirmada(false)}
-					texto={"Informações alteradas com sucesso!"}
-					showClose={false}
-				/>
+						{/* Modal de confirmação de alteração */}
+						<Modal
+							isOpen={modalConfirmar}
+							onClose={handleConfirmarNao}
+							texto={"Tem certeza que deseja alterar as informações?"}
+							showClose={false}
+							botoes={[{
+								texto: "Sim",
+								onClick: handleConfirmarSim
+							}, {
+								texto: "Não",
+								onClick: handleConfirmarNao
+							}]}
+						/>
+						
+						{/* Modal de feedback de alteração confirmada */}
+						<Modal
+							isOpen={alteracaoConfirmada}
+							onClose={() => setAlteracaoConfirmada(false)}
+							texto={"Informações alteradas com sucesso!"}
+							showClose={false}
+						/>
 					</>
 				)}
 			</div>

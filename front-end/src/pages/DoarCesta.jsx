@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
 import Input from "../components/Input";
 import Botao from "../components/Botao";
-import Radio from "../components/Radio";
+
 import iconeVoltar from "../assets/icone-voltar.png";
 import { beneficiadoService } from "../services/beneficiadoService";
 import { entregaService } from "../services/entregaService";
@@ -376,50 +376,47 @@ export default function DoarCesta() {
         />
         <h1 className="doar-cesta-title">Entregar Cesta</h1>
         <form className="doar-cesta-form" autoComplete="off" onSubmit={handleSubmit}>
-          <div className="doar-cesta-field">
-            <label className="doar-cesta-label">CPF:</label>
-            <Input
-              type="text"
-              placeholder="000.000.000-00"
-              value={cpf}
-              onChange={handleCpfChange}
-              className="doar-cesta-input"
-              maxLength={14}
-            />
-          </div>
-          {cpf && cpf.replace(/\D/g, '').length < 11 && resultados.length > 0 && (
-            <div className="doar-cesta-resultados">
-              {resultados.map((beneficiado, idx) => (
-                <div
-                  className="doar-cesta-resultado"
-                  key={idx}
-                  onClick={() => {
-                    const cpfLimpo = beneficiado.cpf.replace(/\D/g, "");
-                    const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-                    setCpf(cpfFormatado);
-                    setResultados([]); // Limpar resultados após seleção
-                  }}
-                >
-                  {beneficiado.nome}
+          <div className="doar-cesta-row">
+            <div className="doar-cesta-field doar-cesta-cpf-field">
+              <label className="doar-cesta-label">CPF:</label>
+              <input
+                type="text"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={handleCpfChange}
+                className="doar-cesta-input doar-cesta-cpf-input"
+                maxLength={14}
+                autoComplete="off"
+              />
+              {cpf && cpf.replace(/\D/g, '').length < 11 && resultados.length > 0 && (
+                <div className="doar-cesta-resultados">
+                  {resultados.map((beneficiado, idx) => (
+                    <div
+                      className="doar-cesta-resultado"
+                      key={idx}
+                      onClick={() => {
+                        const cpfLimpo = beneficiado.cpf.replace(/\D/g, "");
+                        const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                        setCpf(cpfFormatado);
+                        setResultados([]); // Limpar resultados após seleção
+                      }}
+                    >
+                      {beneficiado.nome}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-          <div className="doar-cesta-field doar-cesta-tipo-field">
-            <label className="doar-cesta-label">Tipo:</label>
-            <Radio
-              name="tipoCesta"
-              options={[
-                { label: "Kit", value: "kit" },
-                { label: "Cesta Básica", value: "basica" },
-              ]}
-              value={tipoCesta}
-              onChange={e => setTipoCesta(e.target.value)}
-              className="doar-cesta-radio"
-            />
-          </div>
-          <div className="doar-cesta-btn-container">
-            <Botao texto="Doar" type="submit" className="doar-cesta-btn" />
+            <div className="doar-cesta-toggle-container">
+              <span className={`doar-cesta-toggle-option ${tipoCesta === 'kit' ? 'active' : ''}`}>Kit</span>
+              <div className="doar-cesta-toggle-switch" onClick={() => setTipoCesta(tipoCesta === 'kit' ? 'basica' : 'kit')}>
+                <div className={`doar-cesta-toggle-slider ${tipoCesta === 'basica' ? 'right' : 'left'}`}></div>
+              </div>
+              <span className={`doar-cesta-toggle-option ${tipoCesta === 'basica' ? 'active' : ''}`}>Cesta Básica</span>
+            </div>
+            <div className="doar-cesta-btn-container">
+              <Botao texto="Doar" type="submit" className="doar-cesta-btn" />
+            </div>
           </div>
           
           <Modal

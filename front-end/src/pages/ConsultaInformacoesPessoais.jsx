@@ -17,6 +17,7 @@ export default function ConsultaInformacoesPessoais() {
   const [beneficiado, setBeneficiado] = useState(null);
   const [fotoBlobUrl, setFotoBlobUrl] = useState(null);
   const [carregandoFoto, setCarregandoFoto] = useState(false);
+  const [modalExcluidoSucesso, setModalExcluidoSucesso] = useState(false);
 
   const formatRenda = (value) => {
     let v = value.replace(/\D/g, "");
@@ -287,7 +288,6 @@ export default function ConsultaInformacoesPessoais() {
   const [alteracaoConfirmada, setAlteracaoConfirmada] = useState(false);
 
   const [modalExcluirBeneficiado, setModalExcluirBeneficiado] = useState(false);
-  const [modalExcluidoSucesso, setModalExcluidoSucesso] = useState(false);
 
   function handleAlterarClick() {
     setModalConfirmar(true);

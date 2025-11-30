@@ -43,6 +43,16 @@ export default function VoluntariosExcluir() {
     }
   }, [modalSucesso, navigate]);
 
+  // Auto-close modal de erro após 3 segundos
+  React.useEffect(() => {
+    if (modalErro.open) {
+      const timer = setTimeout(() => {
+        setModalErro({ open: false, mensagem: "" });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalErro.open]);
+
   const formatCPF = (value) => {
     let numbers = value.replace(/\D/g, "");
     if (numbers.length > 11) numbers = numbers.slice(0, 11);
