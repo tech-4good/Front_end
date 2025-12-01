@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Modal from "../components/Modal";
 import { beneficiadoService } from "../services/beneficiadoService";
+import { auxilioService } from "../services/auxilioService";
 import { getFotoBlobUrl } from "../services/fileService";
 import "../styles/ConsultaInformacoesPessoais.css";
 import iconeCasa from "../assets/icone-casa.png";
@@ -121,6 +122,9 @@ export default function ConsultaInformacoesPessoais() {
       if (response.success) {
         console.log("Dados do beneficiado:", response.data);
         setBeneficiado(response.data);
+        
+        // Carregar auxílios do beneficiado
+        await carregarAuxilios(response.data.id || response.data.idBeneficiado);
       } else {
         console.error("Erro ao carregar beneficiado:", response.error);
         setErro(response.error || "Erro ao carregar dados do beneficiado");
@@ -130,6 +134,38 @@ export default function ConsultaInformacoesPessoais() {
       setErro("Erro inesperado ao carregar dados");
     } finally {
       setCarregando(false);
+    }
+  };
+
+  const carregarAuxilios = async (beneficiadoId) => {
+    if (!beneficiadoId) {
+      console.log("⚠️ ID do beneficiado não fornecido");
+      return;
+    }
+
+    try {
+      console.log("🔍 Buscando auxílios do beneficiado ID:", beneficiadoId);
+      const response = await auxilioService.buscarPorBeneficiario(beneficiadoId);
+      
+      if (response.success && response.data && response.data.length > 0) {
+        console.log("✅ Auxílios encontrados:", response.data);
+        // Armazenar os auxílios com ID da associação e nome
+        const listaAuxilios = response.data.map(assoc => ({
+          id: assoc.id, // ID da associação para poder excluir
+          nome: assoc.auxilioGovernamental?.tipo || 
+                assoc.auxilioGovernamental?.nome || 
+                assoc.tipo || 
+                assoc.nome || 
+                "Auxílio sem nome"
+        }));
+        setAuxilios(listaAuxilios);
+      } else {
+        console.log("ℹ️ Nenhum auxílio encontrado para este beneficiado");
+        setAuxilios([]);
+      }
+    } catch (error) {
+      console.error("❌ Erro ao carregar auxílios:", error);
+      setAuxilios([]);
     }
   };
 
@@ -167,14 +203,21 @@ export default function ConsultaInformacoesPessoais() {
         dataNascimentoFormatada = beneficiado.dataNascimento;
       }
 
-      // Formatar renda se existir
+      // Formatar renda se existir (backend retorna como 'rendaMensal')
       let rendaFormatada = "";
-      if (beneficiado.renda) {
-        const rendaNum = parseFloat(beneficiado.renda);
+      const rendaValue = beneficiado.rendaMensal || beneficiado.renda;
+      if (rendaValue) {
+        const rendaNum = parseFloat(rendaValue);
         if (!isNaN(rendaNum)) {
           rendaFormatada = `R$ ${rendaNum.toFixed(2).replace(".", ",")}`;
         }
       }
+
+      // Quantidade de dependentes (backend retorna como 'quantidadeDependentes')
+      const qtdDependentes = beneficiado.quantidadeDependentes || 
+                             beneficiado.dependentes || 
+                             beneficiado.qtdDependentes || 
+                             0;
 
       return {
         nome: beneficiado.nome || "",
@@ -185,7 +228,7 @@ export default function ConsultaInformacoesPessoais() {
         escolaridade: beneficiado.escolaridade || "",
         profissao: beneficiado.profissao || "",
         empresa: beneficiado.empresa || "",
-        dependentes: beneficiado.dependentes || beneficiado.qtdDependentes || 0,
+        dependentes: qtdDependentes,
         estadoCivil: beneficiado.estadoCivil || "",
         religiao: beneficiado.religiao || "",
         renda: rendaFormatada,
@@ -222,17 +265,7 @@ export default function ConsultaInformacoesPessoais() {
       const novosdados = getDadosStorage();
       setDadosOriginais(novosdados);
       setDados(novosdados);
-
-      // Carregar auxílios do beneficiado
-      if (beneficiado.auxilios && Array.isArray(beneficiado.auxilios)) {
-        setAuxilios(beneficiado.auxilios.map((a) => a.nome || a.tipo || a));
-      } else if (beneficiado.auxilios) {
-        // Caso seja um objeto ou string
-        setAuxilios([beneficiado.auxilios]);
-      } else {
-        // Caso não tenha auxílios, manter vazio
-        setAuxilios([]);
-      }
+      // Os auxílios já foram carregados pela função carregarAuxilios()
     }
   }, [beneficiado]);
 
@@ -304,16 +337,6 @@ export default function ConsultaInformacoesPessoais() {
         return;
       }
 
-      // Converter data de DD/MM/YYYY para YYYY-MM-DD
-      let dataNascimento = dados.nascimento;
-      if (dataNascimento && dataNascimento.includes("/")) {
-        const [dia, mes, ano] = dataNascimento.split("/");
-        dataNascimento = `${ano}-${mes.padStart(2, "0")}-${dia.padStart(
-          2,
-          "0"
-        )}`;
-      }
-
       // Extrair valor numérico da renda (remover R$ e formatação)
       let rendaMensal = 0;
       if (dados.renda) {
@@ -321,27 +344,26 @@ export default function ConsultaInformacoesPessoais() {
         rendaMensal = parseFloat(rendaNum) || 0;
       }
 
+      // ✅ PATCH: Enviar APENAS campos editáveis
+      // ❌ NÃO enviar: nome, cpf, rg, dataNascimento
       const dadosAtualizados = {
-        nome: dados.nome,
-        cpf: dados.cpf,
-        rg: dados.rg,
-        dataNascimento: dataNascimento,
+        naturalidade: beneficiado.naturalidade, // Manter original
         telefone: dados.telefone,
+        estadoCivil: dados.estadoCivil,
         escolaridade: dados.escolaridade,
         profissao: dados.profissao,
-        empresa: dados.empresa,
-        estadoCivil: dados.estadoCivil,
-        religiao: dados.religiao,
         rendaMensal: rendaMensal,
+        empresa: dados.empresa,
         cargo: dados.cargo,
+        religiao: dados.religiao,
         quantidadeDependentes: parseInt(dados.dependentes) || 0,
         enderecoId: beneficiado.enderecoId || beneficiado.endereco?.id,
       };
 
       console.log(
-        "Atualizando beneficiado ID:",
+        "📝 Atualizando beneficiado ID:",
         beneficiadoId,
-        "com dados:",
+        "com dados (somente campos editáveis):",
         dadosAtualizados
       );
       const response = await beneficiadoService.atualizarBeneficiado(
@@ -475,13 +497,12 @@ export default function ConsultaInformacoesPessoais() {
                     type="text"
                     name="nome"
                     value={dados.nome}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
-                      value = value.replace(/\s{2,}/g, ' ');
-                      setDados(prev => ({ ...prev, nome: value }));
-                    }}
+                    disabled
+                    readOnly
                     className="consulta-info-input"
                     placeholder="Insira o nome completo"
+                    style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                    title="Nome não pode ser alterado"
                   />
                 </div>
                 <div className="consulta-info-field">
@@ -490,11 +511,13 @@ export default function ConsultaInformacoesPessoais() {
                     type="text"
                     name="cpf"
                     value={dados.cpf}
-                    onChange={handleChange}
+                    disabled
+                    readOnly
                     maxLength={14}
                     className="consulta-info-input"
                     placeholder="000.000.000-00"
-                    onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}
+                    style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                    title="CPF não pode ser alterado"
                   />
                 </div>
                 <div className="consulta-info-field">
@@ -503,11 +526,13 @@ export default function ConsultaInformacoesPessoais() {
                     type="text"
                     name="rg"
                     value={dados.rg}
-                    onChange={handleChange}
+                    disabled
+                    readOnly
                     maxLength={12}
                     className="consulta-info-input"
                     placeholder="00.000.000-0"
-                    onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}
+                    style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                    title="RG não pode ser alterado"
                   />
                 </div>
               </div>
@@ -519,21 +544,14 @@ export default function ConsultaInformacoesPessoais() {
                   <input
                     type="text"
                     name="dataNascimento"
-                    value={dados.dataNascimento}
-                    onChange={(e) => {
-                      const formatDate = (value) => {
-                        let numbers = value.replace(/\D/g, "");
-                        if (numbers.length > 8) numbers = numbers.slice(0, 8);
-                        if (numbers.length <= 2) return numbers;
-                        if (numbers.length <= 4) return numbers.replace(/(\d{2})(\d{0,2})/, "$1/$2");
-                        return numbers.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3");
-                      };
-                      const formattedValue = formatDate(e.target.value);
-                      setDados(prev => ({ ...prev, dataNascimento: formattedValue }));
-                    }}
+                    value={dados.nascimento}
+                    disabled
+                    readOnly
                     maxLength={10}
                     className="consulta-info-input"
                     placeholder="dd/mm/aaaa"
+                    style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                    title="Data de nascimento não pode ser alterada"
                   />
                 </div>
                 <div className="consulta-info-field">
@@ -698,7 +716,7 @@ export default function ConsultaInformacoesPessoais() {
             <div className="consulta-info-auxilios">
               {auxilios.length > 0 ? auxilios.map((a, i) => (
                 <div key={i} className="consulta-info-auxilio">
-                  {a}
+                  {a.nome || a}
                 </div>
               )) : (
                 <div className="consulta-info-no-auxilios">
@@ -709,7 +727,11 @@ export default function ConsultaInformacoesPessoais() {
             <div className="consulta-info-botoes">
               <button
                 className="consulta-info-botao-secundario"
-                onClick={() => navigate("/cadastro-auxilios")}
+                onClick={() => {
+                  // Manter o CPF selecionado para facilitar o cadastro
+                  sessionStorage.setItem("cpfSelecionado", beneficiado.cpf);
+                  navigate("/cadastro-auxilios");
+                }}
               >
                 Cadastrar Auxílio
               </button>
@@ -784,7 +806,7 @@ export default function ConsultaInformacoesPessoais() {
               texto={"Selecione o auxílio que deseja excluir:"}
               showClose={false}
               botoes={auxilios.map((a) => ({
-                texto: a,
+                texto: a.nome || a,
                 onClick: () => {
                   setAuxilioParaExcluir(a);
                   setModalEscolherAuxilio(false);
@@ -797,17 +819,43 @@ export default function ConsultaInformacoesPessoais() {
             <Modal
               isOpen={modalConfirmarExclusao}
               onClose={() => setModalConfirmarExclusao(false)}
-              texto={`Deseja realmente excluir o auxílio "${auxilioParaExcluir}"?`}
+              texto={`Deseja realmente excluir o auxílio "${auxilioParaExcluir?.nome || auxilioParaExcluir}"?`}
               showClose={false}
               botoes={[
                 {
                   texto: "Sim",
-                  onClick: () => {
-                    setAuxilios(
-                      auxilios.filter((a) => a !== auxilioParaExcluir)
-                    );
+                  onClick: async () => {
                     setModalConfirmarExclusao(false);
-                    setAuxilioParaExcluir(null);
+                    setCarregando(true);
+                    
+                    try {
+                      const associacaoId = auxilioParaExcluir?.id;
+                      if (!associacaoId) {
+                        setErro("ID da associação não encontrado");
+                        return;
+                      }
+                      
+                      console.log("🗑️ Removendo associação ID:", associacaoId);
+                      const response = await auxilioService.removerAssociacao(associacaoId);
+                      
+                      if (response.success) {
+                        console.log("✅ Auxílio removido com sucesso!");
+                        // Atualizar lista local
+                        setAuxilios(auxilios.filter((a) => a.id !== associacaoId));
+                        // Mostrar feedback de sucesso
+                        setAlteracaoConfirmada(true);
+                        setTimeout(() => setAlteracaoConfirmada(false), 2000);
+                      } else {
+                        console.error("❌ Erro ao remover auxílio:", response.error);
+                        setErro(response.error || "Erro ao remover auxílio");
+                      }
+                    } catch (error) {
+                      console.error("❌ Erro inesperado ao remover auxílio:", error);
+                      setErro("Erro inesperado ao remover auxílio");
+                    } finally {
+                      setCarregando(false);
+                      setAuxilioParaExcluir(null);
+                    }
                   },
                 },
                 {

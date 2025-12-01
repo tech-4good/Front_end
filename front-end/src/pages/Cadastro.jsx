@@ -22,7 +22,7 @@ const Cadastro = () => {
     telefone: "",
     email: "",
     senha: "",
-    TipoUsuario: 1,
+    TipoUsuario: 1, // Bug 9 Fix: Cadastro público sempre deve ser Voluntário Simples (1)
   });
 
   const mostrarModalErro = (mensagem) => {

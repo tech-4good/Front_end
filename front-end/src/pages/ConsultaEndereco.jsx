@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Voltar from "../components/Voltar";
 import { beneficiadoService } from "../services/beneficiadoService";
+// import { enderecoService } from "../services/enderecoService"; // TODO: Descomentar quando implementar deletar endereço (Bug 6)
 import "../styles/Home.css"; 
 import "../styles/ConsultaEndereco.css";
 import iconeCasa from "../assets/icone-casa.png";
@@ -913,8 +914,10 @@ export default function ConsultaEndereco() {
 		}
 	}, [beneficiado]);	const [modalConfirmar, setModalConfirmar] = useState(false);
 	const [alteracaoConfirmada, setAlteracaoConfirmada] = useState(false);
-	const [modalExcluirEndereco, setModalExcluirEndereco] = useState(false);
-	const [modalExcluidoSucesso, setModalExcluidoSucesso] = useState(false);
+	// TODO: Descomentar quando implementar deletar endereço (Bug 6)
+	// const [modalExcluirEndereco, setModalExcluirEndereco] = useState(false);
+	// const [modalExcluidoSucesso, setModalExcluidoSucesso] = useState(false);
+	// const [modalErroExclusao, setModalErroExclusao] = useState(false);
 
 	function handleChange(e) {
 		const { name, value } = e.target;
@@ -924,7 +927,7 @@ export default function ConsultaEndereco() {
 		} else if (name === "dataEntrada" || name === "dataSaida") {
 			newValue = formatDate(value);
 		} else if (name === "numero") {
-			newValue = onlyNumbers(value, 4);
+			newValue = onlyNumbers(value, 5);
 		} else if (["rua", "bairro", "cidade", "estado", "moradia", "tipoMoradia", "tipoCesta", "status"].includes(name)) {
 			newValue = onlyLettersAndSpaces(value);
 		} else if (name === "complemento") {
@@ -943,60 +946,217 @@ export default function ConsultaEndereco() {
 		try {
 			setModalConfirmar(false);
 			setCarregando(true);
+			setErro(null);
 			
 			console.log('💾 Tentando salvar alterações de endereço:', endereco);
+			console.log('📋 Beneficiado completo:', beneficiado);
+			console.log('🔍 Investigando estrutura do beneficiado:', {
+				temEnderecoId: !!beneficiado?.enderecoId,
+				enderecoId: beneficiado?.enderecoId,
+				temEndereco: !!beneficiado?.endereco,
+				endereco: beneficiado?.endereco,
+				todasAsChaves: beneficiado ? Object.keys(beneficiado) : [],
+				chavesEndereco: beneficiado?.endereco ? Object.keys(beneficiado.endereco) : []
+			});
 			
 			// Preparar dados para atualização
-			const enderecoId = beneficiado?.enderecoId || beneficiado?.endereco?.id;
+			let enderecoId = beneficiado?.enderecoId || 
+							 beneficiado?.endereco?.idEndereco || 
+							 beneficiado?.endereco?.id;
+			
+			// Se ainda não encontrou, tentar buscar o endereço pelo CPF
+			if (!enderecoId && beneficiado?.cpf) {
+				console.log('🔍 Tentando buscar endereço pelo CPF do beneficiado...');
+				try {
+					const enderecosResponse = await beneficiadoService.buscarEnderecos();
+					if (enderecosResponse.success && enderecosResponse.data) {
+						// Procurar um endereço que tenha os mesmos dados
+						const enderecoEncontrado = enderecosResponse.data.find(e => 
+							e.logradouro === endereco.rua && 
+							e.numero === endereco.numero
+						);
+						
+						if (enderecoEncontrado) {
+							enderecoId = enderecoEncontrado.id || enderecoEncontrado.idEndereco;
+							console.log('✅ Endereço encontrado por comparação:', enderecoId);
+						}
+					}
+				} catch (buscaError) {
+					console.log('⚠️ Erro ao buscar lista de endereços:', buscaError);
+				}
+			}
+			
 			const beneficiadoId = beneficiado?.id;
 			
-			// Dados de endereço para atualizar
-			const dadosEnderecoParaAtualizar = {
-				logradouro: endereco.rua,
-				numero: endereco.numero,
-				complemento: endereco.complemento,
-				bairro: endereco.bairro,
-				cidade: endereco.cidade,
-				estado: endereco.estado,
-				cep: endereco.cep.replace(/\D/g, '') // Remove formatação do CEP
-			};
+			console.log('🔑 IDs encontrados:', { enderecoId, beneficiadoId });
 			
-			// Dados do beneficiado para atualizar (quantidades e informações complementares)
-			const dadosBeneficiadoParaAtualizar = {
-				tipoMoradia: endereco.tipoMoradia,
-				status: endereco.status,
-				qtdCriancas: parseInt(endereco.criancas) || 0,
-				qtdJovens: parseInt(endereco.jovens) || 0,
-				qtdAdolescentes: parseInt(endereco.adolescentes) || 0,
-				qtdIdosos: parseInt(endereco.idosos) || 0,
-				qtdGestantes: parseInt(endereco.gestantes) || 0,
-				qtdDeficientes: parseInt(endereco.deficientes) || 0,
-				qtdOutros: parseInt(endereco.outros) || 0,
-				tipoCesta: endereco.tipoCesta,
-				tipoCestaAtual: endereco.tipoCestaAtual
+			if (!enderecoId) {
+				const mensagemErro = 'ID do endereço não encontrado. Estrutura do beneficiado: ' + JSON.stringify({
+					enderecoId: beneficiado?.enderecoId,
+					endereco: beneficiado?.endereco,
+					todasAsChaves: beneficiado ? Object.keys(beneficiado) : []
+				}, null, 2);
+				console.error('❌ ' + mensagemErro);
+				throw new Error('ID do endereço não encontrado. Não é possível atualizar. Verifique o console para mais detalhes.');
+			}
+			
+			// 📝 Detectar apenas campos ALTERADOS do endereço (PATCH parcial)
+			const enderecoOriginalData = beneficiado?.endereco || enderecoOriginal;
+			const dadosEnderecoParaAtualizar = {};
+			
+			console.log('🔍 DEBUG - Comparação de valores:');
+			console.log('  Formulário numero:', endereco.numero, `(tipo: ${typeof endereco.numero})`);
+			console.log('  Original numero:', enderecoOriginalData?.numero, `(tipo: ${typeof enderecoOriginalData?.numero})`);
+			console.log('  São diferentes?:', endereco.numero !== enderecoOriginalData?.numero);
+			
+			if (endereco.rua !== enderecoOriginalData?.logradouro) {
+				dadosEnderecoParaAtualizar.logradouro = endereco.rua;
+			}
+			if (endereco.numero !== enderecoOriginalData?.numero) {
+				dadosEnderecoParaAtualizar.numero = endereco.numero;
+				console.log('✏️ Número será atualizado de', enderecoOriginalData?.numero, 'para', endereco.numero);
+			}
+			if (endereco.complemento !== enderecoOriginalData?.complemento) {
+				dadosEnderecoParaAtualizar.complemento = endereco.complemento;
+			}
+			if (endereco.bairro !== enderecoOriginalData?.bairro) {
+				dadosEnderecoParaAtualizar.bairro = endereco.bairro;
+			}
+			if (endereco.cidade !== enderecoOriginalData?.cidade) {
+				dadosEnderecoParaAtualizar.cidade = endereco.cidade;
+			}
+			if (endereco.estado !== enderecoOriginalData?.estado) {
+				dadosEnderecoParaAtualizar.estado = endereco.estado;
+			}
+			const cepLimpo = endereco.cep.replace(/\D/g, '');
+			if (cepLimpo !== enderecoOriginalData?.cep?.replace(/\D/g, '')) {
+				dadosEnderecoParaAtualizar.cep = cepLimpo;
+			}
+			
+			// 📅 Campos de DATA, MORADIA, CESTA e STATUS (pertencem à tabela ENDERECOS)
+			if (endereco.dataEntrada && endereco.dataEntrada.dia && endereco.dataEntrada.mes && endereco.dataEntrada.ano) {
+				const dataEntradaFormatada = `${endereco.dataEntrada.ano}-${endereco.dataEntrada.mes.toString().padStart(2, '0')}-${endereco.dataEntrada.dia.toString().padStart(2, '0')}`;
+				const dataOriginal = enderecoOriginalData?.dataEntrada;
+				const dataOriginalFormatada = dataOriginal ? `${dataOriginal[0]}-${dataOriginal[1].toString().padStart(2, '0')}-${dataOriginal[2].toString().padStart(2, '0')}` : null;
+				
+				if (dataEntradaFormatada !== dataOriginalFormatada) {
+					dadosEnderecoParaAtualizar.dataEntrada = dataEntradaFormatada;
+				}
+			}
+			
+			if (endereco.dataSaida && endereco.dataSaida.dia && endereco.dataSaida.mes && endereco.dataSaida.ano) {
+				const dataSaidaFormatada = `${endereco.dataSaida.ano}-${endereco.dataSaida.mes.toString().padStart(2, '0')}-${endereco.dataSaida.dia.toString().padStart(2, '0')}`;
+				const dataOriginal = enderecoOriginalData?.dataSaida;
+				const dataOriginalFormatada = dataOriginal ? `${dataOriginal[0]}-${dataOriginal[1].toString().padStart(2, '0')}-${dataOriginal[2].toString().padStart(2, '0')}` : null;
+				
+				if (dataSaidaFormatada !== dataOriginalFormatada) {
+					dadosEnderecoParaAtualizar.dataSaida = dataSaidaFormatada;
+				}
+			}
+			
+			if (endereco.moradia !== enderecoOriginalData?.moradia) {
+				dadosEnderecoParaAtualizar.moradia = endereco.moradia;
+			}
+			if (endereco.tipoMoradia !== enderecoOriginalData?.tipoMoradia) {
+				// Backend espera TipoMoradia em MAIÚSCULO (ex: CASA, APARTAMENTO)
+				dadosEnderecoParaAtualizar.tipoMoradia = endereco.tipoMoradia?.toUpperCase();
+			}
+			if (endereco.tipoCesta !== enderecoOriginalData?.tipoCesta) {
+				// Backend espera TipoCesta em MAIÚSCULO (ex: BASICA, KIT, ESPECIAL)
+				dadosEnderecoParaAtualizar.tipoCesta = endereco.tipoCesta?.toUpperCase();
+			}
+			if (endereco.status !== enderecoOriginalData?.status) {
+				// Backend espera Status em MAIÚSCULO (ex: ABERTO, FECHADO)
+				// Converter "Ativo" → "ABERTO", "Inativo" → "FECHADO"
+				let statusBackend = endereco.status?.toUpperCase();
+				if (statusBackend === 'ATIVO') statusBackend = 'ABERTO';
+				if (statusBackend === 'INATIVO') statusBackend = 'FECHADO';
+				dadosEnderecoParaAtualizar.status = statusBackend;
+			}
+			
+			console.log('📝 Campos de endereço alterados:', Object.keys(dadosEnderecoParaAtualizar));
+			
+			// Se nenhum campo de endereço foi alterado, não enviar PATCH de endereço
+			const temAlteracaoEndereco = Object.keys(dadosEnderecoParaAtualizar).length > 0;
+			
+			// 📊 Dados de TIPO_MORADOR para atualizar (APENAS quantidades de pessoas)
+			const dadosTipoMoradorParaAtualizar = {
+				quantidadeCrianca: parseInt(endereco.criancas) || 0,
+				quantidadeJovem: parseInt(endereco.jovens) || 0,
+				quantidadeAdolescente: parseInt(endereco.adolescentes) || 0,
+				quantidadeIdoso: parseInt(endereco.idosos) || 0,
+				quantidadeGestante: parseInt(endereco.gestantes) || 0,
+				quantidadeDeficiente: parseInt(endereco.deficientes) || 0,
+				quantidadeOutros: parseInt(endereco.outros) || 0
 			};
 			
 			console.log('📦 Dados preparados para atualização:', {
 				enderecoId,
 				beneficiadoId,
 				dadosEndereco: dadosEnderecoParaAtualizar,
-				dadosBeneficiado: dadosBeneficiadoParaAtualizar
+				dadosTipoMorador: dadosTipoMoradorParaAtualizar,
+				temAlteracaoEndereco
 			});
 			
-			// Tentar atualizar via API (quando implementado)
-			if (enderecoId) {
-				console.log('🔄 Endereço ID encontrado, seria possível atualizar via API:', enderecoId);
-				// const resultadoEndereco = await beneficiadoService.atualizarEndereco(enderecoId, dadosEnderecoParaAtualizar);
+			// ✅ Atualizar endereço APENAS se houver alterações
+			if (temAlteracaoEndereco) {
+				console.log('🔄 Atualizando endereço via API - ID:', enderecoId);
+				console.log('📤 Payload do endereço (PATCH parcial):', dadosEnderecoParaAtualizar);
+				
+				const { enderecoService } = await import('../services/enderecoService');
+				const resultadoEndereco = await enderecoService.atualizarEndereco(enderecoId, dadosEnderecoParaAtualizar);
+				
+				console.log('📥 Resposta da API de endereço:', resultadoEndereco);
+				
+				if (resultadoEndereco.success) {
+					console.log('✅ Endereço atualizado com sucesso no banco:', resultadoEndereco.data);
+				} else {
+					throw new Error('Erro ao atualizar endereço: ' + (resultadoEndereco.error || 'Erro desconhecido'));
+				}
+			} else {
+				console.log('ℹ️ Nenhuma alteração de endereço detectada - pulando PATCH de endereço');
 			}
 			
+			// 📊 Atualizar TIPO_MORADOR (quantidades de pessoas)
+			// Buscar ID do tipo_morador
+			console.log('🔍 Buscando ID do tipo_morador para beneficiado:', beneficiadoId);
+			
+			const tipoMoradorService = (await import('../services/tipoMoradorService')).default;
+			const tipoMoradorResponse = await tipoMoradorService.buscarPorBeneficiado(beneficiadoId);
+			
+			if (tipoMoradorResponse.success && tipoMoradorResponse.data) {
+				const tipoMoradorId = tipoMoradorResponse.data.idTipoMorador;
+				console.log('✅ Tipo Morador encontrado - ID:', tipoMoradorId);
+				
+				console.log('🔄 Atualizando tipo_morador via API - ID:', tipoMoradorId);
+				console.log('📤 Payload do tipo_morador:', dadosTipoMoradorParaAtualizar);
+				
+				const resultadoTipoMorador = await tipoMoradorService.atualizar(tipoMoradorId, dadosTipoMoradorParaAtualizar);
+				
+				console.log('📥 Resposta da API de tipo_morador:', resultadoTipoMorador);
+				
+				if (resultadoTipoMorador.success) {
+					console.log('✅ Tipo Morador atualizado com sucesso:', resultadoTipoMorador.data);
+				} else {
+					console.warn('⚠️ Erro ao atualizar tipo_morador:', resultadoTipoMorador.error);
+					// Não falha a operação toda se tipo_morador falhar
+				}
+			} else {
+				console.warn('⚠️ Tipo Morador não encontrado para este beneficiado');
+				console.warn('   As quantidades de pessoas não serão atualizadas');
+			}
+			
+			// Atualizar dados do beneficiado se necessário (campos básicos)
 			if (beneficiadoId) {
-				console.log('🔄 Beneficiado ID encontrado, seria possível atualizar informações via API:', beneficiadoId);
-				// const resultadoBeneficiado = await beneficiadoService.atualizarBeneficiado(beneficiadoId, dadosBeneficiadoParaAtualizar);
+				// O beneficiado não precisa mais receber tipoMoradia, status, qtd* pois vão para outras tabelas
+				console.log('ℹ️ Beneficiado não precisa de atualização adicional (campos já atualizados em endereço e tipo_morador)');
 			}
 			
-			console.log('ℹ️ Funções de atualização não implementadas ainda no service - dados salvos localmente');
+			// Recarregar dados do beneficiado após atualização
+			console.log('🔄 Recarregando dados do beneficiado...');
+			await carregarBeneficiado();
 			
-			// Salvar localmente como fallback
+			// Salvar localmente como backup
 			setEnderecoOriginal(endereco);
 			localStorage.setItem('enderecoBeneficiado', JSON.stringify(endereco));
 			
@@ -1004,8 +1164,10 @@ export default function ConsultaEndereco() {
 			setTimeout(() => setAlteracaoConfirmada(false), 3000);
 			
 		} catch (error) {
-			console.error('❌ Erro ao salvar alterações:', error);
-			setErro('Erro ao salvar alterações. As informações foram salvas localmente.');
+			console.error('❌ ERRO COMPLETO ao salvar alterações:', error);
+			console.error('❌ Stack trace:', error.stack);
+			console.error('❌ Mensagem:', error.message);
+			setErro(`Erro ao salvar: ${error.message}`);
 		} finally {
 			setCarregando(false);
 		}
@@ -1016,6 +1178,64 @@ export default function ConsultaEndereco() {
 		setEndereco(getEnderecoStorage());
 		window.location.reload();
 	}
+
+	// TODO: Descomentar quando implementar deletar endereço (Bug 6)
+	// Referência: Ver README_PROBLEMA_FK_ENDERECOS.md para soluções possíveis sobre FK constraints
+	/*
+	async function handleExcluirEndereco() {
+		setModalExcluirEndereco(false);
+		setCarregando(true);
+		
+		try {
+			// Buscar ID do endereço
+			const enderecoId = beneficiado?.enderecoId || 
+							   beneficiado?.endereco?.idEndereco || 
+							   beneficiado?.endereco?.id;
+			
+			if (!enderecoId) {
+				console.error("❌ ID do endereço não encontrado");
+				setErro("Erro: ID do endereço não encontrado");
+				setCarregando(false);
+				return;
+			}
+			
+			console.log("🗑️ Deletando endereço ID:", enderecoId);
+			const response = await enderecoService.deletarEndereco(enderecoId);
+			
+			if (response.success) {
+				console.log("✅ Endereço deletado com sucesso!");
+				setModalExcluidoSucesso(true);
+				// Aguarda 2s antes de redirecionar (UX)
+				setTimeout(() => {
+					setModalExcluidoSucesso(false);
+					navigate('/cadastro-beneficiado-menu');
+				}, 2000);
+			} else {
+				console.error("❌ Erro ao deletar endereço:", response.error);
+				setErro(response.error || "Erro ao deletar endereço");
+			}
+		} catch (error) {
+			console.error("❌ Erro inesperado ao deletar endereço:", error);
+			
+			// Detectar erro de constraint (foreign key)
+			if (error.message && error.message.includes('foreign key constraint')) {
+				setModalErroExclusao(true);
+			} else if (error.message && error.message.includes('Unauthorized')) {
+				// Redirecionar para login se sessão expirou
+				setErro("Sessão expirada. Redirecionando para login...");
+				setTimeout(() => navigate('/'), 2000);
+			} else if (error.message && error.message.includes('Not Found')) {
+				// Endereço já foi deletado - atualizar página
+				setErro("Este endereço já foi deletado. Atualizando...");
+				setTimeout(() => navigate('/cadastro-beneficiado-menu'), 2000);
+			} else {
+				setErro(error.message || "Erro inesperado ao excluir endereço");
+			}
+		} finally {
+			setCarregando(false);
+		}
+	}
+	*/
 
 	return (
 		<div>
@@ -1068,8 +1288,9 @@ export default function ConsultaEndereco() {
 										value={endereco.numero}
 										onChange={handleChange}
 										className="consulta-endereco-input"
-										placeholder="Número"
-										maxLength={4}
+										placeholder="Ex: 67, 678, 1234"
+										maxLength={10}
+										title="Número do endereço"
 									/>
 								</div>
 								<div className="consulta-endereco-field">
@@ -1370,23 +1591,32 @@ export default function ConsultaEndereco() {
 								</div>
 							</div>
 
-							<div className="consulta-endereco-botoes">
-								<button type="submit" className="consulta-endereco-botao">
-									Alterar Informações
-								</button>
-								<button
-									type="button"
-									className="consulta-endereco-botao-danger"
-									onClick={() => setModalExcluirEndereco(true)}
-								>
-									Excluir Endereço
-								</button>
-							</div>
-						</form>
-						</>
-					)}
 
-				{/* Modal de confirmação de alteração */}
+						<div className="consulta-endereco-botoes">
+							<button 
+								type="submit" 
+								className="consulta-endereco-botao"
+								disabled={carregando}
+							>
+								{carregando ? 'Salvando...' : 'Alterar Informações'}
+							</button>
+							{/* TODO: Descomentar quando implementar deletar endereço (Bug 6) */}
+							{/* Referência: Ver README_PROBLEMA_FK_ENDERECOS.md para soluções sobre FK constraints */}
+							{/*
+							<button
+								type="button"
+								className="consulta-endereco-botao-danger"
+								onClick={() => setModalExcluirEndereco(true)}
+								disabled={carregando}
+								title="⚠️ ATENÇÃO: Endereços com registros vinculados (beneficiados, tipo_morador, filhos) não podem ser deletados. Delete os registros vinculados primeiro."
+							>
+								{carregando ? 'Processando...' : '🗑️ Excluir Endereço'}
+							</button>
+							*/}
+						</div>
+					</form>
+					</>
+				)}				{/* Modal de confirmação de alteração */}
 				<Modal
 					isOpen={modalConfirmar}
 					onClose={handleConfirmarNao}
@@ -1404,51 +1634,91 @@ export default function ConsultaEndereco() {
 					]}
 				/>
 
-				{/* Modal de confirmação de exclusão de endereço */}
+				{/* TODO: Descomentar quando implementar deletar endereço (Bug 6) */}
+				{/* Referência: Ver README_PROBLEMA_FK_ENDERECOS.md para entender o problema de FK constraints */}
+				{/*
 				<Modal
 					isOpen={modalExcluirEndereco}
 					onClose={() => setModalExcluirEndereco(false)}
-					texto={"Tem certeza que deseja excluir o endereço?"}
+					texto={
+						"⚠️ Confirmar Exclusão de Endereço\n\n" +
+						"Você está prestes a deletar permanentemente:\n" +
+						`• ${endereco.rua || endereco.logradouro}, ${endereco.numero}\n` +
+						`• ${endereco.bairro} - ${endereco.cidade}/${endereco.estado}\n` +
+						`• CEP: ${endereco.cep}\n\n` +
+						"⚠️ ATENÇÃO: Esta ação NÃO pode ser desfeita!"
+					}
 					showClose={false}
 					botoes={[
 						{
-							texto: "Sim",
-							onClick: () => {
-								setModalExcluirEndereco(false);
-								setModalExcluidoSucesso(true);
-								setTimeout(() => {
-									setModalExcluidoSucesso(false);
-									navigate('/consulta-beneficiados-menu');
-								}, 2000);
-							},
+							texto: "Cancelar",
+							onClick: () => setModalExcluirEndereco(false),
 							style: {
 								background: "#fff",
 								color: "#111",
-								border: "2px solid #111",
+								border: "2px solid #ccc",
+								minWidth: 120,
+								minHeight: 44,
+								fontSize: 16
 							},
 						},
 						{
-							texto: "Não",
-							onClick: () => setModalExcluirEndereco(false),
+							texto: "❌ Confirmar Exclusão",
+							onClick: handleExcluirEndereco,
 							style: {
-								background: "#111",
+								background: "#d32f2f",
 								color: "#fff",
-								border: "2px solid #111",
+								border: "2px solid #d32f2f",
+								minWidth: 120,
+								minHeight: 44,
+								fontSize: 16,
+								fontWeight: "bold"
 							},
 						},
 					]}
 				/>
 
-				{/* Modal de sucesso ao excluir endereço */}
 				<Modal
 					isOpen={modalExcluidoSucesso}
 					onClose={() => {
 						setModalExcluidoSucesso(false);
-						navigate('/consulta-beneficiados-menu');
+						navigate('/consulta-beneficiado-menu');
 					}}
 					texto={"Endereço excluído com sucesso!"}
 					showClose={false}
 				/>
+
+				<Modal
+					isOpen={modalErroExclusao}
+					onClose={() => setModalErroExclusao(false)}
+					texto={
+						"⚠️ Não é Possível Deletar Este Endereço\n\n" +
+						"❌ Existem registros vinculados a este endereço:\n" +
+						"• Beneficiados\n" +
+						"• Tipo de Morador\n" +
+						"• Filhos\n\n" +
+						"📋 Para deletar o endereço, você deve primeiro:\n\n" +
+						"1️⃣ Remover ou alterar o endereço de todos os beneficiados vinculados\n" +
+						"2️⃣ Ou excluir os beneficiados que utilizam este endereço\n\n" +
+						"💡 Dica: Você pode apenas atualizar as informações do endereço sem excluí-lo."
+					}
+					showClose={true}
+					botoes={[
+						{
+							texto: "Entendi",
+							onClick: () => setModalErroExclusao(false),
+							style: {
+								background: "#111",
+								color: "#fff",
+								border: "2px solid #111",
+								minWidth: 120,
+								minHeight: 44,
+								fontSize: 16
+							}
+						}
+					]}
+				/>
+				*/}
 
 				{/* Modal de feedback de alteração confirmada */}
 				<Modal

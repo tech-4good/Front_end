@@ -135,11 +135,50 @@ export default function ConsultaFilhos() {
 		setModalConfirmar(true);
 	}
 
-	function handleConfirmarSim() {
-		setFilhosOriginais(filhos);
-		setAlteracaoConfirmada(true);
+	async function handleConfirmarSim() {
 		setModalConfirmar(false);
-		setTimeout(() => setAlteracaoConfirmada(false), 2000);
+		setCarregando(true);
+		
+		try {
+			// Atualizar cada filho que foi modificado
+			const promessas = filhos.map(async (filho, index) => {
+				const filhoOriginal = filhosOriginais[index];
+				
+				// Verificar se houve mudança
+				if (filhoOriginal && (
+					filho.creche !== filhoOriginal.creche || 
+					filho.estuda !== filhoOriginal.estuda
+				)) {
+					console.log("🔄 Atualizando filho ID:", filho.id);
+					
+					const dadosAtualizacao = {
+						isEstudante: filho.estuda === "Sim",
+						hasCreche: filho.creche === "Sim"
+					};
+					
+					const response = await beneficiadoService.atualizarFilho(filho.id, dadosAtualizacao);
+					
+					if (!response.success) {
+						console.error("❌ Erro ao atualizar filho:", response.error);
+						throw new Error(response.error);
+					}
+					
+					console.log("✅ Filho atualizado com sucesso!");
+					return response;
+				}
+			});
+			
+			await Promise.all(promessas);
+			
+			setFilhosOriginais(filhos);
+			setAlteracaoConfirmada(true);
+			setTimeout(() => setAlteracaoConfirmada(false), 2000);
+		} catch (error) {
+			console.error("❌ Erro ao atualizar filhos:", error);
+			setErro("Erro ao atualizar informações dos filhos");
+		} finally {
+			setCarregando(false);
+		}
 	}
 
 	function handleConfirmarNao() {
@@ -159,11 +198,39 @@ export default function ConsultaFilhos() {
 	 const [filhoParaExcluirDados, setFilhoParaExcluirDados] = useState(null);
 	 const [modalConfirmarExclusao, setModalConfirmarExclusao] = useState(false);
 	 const [modalExcluidoSucesso, setModalExcluidoSucesso] = useState(false);
-	 // Não precisa mais de snapshot, basta usar o índice da lista atual
-	 function handleExcluirFilho(idx) {
-		 setFilhos(prev => prev.filter((_, i) => i !== idx));
-		 setModalExcluidoSucesso(true);
-		 setTimeout(() => setModalExcluidoSucesso(false), 2000);
+	 const [modalErroExclusao, setModalErroExclusao] = useState(false);
+	 
+	 async function handleExcluirFilho(filhoId) {
+		 if (!filhoId) {
+			 console.error("❌ ID do filho não encontrado");
+			 setModalErroExclusao(true);
+			 setTimeout(() => setModalErroExclusao(false), 3000);
+			 return;
+		 }
+		 
+		 setCarregando(true);
+		 try {
+			 console.log("🗑️ Removendo filho ID:", filhoId);
+			 const response = await beneficiadoService.removerFilho(filhoId);
+			 
+			 if (response.success) {
+				 console.log("✅ Filho removido com sucesso!");
+				 // Atualizar lista local
+				 setFilhos(prev => prev.filter(f => f.id !== filhoId));
+				 setModalExcluidoSucesso(true);
+				 setTimeout(() => setModalExcluidoSucesso(false), 2000);
+			 } else {
+				 console.error("❌ Erro ao remover filho:", response.error);
+				 setModalErroExclusao(true);
+				 setTimeout(() => setModalErroExclusao(false), 3000);
+			 }
+		 } catch (error) {
+			 console.error("❌ Erro inesperado ao remover filho:", error);
+			 setModalErroExclusao(true);
+			 setTimeout(() => setModalErroExclusao(false), 3000);
+		 } finally {
+			 setCarregando(false);
+		 }
 	 }
 
 	return (
@@ -214,8 +281,10 @@ export default function ConsultaFilhos() {
 														className="consulta-filhos-input"
 														name="nascimento" 
 														value={filho.nascimento} 
-														onChange={e => handleChange(idx, e)}
-														placeholder="DD/MM/AAAA"
+														readOnly
+														disabled
+														style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+														title="A data de nascimento não pode ser alterada"
 													/>
 												</div>
 												<div className="consulta-filhos-field">
@@ -286,23 +355,11 @@ export default function ConsultaFilhos() {
 							showClose={false}
 							botoes={[{
 								texto: "Sim",
-								onClick: () => {
-									setFilhos(prev => {
-										const idxAtual = prev.findIndex(f =>
-											f.nascimento === filhoParaExcluirDados.nascimento &&
-											f.creche === filhoParaExcluirDados.creche &&
-											f.estuda === filhoParaExcluirDados.estuda
-										);
-										if (idxAtual !== -1) {
-											return prev.filter((_, i) => i !== idxAtual);
-										}
-										return prev;
-									});
+								onClick: async () => {
 									setModalConfirmarExclusao(false);
+									await handleExcluirFilho(filhoParaExcluirDados?.id);
 									setFilhoParaExcluir(null);
 									setFilhoParaExcluirDados(null);
-									setModalExcluidoSucesso(true);
-									setTimeout(() => setModalExcluidoSucesso(false), 2000);
 								},
 								style: { background: '#fff', color: '#111', border: '2px solid #111' }
 							}, {
@@ -321,6 +378,14 @@ export default function ConsultaFilhos() {
 							isOpen={modalExcluidoSucesso}
 							onClose={() => setModalExcluidoSucesso(false)}
 							texto={"Filho excluído com sucesso!"}
+							showClose={false}
+						/>
+						
+						{/* Modal de erro ao excluir filho */}
+						<Modal
+							isOpen={modalErroExclusao}
+							onClose={() => setModalErroExclusao(false)}
+							texto={"Erro ao excluir filho. Tente novamente."}
 							showClose={false}
 						/>
 

@@ -38,10 +38,6 @@ export const beneficiadoService = {
       console.log('dadosFilho.enderecoId:', dadosFilho.enderecoId);
 
       // Validar campos obrigatórios conforme documentação do backend
-      if (!dadosFilho.nome || dadosFilho.nome.trim() === '') {
-        console.error('ERRO: Nome vazio ou inválido');
-        return { success: false, error: 'Nome do filho é obrigatório' };
-      }
       if (!dadosFilho.dataNascimento) {
         console.error('ERRO: Data de nascimento ausente');
         return { success: false, error: 'Data de nascimento é obrigatória' };
@@ -63,9 +59,8 @@ export const beneficiadoService = {
         return { success: false, error: 'Endereço é obrigatório' };
       }
 
-      // Payload completo conforme documentação do backend
+      // Payload conforme documentação do backend (sem campo 'nome')
       const payload = {
-        nome: dadosFilho.nome.trim(),
         dataNascimento: dadosFilho.dataNascimento,
         isEstudante: Boolean(dadosFilho.isEstudante),
         hasCreche: Boolean(dadosFilho.hasCreche),
@@ -140,16 +135,20 @@ export const beneficiadoService = {
     }
   },
 
-  // Atualizar filho
+  // Atualizar filho (PATCH - somente isEstudante e hasCreche)
   atualizarFilho: async (id, dadosFilho) => {
     try {
-      const payload = {
-        nome: dadosFilho.nome,
-        dataNascimento: dadosFilho.dataNascimento,
-        beneficiadoId: dadosFilho.beneficiadoId
-      };
+      const payload = {};
+      
+      // Apenas campos permitidos no PATCH
+      if (dadosFilho.isEstudante !== undefined) {
+        payload.isEstudante = Boolean(dadosFilho.isEstudante);
+      }
+      if (dadosFilho.hasCreche !== undefined) {
+        payload.hasCreche = Boolean(dadosFilho.hasCreche);
+      }
 
-      console.log('Payload para atualização de filho:', payload);
+      console.log('Payload para atualização de filho (PATCH):', payload);
       const response = await apiClient.patch(`/filhos-beneficiados/${id}`, payload);
       return { success: true, data: response.data };
     } catch (error) {
@@ -416,23 +415,49 @@ export const beneficiadoService = {
   // Atualizar beneficiado
   atualizarBeneficiado: async (id, dadosBeneficiado) => {
     try {
-      const payload = {
-        nome: dadosBeneficiado.nome,
-        cpf: dadosBeneficiado.cpf?.replace(/\D/g, ''),
-        rg: dadosBeneficiado.rg?.replace(/\D/g, ''),
-        dataNascimento: dadosBeneficiado.dataNascimento,
-        naturalidade: dadosBeneficiado.naturalidade,
-        telefone: dadosBeneficiado.telefone?.replace(/\D/g, ''),
-        estadoCivil: dadosBeneficiado.estadoCivil,
-        escolaridade: dadosBeneficiado.escolaridade,
-        profissao: dadosBeneficiado.profissao,
-        rendaMensal: dadosBeneficiado.rendaMensal,
-        empresa: dadosBeneficiado.empresa,
-        cargo: dadosBeneficiado.cargo,
-        religiao: dadosBeneficiado.religiao,
-        enderecoId: dadosBeneficiado.enderecoId,
-        quantidadeDependentes: parseInt(dadosBeneficiado.quantidadeDependentes) || 0
-      };
+      // ⚠️ IMPORTANTE: PATCH NÃO aceita nome, cpf, rg, dataNascimento
+      // Apenas campos editáveis conforme documentação do backend
+      const payload = {};
+
+      // Adicionar apenas campos que foram fornecidos e são permitidos no PATCH
+      if (dadosBeneficiado.naturalidade !== undefined) {
+        payload.naturalidade = dadosBeneficiado.naturalidade;
+      }
+      if (dadosBeneficiado.telefone !== undefined) {
+        payload.telefone = dadosBeneficiado.telefone?.replace(/\D/g, '');
+      }
+      if (dadosBeneficiado.estadoCivil !== undefined) {
+        payload.estadoCivil = dadosBeneficiado.estadoCivil;
+      }
+      if (dadosBeneficiado.escolaridade !== undefined) {
+        payload.escolaridade = dadosBeneficiado.escolaridade;
+      }
+      if (dadosBeneficiado.profissao !== undefined) {
+        payload.profissao = dadosBeneficiado.profissao;
+      }
+      if (dadosBeneficiado.rendaMensal !== undefined) {
+        payload.rendaMensal = dadosBeneficiado.rendaMensal;
+      }
+      if (dadosBeneficiado.empresa !== undefined) {
+        payload.empresa = dadosBeneficiado.empresa;
+      }
+      if (dadosBeneficiado.cargo !== undefined) {
+        payload.cargo = dadosBeneficiado.cargo;
+      }
+      if (dadosBeneficiado.religiao !== undefined) {
+        payload.religiao = dadosBeneficiado.religiao;
+      }
+      if (dadosBeneficiado.enderecoId !== undefined) {
+        payload.enderecoId = dadosBeneficiado.enderecoId;
+      }
+      if (dadosBeneficiado.quantidadeDependentes !== undefined) {
+        payload.quantidadeDependentes = parseInt(dadosBeneficiado.quantidadeDependentes) || 0;
+      }
+      if (dadosBeneficiado.fotoId !== undefined) {
+        payload.fotoId = dadosBeneficiado.fotoId;
+      }
+
+      console.log('📝 Payload PATCH (apenas campos editáveis):', payload);
 
       const response = await apiClient.patch(`/beneficiados/${id}`, payload);
       return { success: true, data: response.data };

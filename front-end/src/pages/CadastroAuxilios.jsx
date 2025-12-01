@@ -29,6 +29,7 @@ export default function CadastroAuxilios() {
   const [modalCampos, setModalCampos] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [beneficiadoEncontrado, setBeneficiadoEncontrado] = useState(null);
+  const [modalAuxilioJaVinculado, setModalAuxilioJaVinculado] = useState(false);
 
   const [tipoUsuario, setTipoUsuario] = useState("2");
   const navigate = useNavigate();
@@ -36,6 +37,13 @@ export default function CadastroAuxilios() {
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "2";
     setTipoUsuario(tipo);
+    
+    // Preencher CPF automaticamente se vier da tela de consulta
+    const cpfPreenchido = sessionStorage.getItem("cpfSelecionado");
+    if (cpfPreenchido) {
+      setCpfBeneficiado(formatCPF(cpfPreenchido));
+      console.log("📋 CPF preenchido automaticamente:", cpfPreenchido);
+    }
   }, []);
 
   // Auto-close modal de campos após 3 segundos
@@ -70,14 +78,24 @@ export default function CadastroAuxilios() {
     }
   }, [modalCpfNaoEncontrado]);
 
+  // Auto-close modal de auxílio já vinculado após 3 segundos
+  useEffect(() => {
+    if (modalAuxilioJaVinculado) {
+      const timer = setTimeout(() => {
+        setModalAuxilioJaVinculado(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [modalAuxilioJaVinculado]);
+
   // Auto-close modal de sucesso e redirecionar após 2 segundos
   useEffect(() => {
     if (modalSucesso) {
       console.log("🎉 Modal de sucesso ativado, redirecionando em 2s");
       const timer = setTimeout(() => {
-        console.log("🏠 Redirecionando para home");
+        console.log("📋 Redirecionando para menu de cadastro");
         setModalSucesso(false);
-        navigate("/home");
+        navigate("/cadastro-beneficiado-menu");
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -133,92 +151,7 @@ export default function CadastroAuxilios() {
     return texto;
   }
 
-  async function handleSalvar(e) {
-    e.preventDefault();
-    console.log("🚀 Iniciando handleSalvar");
-    console.log("📝 CPF informado:", cpfBeneficiado);
-    console.log("📝 Auxílio informado:", nomeAuxilio);
-    let newErros = {};
 
-    if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpfBeneficiado)) {
-      newErros.cpf = "CPF inválido";
-    }
-    if (!nomeAuxilio || nomeAuxilio.trim() === "")
-      newErros.nomeAuxilio = "Informe o nome do auxílio";
-
-    setErros(newErros);
-
-    if (Object.keys(newErros).length > 0) {
-      setModalCampos(true);
-      return;
-    }
-
-    setCarregando(true);
-    try {
-      // Buscar beneficiário pelo CPF diretamente no backend
-      const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
-      console.log("🔍 Buscando CPF:", cpfLimpo);
-      const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpfLimpo);
-      console.log("📋 Resposta da busca:", respostaBeneficiado);
-
-      if (!respostaBeneficiado.success) {
-        console.log("❌ CPF não encontrado, mostrando modal");
-        setModalCpfNaoEncontrado(true);
-        setCarregando(false);
-        return;
-      }
-
-      const beneficiado = respostaBeneficiado.data;
-
-        // Verificar se o auxílio existe ou criar um novo
-        let auxilioId = null;
-        const respostaAuxilios = await auxilioService.buscarPorNome(
-          nomeAuxilio.trim()
-        );
-
-        if (respostaAuxilios.success && respostaAuxilios.data.length > 0) {
-          auxilioId = respostaAuxilios.data[0].id;
-        } else {
-          // Criar novo auxílio
-          const novoAuxilio = await auxilioService.cadastrar({
-            nome: nomeAuxilio.trim(),
-          });
-          if (novoAuxilio.success) {
-            auxilioId = novoAuxilio.data.id;
-          } else {
-            setModalErro({
-              open: true,
-              mensagem: "Erro ao criar auxílio: " + novoAuxilio.error,
-            });
-            return;
-          }
-        }
-
-        // Associar auxílio ao beneficiário
-        const associacao = await auxilioService.associarBeneficiario(
-          beneficiado.id,
-          auxilioId
-        );
-        if (associacao.success) {
-          setModalSucesso(true);
-          setCpfBeneficiado("");
-          setNomeAuxilio("");
-        } else {
-          setModalErro({
-            open: true,
-            mensagem: "Erro ao associar auxílio: " + associacao.error,
-          });
-        }
-
-    } catch (error) {
-      setModalErro({
-        open: true,
-        mensagem: "Erro ao processar cadastro de auxílio",
-      });
-    } finally {
-      setCarregando(false);
-    }
-  }
 
   async function handleBuscarAuxilio(e) {
     e.preventDefault();
@@ -235,50 +168,36 @@ export default function CadastroAuxilios() {
 
     setCarregando(true);
     try {
-      // PASSO 1: Buscar auxílio
+      // PASSO 1: Verificar se CPF existe
+      const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
+      console.log("🔍 Verificando CPF:", cpfLimpo);
+      const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpfLimpo);
+      
+      if (!respostaBeneficiado.success) {
+        // CPF NÃO ENCONTRADO
+        console.log("❌ CPF não encontrado");
+        setModalCpfNaoEncontrado(true);
+        setCarregando(false);
+        return;
+      }
+      
+      // PASSO 2: Buscar auxílio
       console.log("🔍 Buscando auxílio:", nomeAuxilio.trim());
       const respostaAuxilio = await auxilioService.buscarPorNome(nomeAuxilio.trim());
       
       if (respostaAuxilio.success && respostaAuxilio.data.length > 0) {
-        // AUXÍLIO ENCONTRADO - agora verificar CPF
+        // AUXÍLIO ENCONTRADO - Mostrar modal de confirmação
         const auxilioEncontrado = respostaAuxilio.data[0];
-        console.log("✅ Auxílio encontrado:", auxilioEncontrado.nome);
+        console.log("✅ Auxílio encontrado:", auxilioEncontrado.tipo || auxilioEncontrado.nome);
         
-        // PASSO 2: Verificar se CPF existe
-        const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
-        console.log("🔍 Verificando CPF:", cpfLimpo);
-        const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpfLimpo);
-        
-        if (!respostaBeneficiado.success) {
-          // CPF NÃO ENCONTRADO
-          console.log("❌ CPF não encontrado");
-          setModalCpfNaoEncontrado(true);
-          return;
-        }
-        
-        // CPF ENCONTRADO - associar auxílio ao beneficiário
-        const beneficiado = respostaBeneficiado.data;
-        console.log("✅ Beneficiado encontrado:", beneficiado.nome);
-        
-        // PASSO 3: Associar auxílio ao beneficiário
-        const associacao = await auxilioService.associarBeneficiario(
-          beneficiado.id,
-          auxilioEncontrado.id
-        );
-        
-        if (associacao.success) {
-          console.log("✅ Auxílio associado com sucesso!");
-          setModalSucesso(true);
-        } else {
-          setModalErro({
-            open: true,
-            mensagem: "Erro ao associar auxílio: " + associacao.error,
-          });
-        }
+        // Armazenar dados para usar na confirmação
+        setBeneficiadoEncontrado(respostaBeneficiado.data);
+        setModalEncontrado({ open: true, auxilio: auxilioEncontrado });
         
       } else {
-        // AUXÍLIO NÃO ENCONTRADO
+        // AUXÍLIO NÃO ENCONTRADO - Mostrar modal perguntando se quer criar
         console.log("❌ Auxílio não encontrado");
+        setBeneficiadoEncontrado(respostaBeneficiado.data);
         setModalNaoEncontrado(true);
       }
     } catch (error) {
@@ -302,36 +221,111 @@ export default function CadastroAuxilios() {
     }
   };
 
-  const criarEAssociarAuxilio = async () => {
-    if (!cpfBeneficiado || !nomeAuxilio) return;
+  const associarAuxilioExistente = async () => {
+    if (!beneficiadoEncontrado || !modalEncontrado.auxilio) return;
     
     setCarregando(true);
     try {
-      // Verificar CPF primeiro
-      const cpfLimpo = cpfBeneficiado.replace(/\D/g, "");
-      const respostaBeneficiado = await beneficiadoService.buscarPorCpf(cpfLimpo);
+      const auxilioId = modalEncontrado.auxilio.idAuxilio || modalEncontrado.auxilio.id;
       
-      if (!respostaBeneficiado.success) {
-        setModalCpfNaoEncontrado(true);
-        return;
+      // Verificar se o auxílio já está vinculado ao beneficiário
+      console.log("🔍 Verificando se auxílio já está vinculado...");
+      const auxiliosVinculados = await auxilioService.buscarPorBeneficiario(beneficiadoEncontrado.id);
+      
+      if (auxiliosVinculados.success && auxiliosVinculados.data.length > 0) {
+        const jaVinculado = auxiliosVinculados.data.some(assoc => {
+          const idAssociado = assoc.auxilioGovernamental?.idAuxilio || 
+                             assoc.auxilioGovernamental?.id || 
+                             assoc.auxilioId;
+          return idAssociado === auxilioId;
+        });
+        
+        if (jaVinculado) {
+          console.log("⚠️ Auxílio já vinculado ao beneficiário!");
+          setModalAuxilioJaVinculado(true);
+          setCarregando(false);
+          return;
+        }
       }
       
-      const beneficiado = respostaBeneficiado.data;
+      // Se não está vinculado, prosseguir com a associação
+      console.log("🔗 Associando beneficiado", beneficiadoEncontrado.id, "ao auxílio", auxilioId);
       
+      const associacao = await auxilioService.associarBeneficiario(
+        beneficiadoEncontrado.id,
+        auxilioId
+      );
+      
+      if (associacao.success) {
+        console.log("✅ Auxílio associado com sucesso!");
+        setModalSucesso(true);
+        setCpfBeneficiado("");
+        setNomeAuxilio("");
+        setBeneficiadoEncontrado(null);
+      } else {
+        setModalErro({
+          open: true,
+          mensagem: "Erro ao associar auxílio: " + associacao.error,
+        });
+      }
+    } catch (error) {
+      setModalErro({
+        open: true,
+        mensagem: "Erro ao processar associação",
+      });
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const criarEAssociarAuxilio = async () => {
+    if (!beneficiadoEncontrado || !nomeAuxilio) return;
+    
+    setCarregando(true);
+    try {
       // Criar novo auxílio
+      console.log("📝 Criando novo auxílio:", nomeAuxilio.trim());
       const novoAuxilio = await auxilioService.cadastrar({
         nome: nomeAuxilio.trim(),
       });
       
       if (novoAuxilio.success) {
         // Associar ao beneficiário
+        // API retorna idAuxilio, não id
+        const auxilioId = novoAuxilio.data.idAuxilio || novoAuxilio.data.id;
+        console.log("✅ Auxílio criado, ID:", auxilioId);
+        
+        // Verificar se o auxílio já está vinculado (por segurança)
+        console.log("🔍 Verificando se auxílio já está vinculado...");
+        const auxiliosVinculados = await auxilioService.buscarPorBeneficiario(beneficiadoEncontrado.id);
+        
+        if (auxiliosVinculados.success && auxiliosVinculados.data.length > 0) {
+          const jaVinculado = auxiliosVinculados.data.some(assoc => {
+            const idAssociado = assoc.auxilioGovernamental?.idAuxilio || 
+                               assoc.auxilioGovernamental?.id || 
+                               assoc.auxilioId;
+            return idAssociado === auxilioId;
+          });
+          
+          if (jaVinculado) {
+            console.log("⚠️ Auxílio já vinculado ao beneficiário!");
+            setModalAuxilioJaVinculado(true);
+            setCarregando(false);
+            return;
+          }
+        }
+        
+        console.log("🔗 Associando beneficiado", beneficiadoEncontrado.id, "ao auxílio", auxilioId);
         const associacao = await auxilioService.associarBeneficiario(
-          beneficiado.id,
-          novoAuxilio.data.id
+          beneficiadoEncontrado.id,
+          auxilioId
         );
         
         if (associacao.success) {
           setModalSucesso(true);
+          setCpfBeneficiado("");
+          setNomeAuxilio("");
+          setBeneficiadoEncontrado(null);
         } else {
           setModalErro({
             open: true,
@@ -354,18 +348,13 @@ export default function CadastroAuxilios() {
     }
   };
 
-  const associarAuxilioExistente = async () => {
-    // Esta função não é mais necessária pois a lógica já está no handleBuscarAuxilio
-    console.log("Associação já foi feita no handleBuscarAuxilio");
-  };
-
   return (
     <div className="cadastro-auxilios-bg">
       <Navbar nomeUsuario={nomeUsuario} botoes={botoesNavbar} isCadastrarBeneficiadosPage={true} />
       <div className="cadastro-auxilios-container">
         <h1 className="cadastro-auxilios-title">Cadastro de Auxílios</h1>
 
-        <form className="cadastro-auxilios-form" onSubmit={handleSalvar}>
+        <div className="cadastro-auxilios-form">
           {/* Linha única - CPF e Nome do Auxílio lado a lado */}
           <div className="cadastro-auxilios-row">
             <div className="cadastro-auxilios-field">
@@ -406,7 +395,7 @@ export default function CadastroAuxilios() {
           </div>
 
 
-        </form>
+        </div>
 
         {carregando && (
           <div style={{ textAlign: "center", marginTop: 20 }}>
@@ -423,7 +412,7 @@ export default function CadastroAuxilios() {
         <Modal
           isOpen={modalEncontrado.open}
           onClose={() => setModalEncontrado({ open: false, auxilio: null })}
-          texto={`Auxílio "${modalEncontrado.auxilio?.nome}" encontrado!\nDeseja adicionar este auxílio ao beneficiário?`}
+          texto={`Auxílio "${modalEncontrado.auxilio?.tipo || modalEncontrado.auxilio?.nome}" encontrado!\nDeseja vincular este auxílio ao beneficiário?`}
           showClose={true}
           botoes={[
             {
@@ -440,7 +429,7 @@ export default function CadastroAuxilios() {
           isOpen={modalNaoEncontrado}
           onClose={() => setModalNaoEncontrado(false)}
           texto={
-            "Auxílio não encontrado!\nDeseja criar e adicionar este novo auxílio ao beneficiário?"
+            "Auxílio não encontrado!\nDeseja cadastrar e vincular este novo auxílio ao beneficiário?"
           }
           showClose={false}
           botoes={[
@@ -458,15 +447,15 @@ export default function CadastroAuxilios() {
           isOpen={modalSucesso}
           onClose={() => {
             setModalSucesso(false);
-            navigate("/home");
+            navigate("/cadastro-beneficiado-menu");
           }}
-          texto={"Auxílio cadastrado com sucesso!"}
+          texto={"Auxílio vinculado com sucesso!"}
           showClose={false}
           botoes={[{ 
             texto: "OK", 
             onClick: () => {
               setModalSucesso(false);
-              navigate("/home");
+              navigate("/cadastro-beneficiado-menu");
             }
           }]}
         />
@@ -480,6 +469,12 @@ export default function CadastroAuxilios() {
           isOpen={modalCpfNaoEncontrado}
           onClose={() => setModalCpfNaoEncontrado(false)}
           texto="CPF não encontrado na base de dados"
+          showClose={false}
+        />
+        <Modal
+          isOpen={modalAuxilioJaVinculado}
+          onClose={() => setModalAuxilioJaVinculado(false)}
+          texto="Este auxílio já está vinculado a este beneficiário"
           showClose={false}
         />
       </div>

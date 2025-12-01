@@ -151,8 +151,11 @@ export default function CadastroBeneficiadoCompleto2() {
 		if (camposMsg) erros.push(camposMsg);
 		const nomeMsg = validarNome(form.nome);
 		if (nomeMsg) erros.push(nomeMsg);
+		// Bug 3 Fix: Validar CPF
+		const cpfMsg = validarCPF(form.cpf);
+		if (cpfMsg) erros.push(cpfMsg);
 		if (erros.length > 0) {
-			setModalErro({ open: true, mensagem: "Todos os campos devem estar preenchidos." });
+			setModalErro({ open: true, mensagem: erros[0] }); // Mostrar primeiro erro
 			if (modalTimeout) clearTimeout(modalTimeout);
 			const timeout = setTimeout(() => setModalErro({ open: false, mensagem: "" }), 7000);
 			setModalTimeout(timeout);

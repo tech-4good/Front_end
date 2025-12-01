@@ -194,11 +194,215 @@ export const cadastrarEndereco = async (endereco) => {
   }
 };
 
+/**
+ * Lista todos os endereços cadastrados
+ * @returns {Promise<Object>} Lista de endereços
+ */
+export const listarEnderecos = async () => {
+  try {
+    console.log('📋 Listando endereços...');
+
+    const response = await api.get('/enderecos');
+
+    console.log('✅ Endereços carregados:', response.data);
+
+    return {
+      success: true,
+      data: response.data || []
+    };
+
+  } catch (error) {
+    console.error('❌ Erro ao listar endereços:', error);
+
+    // 204 No Content significa que não há endereços
+    if (error.response?.status === 204) {
+      return {
+        success: true,
+        data: []
+      };
+    }
+
+    if (error.response) {
+      const status = error.response.status;
+      const mensagem = error.response.data?.message || error.message;
+
+      switch (status) {
+        case 401:
+          throw new Error('Sessão expirada. Faça login novamente.');
+        case 500:
+          throw new Error('Erro no servidor. Tente novamente.');
+        default:
+          throw new Error(mensagem || 'Erro ao listar endereços.');
+      }
+    }
+
+    return {
+      success: false,
+      error: error.message || 'Erro ao listar endereços.'
+    };
+  }
+};
+
+/**
+ * Busca endereço por ID
+ * @param {number} id - ID do endereço
+ * @returns {Promise<Object>} Dados do endereço
+ */
+export const buscarEnderecoPorId = async (id) => {
+  try {
+    console.log('🔍 Buscando endereço ID:', id);
+
+    const response = await api.get(`/enderecos/${id}`);
+
+    console.log('✅ Endereço encontrado:', response.data);
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+    console.error('❌ Erro ao buscar endereço:', error);
+
+    if (error.response) {
+      const status = error.response.status;
+      const mensagem = error.response.data?.message || error.message;
+
+      switch (status) {
+        case 404:
+          throw new Error('Endereço não encontrado.');
+        case 401:
+          throw new Error('Sessão expirada. Faça login novamente.');
+        default:
+          throw new Error(mensagem || 'Erro ao buscar endereço.');
+      }
+    }
+
+    return {
+      success: false,
+      error: error.message || 'Erro ao buscar endereço.'
+    };
+  }
+};
+
+/**
+ * Atualiza um endereço existente (PATCH - atualização parcial)
+ * @param {number} id - ID do endereço
+ * @param {Object} dadosAtualizados - Campos a atualizar
+ * @returns {Promise<Object>} Endereço atualizado
+ */
+export const atualizarEndereco = async (id, dadosAtualizados) => {
+  try {
+    console.log('✏️ Atualizando endereço ID:', id, 'com dados:', dadosAtualizados);
+
+    const response = await api.patch(`/enderecos/${id}`, dadosAtualizados);
+
+    console.log('✅ Endereço atualizado:', response.data);
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+    console.error('❌ Erro ao atualizar endereço:', error);
+
+    if (error.response) {
+      const status = error.response.status;
+      const mensagem = error.response.data?.message || error.message;
+
+      switch (status) {
+        case 400:
+          throw new Error('Dados inválidos. Verifique as informações.');
+        case 404:
+          throw new Error('Endereço não encontrado.');
+        case 401:
+          throw new Error('Sessão expirada. Faça login novamente.');
+        default:
+          throw new Error(mensagem || 'Erro ao atualizar endereço.');
+      }
+    }
+
+    return {
+      success: false,
+      error: error.message || 'Erro ao atualizar endereço.'
+    };
+  }
+};
+
+/**
+ * Deleta um endereço
+ * @param {number} id - ID do endereço
+ * @returns {Promise<Object>} Resultado da operação
+ */
+export const deletarEndereco = async (id) => {
+  try {
+    console.log('🗑️ Deletando endereço ID:', id);
+
+    const response = await api.delete(`/enderecos/${id}`);
+
+    // 204 No Content - sucesso (conforme documentação backend)
+    console.log('✅ Endereço deletado com sucesso');
+
+    return {
+      success: true
+    };
+
+  } catch (error) {
+    console.error('❌ Erro ao deletar endereço:', error);
+
+    if (error.response) {
+      const status = error.response.status;
+      const mensagem = error.response.data?.message || error.response.data?.error || error.message || '';
+
+      // PRIMEIRO: Detectar mensagens de constraint (pode vir como 500 ou 409)
+      if (mensagem && (
+        mensagem.includes('foreign key') ||
+        mensagem.includes('Foreign key') ||
+        mensagem.includes('constraint fails') ||
+        mensagem.includes('Cannot delete or update a parent row') ||
+        mensagem.includes('DataIntegrityViolationException')
+      )) {
+        throw new Error('foreign key constraint: Não é possível deletar. Existem registros vinculados a este endereço.');
+      }
+
+      // DEPOIS: Tratamento específico por status code
+      switch (status) {
+        case 401:
+          throw new Error('Unauthorized: Sessão expirada. Faça login novamente.');
+        
+        case 404:
+          throw new Error('Not Found: Endereço não encontrado.');
+        
+        case 409:
+          // Conflict - FK constraint (caso venha com código correto)
+          throw new Error('foreign key constraint: Não é possível deletar. Existem registros vinculados a este endereço.');
+        
+        case 500:
+          // Erro 500 genérico (não FK)
+          throw new Error('Server Error: Erro no servidor. Tente novamente.');
+        
+        default:
+          throw new Error(mensagem || 'Erro ao deletar endereço.');
+      }
+    }
+
+    return {
+      success: false,
+      error: error.message || 'Erro ao deletar endereço.'
+    };
+  }
+};
+
 export const enderecoService = {
   buscarCep,
   buscarCepComCache,
   buscarEnderecoPorCep,
   cadastrarEndereco,
+  listarEnderecos,
+  buscarEnderecoPorId,
+  atualizarEndereco,
+  deletarEndereco,
   validarCep,
   formatarCep
 };

@@ -296,7 +296,12 @@ export default function CadastroBeneficiadoCompleto3() {
           botoes={[
             {
               texto: 'Sim',
-              onClick: () => { setModalFilhos(false); navigate('/cadastro-filhos'); },
+              onClick: () => { 
+                setModalFilhos(false); 
+                // Marcar que vai cadastrar filhos para depois mostrar modal de auxílios
+                sessionStorage.setItem('voltarParaAuxilios', 'true');
+                navigate('/cadastro-filhos'); 
+              },
               style: { background: '#ededed', color: '#222', minWidth: 120, minHeight: 44, fontSize: 18 }
             },
             {

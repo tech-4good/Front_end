@@ -5,13 +5,19 @@ export const voluntarioService = {
   // Cadastrar voluntário
   cadastrar: async (dadosVoluntario) => {
     try {
+      // Bug 9 Fix: Backend usa lógica invertida
+      // administrador: 1 = É admin (tipoUsuario "2" no frontend)
+      // administrador: 2 = É voluntário simples (tipoUsuario "1" no frontend)
+      // Como o cadastro público deve criar Voluntário Simples, enviamos 2
+      const tipoBackend = dadosVoluntario.TipoUsuario === 1 ? 2 : 1;
+      
       const response = await apiClient.post('/voluntarios', {
         nome: dadosVoluntario.nomeCompleto,
         cpf: dadosVoluntario.cpf,
         telefone: dadosVoluntario.telefone,
         email: dadosVoluntario.email,
         senha: dadosVoluntario.senha,
-        administrador: dadosVoluntario.TipoUsuario
+        administrador: tipoBackend
       });
       return { success: true, data: response.data };
     } catch (error) {

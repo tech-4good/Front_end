@@ -22,6 +22,7 @@ export default function CadastroFilhos() {
     const [modalCampos, setModalCampos] = useState(false);
     const [modalCamposTexto, setModalCamposTexto] = useState("Preencha todos os campos");
     const [modalSucesso, setModalSucesso] = useState(false);
+    const [modalAuxilios, setModalAuxilios] = useState(false);
     const [carregando, setCarregando] = useState(false);
     const [beneficiadoEncontrado, setBeneficiadoEncontrado] = useState(null);
 
@@ -177,7 +178,6 @@ export default function CadastroFilhos() {
 
         try {
             const dadosFilho = {
-                nome: "Filho de " + beneficiadoEncontrado.nome,
                 dataNascimento: convertDateToISO(dataNascimento),
                 isEstudante: isEstudante,
                 hasCreche: isCreche,
@@ -208,6 +208,22 @@ export default function CadastroFilhos() {
         setDataNascimento("");
         setErros({});
         setBeneficiadoEncontrado(null);
+    }
+
+    function handleNaoCadastrarMaisFilhos() {
+        setModalSucesso(false);
+        
+        // Verificar se veio do fluxo de cadastro completo
+        const voltarParaAuxilios = sessionStorage.getItem('voltarParaAuxilios');
+        
+        if (voltarParaAuxilios === 'true') {
+            // Limpar flag e mostrar modal de auxílios
+            sessionStorage.removeItem('voltarParaAuxilios');
+            setModalAuxilios(true);
+        } else {
+            // Fluxo normal - voltar para home
+            navigate('/home');
+        }
     }
 
     return (
@@ -321,7 +337,27 @@ export default function CadastroFilhos() {
                         },
                         {
                             texto: 'Não',
-                            onClick: () => { setModalSucesso(false); navigate('/home'); }
+                            onClick: handleNaoCadastrarMaisFilhos
+                        }
+                    ]}
+                />
+                
+                {/* Modal de pergunta auxílios */}
+                <Modal
+                    isOpen={modalAuxilios}
+                    onClose={() => { setModalAuxilios(false); navigate('/cadastro-beneficiado-menu'); }}
+                    texto="Deseja cadastrar auxílios governamentais?"
+                    showClose={false}
+                    botoes={[
+                        {
+                            texto: 'Sim',
+                            onClick: () => { setModalAuxilios(false); navigate('/cadastro-auxilios'); },
+                            style: { background: '#ededed', color: '#222', minWidth: 120, minHeight: 44, fontSize: 18 }
+                        },
+                        {
+                            texto: 'Não',
+                            onClick: () => { setModalAuxilios(false); navigate('/cadastro-beneficiado-menu'); },
+                            style: { background: '#111', color: '#fff', border: '2px solid #111', minWidth: 120, minHeight: 44, fontSize: 18 }
                         }
                     ]}
                 />

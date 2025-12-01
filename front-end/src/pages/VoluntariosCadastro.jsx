@@ -13,8 +13,8 @@ import iconeOlhoAberto from "../assets/icone-olho-aberto.png";
 import iconeOlhoFechado from "../assets/icone-olho-fechado.png";
 
 const tipos = [
+  { label: "Voluntário Simples", value: 1 }, // Bug 9 Fix: Voluntário Simples deve ser o padrão (primeira opção)
   { label: "Administrador", value: 2 },
-  { label: "Voluntário Simples", value: 1 },
 ];
 
 export default function VoluntariosCadastro() {
@@ -37,7 +37,7 @@ export default function VoluntariosCadastro() {
     telefone: "",
     email: "",
     senha: "",
-    tipo: 2,
+    tipo: 1, // Bug 9 Fix: Padrão deve ser Voluntário Simples (1), não Administrador (2)
   });
   const [showPassword, setShowPassword] = useState(false);
   const [modalErro, setModalErro] = useState({ open: false, mensagem: "" });
@@ -146,13 +146,16 @@ export default function VoluntariosCadastro() {
 
     try {
       // Preparar dados para o backend
+      // Bug 9 Fix: Backend usa lógica invertida
+      // Frontend: tipo 1 = Voluntário Simples, tipo 2 = Administrador
+      // Backend: administrador 2 = Voluntário Simples, administrador 1 = Administrador
       const dadosVoluntario = {
         nomeCompleto: formData.nomeCompleto,
         cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação do CPF
         telefone: formData.telefone.replace(/\D/g, ''), // Remove formatação do telefone
         email: formData.email,
         senha: formData.senha,
-        TipoUsuario: formData.tipo === 2 ? 1 : 0 // Conversão: Frontend 2=Admin -> Backend 1=Admin, Frontend 1=Voluntário -> Backend 0=Voluntário
+        TipoUsuario: formData.tipo // Será convertido no service (1→2, 2→1)
       };
 
       console.log('Enviando dados para cadastro:', dadosVoluntario);
