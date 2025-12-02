@@ -18,7 +18,6 @@ import CadastroBeneficiadoCompleto3 from "./pages/CadastroBeneficiadoCompleto3";
 import CadastroEndereco1 from "./pages/CadastroEndereco1";
 import CadastroEndereco2 from "./pages/CadastroEndereco2";
 import CadastroQuantidadePessoasPage from "./pages/CadastroQuantidadePessoasPage";
-import FilaEspera from "./pages/FilaEspera";
 import DoarCesta from "./pages/DoarCesta";
 import ConsultaBeneficiados from "./pages/ConsultaBeneficiados";
 import ConsultaBeneficiadosResultado from "./pages/ConsultaBeneficiadosResultado";
@@ -145,11 +144,6 @@ export const router = createBrowserRouter([
   {
     path: "/cadastro-quantidade-pessoas",
     element: <ProtectedRoute><CadastroQuantidadePessoasPage /></ProtectedRoute>,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "/fila-espera",
-    element: <ProtectedRoute><FilaEspera /></ProtectedRoute>,
     errorElement: <ErrorPage />,
   },
   {

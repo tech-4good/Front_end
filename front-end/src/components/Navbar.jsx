@@ -10,7 +10,7 @@ import iconeUsuario from "../assets/icone-usuario.png";
 import iconeSair from "../assets/icone-sair.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 
-const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false, isCestasPage = false, isFilaEsperaPage = false, isCadastroEnderecoPage = false, isEntregarCestaPage = false, isCadastrarBeneficiadosPage = false, isConsultaBeneficiadosPage = false, isVoluntariosPage = false, isRelatoriosPage = false, isHomePage = false, isHistoricoCestasPage = false }) => {
+const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, tipoUsuario, isPerfilPage = false, isCestasPage = false, isCadastroEnderecoPage = false, isEntregarCestaPage = false, isCadastrarBeneficiadosPage = false, isConsultaBeneficiadosPage = false, isVoluntariosPage = false, isRelatoriosPage = false, isHomePage = false, isHistoricoCestasPage = false }) => {
   const navigate = useNavigate();
   
   const allMenuItems = [
@@ -21,8 +21,7 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
     { texto: "Consultar Beneficiados", onClick: () => navigate("/consulta-beneficiados"), admin: true, comum: true },
     { texto: "Cestas", onClick: () => navigate("/controle-cestas"), admin: true, comum: true },
     { texto: "Relatórios", onClick: () => navigate("/painel-menu"), admin: true, comum: false },
-    { texto: "Voluntários", onClick: () => navigate("/voluntarios-menu"), admin: true, comum: false },
-    { texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), admin: true, comum: false }
+    { texto: "Voluntários", onClick: () => navigate("/voluntarios-menu"), admin: true, comum: false }
   ];
   
   const tipo = tipoUsuario || sessionStorage.getItem("tipoUsuario") || "2";
@@ -41,30 +40,7 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
             style={{ cursor: "pointer" }}
             onClick={() => navigate("/home")}
           />
-          {isHomePage && tipoUsuario === "2" && (
-            <Botao
-              className={`navbar-botao ${isFilaEsperaPage ? 'navbar-botao-active' : ''}`}
-              style={{
-                background: isFilaEsperaPage ? "rgba(217, 194, 126, 0.2)" : "none",
-                color: isFilaEsperaPage ? "#BF7E04" : "#264040",
-                fontSize: 18,
-                fontWeight: 500,
-                boxShadow: "none",
-                padding: "0 18px",
-                minWidth: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginLeft: 20,
-                transform: isFilaEsperaPage ? "translateY(-1px)" : "none"
-              }}
-              onClick={() => navigate("/fila-espera")}
-              texto={null}
-            >
-              <img src={iconeRelogio} alt="Fila de Espera" className="navbar-icone" />
-              Fila de Espera
-            </Botao>
-          )}
+
         </div>
         <div className="navbar-direita">
           <Botao
@@ -117,7 +93,7 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
               key={idx}
               className={`navbar-menu-item ${
                 (isCestasPage && item.texto === "Cestas") || 
-                (isFilaEsperaPage && item.texto === "Fila de Espera") ||
+
                 (isCadastroEnderecoPage && item.texto === "Cadastrar Endereços") ||
                 (isEntregarCestaPage && item.texto === "Entregar Cesta") ||
                 (isCadastrarBeneficiadosPage && item.texto === "Cadastrar Beneficiados") ||

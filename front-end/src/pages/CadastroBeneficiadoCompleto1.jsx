@@ -50,7 +50,7 @@ export default function CadastroBeneficiadoCompleto1() {
         { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
         { texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
         ...(tipoUsuario === "2"
-            ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }]
+            ? []
             : []),
         { texto: "Sair", onClick: () => navigate("/"), icone: iconeSair },
     ];

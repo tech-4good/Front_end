@@ -75,7 +75,7 @@ export default function ConsultaFilhos() {
 	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home") },
 		{ texto: "Perfil", onClick: () => navigate("/perfil") },
-		...(tipoUsuario === "2" ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera") }] : []),
+
 		{ texto: "Sair", onClick: () => navigate("/") }
 	];
 	const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";

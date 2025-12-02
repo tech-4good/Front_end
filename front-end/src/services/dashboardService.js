@@ -3,24 +3,24 @@ import api from "../provider/api";
 // Função auxiliar para converter data do backend (array ou string) para Date
 const converterDataBackend = (data) => {
   if (!data) return null;
-  
+
   // Se é array [ano, mes, dia]
   if (Array.isArray(data)) {
     const [ano, mes, dia] = data;
     // Mês no JavaScript é 0-indexed, mas backend envia 1-indexed
     return new Date(ano, mes - 1, dia);
   }
-  
+
   // Se é string ISO
   if (typeof data === 'string') {
     return new Date(data);
   }
-  
+
   // Se já é Date
   if (data instanceof Date) {
     return data;
   }
-  
+
   return null;
 };
 
@@ -100,55 +100,48 @@ const dashboardService = {
     try {
       console.log("📊 Buscando estatísticas com filtro:", filtro);
       console.log("📅 Datas customizadas:", { dataInicioCustom, dataFimCustom });
-      
+
       // Adicionar timestamp para evitar cache
       const timestamp = new Date().getTime();
-      
+
       // Buscar TODAS as entregas (aumentar size da página para pegar tudo)
       const entregasResponse = await api.get(`/entregas?size=1000&_t=${timestamp}`);
       const todasEntregas = entregasResponse.data?.content || entregasResponse.data || [];
-      
+
       console.log("📦 Total de entregas no banco:", todasEntregas.length);
 
       // Buscar beneficiados
       const beneficiadosResponse = await api.get("/beneficiados");
       const beneficiados = beneficiadosResponse.data?.content || beneficiadosResponse.data || [];
 
-      // Buscar fila de espera
-      let filaEspera = 0;
-      try {
-        const filaResponse = await api.get("/fila-espera");
-        filaEspera = filaResponse.data?.content?.length || filaResponse.data?.length || 0;
-      } catch (err) {
-        console.warn("Endpoint /fila-espera não disponível");
-      }
+
 
       // Definir período de acordo com o filtro
       const hoje = new Date();
       hoje.setHours(23, 59, 59, 999); // Final do dia de hoje
-      
+
       // Adicionar 1 dia extra para incluir registros com data futura
       const amanha = new Date(hoje);
       amanha.setDate(amanha.getDate() + 1);
-      
+
       let dataInicio = new Date(hoje);
       let dataFim = amanha;
-      
+
       // Se for período customizado, usar as datas fornecidas
       if (filtro === "Período Customizado" && dataInicioCustom && dataFimCustom) {
         dataInicio = new Date(dataInicioCustom);
         dataInicio.setHours(0, 0, 0, 0);
-        
+
         dataFim = new Date(dataFimCustom);
         dataFim.setHours(23, 59, 59, 999);
-        
+
         console.log("📅 Usando período customizado:", {
           inicio: dataInicio.toLocaleDateString('pt-BR'),
           fim: dataFim.toLocaleDateString('pt-BR')
         });
       } else {
         // Usar lógica padrão de filtros
-        switch(filtro) {
+        switch (filtro) {
           case "Última Semana":
             dataInicio.setDate(hoje.getDate() - 7);
             break;
@@ -165,7 +158,7 @@ const dashboardService = {
           default:
             dataInicio.setDate(hoje.getDate() - 7);
         }
-        
+
         dataInicio.setHours(0, 0, 0, 0); // Início do dia
       }
 
@@ -182,7 +175,7 @@ const dashboardService = {
         const dataConvertida = converterDataBackend(dataArray);
         console.log(`  ${index + 1}. Data Array: ${JSON.stringify(dataArray)} → Date: ${dataConvertida?.toLocaleDateString('pt-BR')} → Timestamp: ${dataConvertida?.getTime()}`);
       });
-      
+
       console.log("📅 Range de busca:", {
         inicioTimestamp: dataInicio.getTime(),
         fimTimestamp: dataFim.getTime()
@@ -192,17 +185,17 @@ const dashboardService = {
       const entregasPeriodo = todasEntregas.filter(e => {
         const dataArray = e.dataRetirada || e.data_retirada;
         const dataEntrega = converterDataBackend(dataArray);
-        
+
         if (!dataEntrega) {
           console.warn("⚠️ Data inválida:", dataArray);
           return false;
         }
-        
+
         const estaNoPerido = dataEntrega >= dataInicio && dataEntrega <= dataFim;
-        
+
         // DEBUG detalhado
         console.log(`Comparando: ${dataEntrega.toLocaleDateString('pt-BR')} (${dataEntrega.getTime()}) está entre ${dataInicio.toLocaleDateString('pt-BR')} e ${dataFim.toLocaleDateString('pt-BR')}? ${estaNoPerido}`);
-        
+
         return estaNoPerido;
       });
 
@@ -259,11 +252,11 @@ const dashboardService = {
         return dataEntrega >= dataInicioAnterior && dataEntrega < dataInicio;
       });
 
-      const cestasAnteriores = entregasPeriodoAnterior.filter(e => 
+      const cestasAnteriores = entregasPeriodoAnterior.filter(e =>
         (e.tipo === "BASICA" || e.cesta?.tipo === "BASICA")
       ).length;
 
-      const kitsAnteriores = entregasPeriodoAnterior.filter(e => 
+      const kitsAnteriores = entregasPeriodoAnterior.filter(e =>
         (e.tipo === "KIT" || e.cesta?.tipo === "KIT")
       ).length;
 
@@ -277,7 +270,7 @@ const dashboardService = {
       const percentualCestas = calcularPercentual(cestasDistribuidas, cestasAnteriores);
       const percentualKits = calcularPercentual(kitsDistribuidos, kitsAnteriores);
       const percentualFamilias = beneficiados.length > 0 ? "+8.5%" : "0%";
-      const percentualFila = filaEspera > 0 ? "+5.0%" : "0%";
+
 
       return {
         success: true,

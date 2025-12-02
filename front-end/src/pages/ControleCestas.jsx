@@ -23,7 +23,7 @@ export default function ControleCestas() {
     { texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
     { texto: "Cestas", onClick: () => navigate("/cestas") },
     ...(tipoUsuario === "2"
-      ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }]
+      ? []
       : []),
     { texto: "Sair", onClick: () => navigate("/"), icone: iconeSair },
   ];

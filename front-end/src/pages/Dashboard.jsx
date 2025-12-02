@@ -161,8 +161,7 @@ export default function Dashboard() {
   const [dadosAtuais, setDadosAtuais] = useState({
     cestasDistribuidas: { valor: 0, percentual: "0%" },
     kitsDistribuidos: { valor: 0, percentual: "0%" },
-    familiasAcompanhadas: { valor: 0, percentual: "0%" },
-    filaEspera: { valor: 0, percentual: "0%" }
+    familiasAcompanhadas: { valor: 0, percentual: "0%" }
   });
   const [dadosGraficoAtual, setDadosGraficoAtual] = useState({
     labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
@@ -373,7 +372,7 @@ export default function Dashboard() {
   const botoesNavbar = [
     { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
     { texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
-    ...(tipoUsuario === "2" ? [{ texto: "Fila de Espera", onClick: () => navigate("/fila-espera"), icone: iconeRelogio }] : []),
+
     { texto: "Sair", onClick: () => navigate("/"), icone: iconeSair }
   ];
 
@@ -454,13 +453,7 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="dashboard-card-resumo">
-            <div className="dashboard-card-titulo">Fila de Espera</div>
-            <div className="dashboard-card-valor">{dadosAtuais.filaEspera.valor}</div>
-            <div className={`dashboard-card-percentual ${dadosAtuais.filaEspera.percentual.startsWith('+') ? 'positivo' : 'negativo'}`}>
-              {dadosAtuais.filaEspera.percentual}
-            </div>
-          </div>
+
         </div>
 
         {/* Layout com colunas */}
