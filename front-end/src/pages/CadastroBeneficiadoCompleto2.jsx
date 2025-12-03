@@ -144,6 +144,48 @@ export default function CadastroBeneficiadoCompleto2() {
 		return null;
 	}
 
+	function validarCPF(cpf) {
+		// Remove formatação
+		const cpfLimpo = cpf.replace(/\D/g, '');
+		
+		// Verifica se tem 11 dígitos
+		if (cpfLimpo.length !== 11) {
+			return "CPF deve conter 11 dígitos.";
+		}
+		
+		// Verifica se todos os dígitos são iguais (ex: 111.111.111-11)
+		if (/^(\d)\1{10}$/.test(cpfLimpo)) {
+			return "CPF inválido.";
+		}
+		
+		// Valida dígitos verificadores
+		let soma = 0;
+		let resto;
+		
+		// Valida primeiro dígito
+		for (let i = 1; i <= 9; i++) {
+			soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
+		}
+		resto = (soma * 10) % 11;
+		if (resto === 10 || resto === 11) resto = 0;
+		if (resto !== parseInt(cpfLimpo.substring(9, 10))) {
+			return "CPF inválido.";
+		}
+		
+		// Valida segundo dígito
+		soma = 0;
+		for (let i = 1; i <= 10; i++) {
+			soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
+		}
+		resto = (soma * 10) % 11;
+		if (resto === 10 || resto === 11) resto = 0;
+		if (resto !== parseInt(cpfLimpo.substring(10, 11))) {
+			return "CPF inválido.";
+		}
+		
+		return null;
+	}
+
 	function handleSubmit(e) {
 		e.preventDefault();
 		let erros = [];

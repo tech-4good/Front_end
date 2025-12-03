@@ -81,8 +81,20 @@ export default function ConsultaEndereco() {
 			const response = await beneficiadoService.buscarPorCpf(cpfSelecionado);
 			
 			// 🏠 BUSCAR DADOS DA TABELA TIPO_MORADOR
-			console.log('🏠 Buscando dados de tipo_morador...');
-			const tipoMoradorResponse = await beneficiadoService.buscarTipoMoradorPorCpf(cpfSelecionado);
+			console.log('🏠 [ConsultaEndereco] Iniciando busca de tipo_morador');
+			let tipoMoradorResponse = null;
+			
+			// Primeiro tentar buscar pelo CPF (método antigo)
+			tipoMoradorResponse = await beneficiadoService.buscarTipoMoradorPorCpf(cpfSelecionado);
+			console.log('🏠 [ConsultaEndereco] Resultado da busca por CPF:', tipoMoradorResponse);
+			
+			// Se não encontrou por CPF e temos um endereço, tentar buscar pelo endereço
+			if (!tipoMoradorResponse.success && response.data?.endereco) {
+				const enderecoId = response.data.endereco.idEndereco || response.data.endereco.id;
+				console.log('🏠 [ConsultaEndereco] Tentando buscar por endereço ID:', enderecoId);
+				tipoMoradorResponse = await beneficiadoService.buscarTipoMoradorPorEndereco(enderecoId);
+				console.log('🏠 [ConsultaEndereco] Resultado da busca por endereço:', tipoMoradorResponse);
+			}
 			
 			if (response.success) {
 				console.log('✅ Sucesso ao carregar beneficiado:', response.data);
@@ -253,22 +265,22 @@ export default function ConsultaEndereco() {
 						...beneficiadoCompleto,
 						// Dados originais da tabela tipo_morador
 						tipoMorador: tipoMoradorResponse.data,
-						// Mapear campos de quantidade com nomes corretos
-						quantidade_crianca: tipoMoradorResponse.data.quantidade_crianca,
-						quantidade_adolescente: tipoMoradorResponse.data.quantidade_adolescente,
-						quantidade_jovem: tipoMoradorResponse.data.quantidade_jovem,
-						quantidade_idoso: tipoMoradorResponse.data.quantidade_idoso,
-						quantidade_gestante: tipoMoradorResponse.data.quantidade_gestante,
-						quantidade_deficiente: tipoMoradorResponse.data.quantidade_deficiente,
-						quantidade_outros: tipoMoradorResponse.data.quantidade_outros,
+						// Mapear campos de quantidade (backend usa camelCase)
+						quantidade_crianca: tipoMoradorResponse.data.quantidadeCrianca || 0,
+						quantidade_adolescente: tipoMoradorResponse.data.quantidadeAdolescente || 0,
+						quantidade_jovem: tipoMoradorResponse.data.quantidadeJovem || 0,
+						quantidade_idoso: tipoMoradorResponse.data.quantidadeIdoso || 0,
+						quantidade_gestante: tipoMoradorResponse.data.quantidadeGestante || 0,
+						quantidade_deficiente: tipoMoradorResponse.data.quantidadeDeficiente || 0,
+						quantidade_outros: tipoMoradorResponse.data.quantidadeOutros || 0,
 						// Manter compatibilidade com nomes alternativos
-						qtdCriancas: tipoMoradorResponse.data.quantidade_crianca,
-						qtdAdolescentes: tipoMoradorResponse.data.quantidade_adolescente,
-						qtdJovens: tipoMoradorResponse.data.quantidade_jovem,
-						qtdIdosos: tipoMoradorResponse.data.quantidade_idoso,
-						qtdGestantes: tipoMoradorResponse.data.quantidade_gestante,
-						qtdDeficientes: tipoMoradorResponse.data.quantidade_deficiente,
-						qtdOutros: tipoMoradorResponse.data.quantidade_outros
+						qtdCriancas: tipoMoradorResponse.data.quantidadeCrianca || 0,
+						qtdAdolescentes: tipoMoradorResponse.data.quantidadeAdolescente || 0,
+						qtdJovens: tipoMoradorResponse.data.quantidadeJovem || 0,
+						qtdIdosos: tipoMoradorResponse.data.quantidadeIdoso || 0,
+						qtdGestantes: tipoMoradorResponse.data.quantidadeGestante || 0,
+						qtdDeficientes: tipoMoradorResponse.data.quantidadeDeficiente || 0,
+						qtdOutros: tipoMoradorResponse.data.quantidadeOutros || 0
 					};
 					
 					console.log('🏠 ✅ Beneficiado com dados de tipo_morador integrados via API:', {
@@ -1081,13 +1093,13 @@ export default function ConsultaEndereco() {
 			
 			// 📊 Dados de TIPO_MORADOR para atualizar (APENAS quantidades de pessoas)
 			const dadosTipoMoradorParaAtualizar = {
-				quantidadeCrianca: parseInt(endereco.criancas) || 0,
-				quantidadeJovem: parseInt(endereco.jovens) || 0,
-				quantidadeAdolescente: parseInt(endereco.adolescentes) || 0,
-				quantidadeIdoso: parseInt(endereco.idosos) || 0,
-				quantidadeGestante: parseInt(endereco.gestantes) || 0,
-				quantidadeDeficiente: parseInt(endereco.deficientes) || 0,
-				quantidadeOutros: parseInt(endereco.outros) || 0
+				quantidadeCrianca: parseInt(endereco.quantidade_crianca) || 0,
+				quantidadeJovem: parseInt(endereco.quantidade_jovem) || 0,
+				quantidadeAdolescente: parseInt(endereco.quantidade_adolescente) || 0,
+				quantidadeIdoso: parseInt(endereco.quantidade_idoso) || 0,
+				quantidadeGestante: parseInt(endereco.quantidade_gestante) || 0,
+				quantidadeDeficiente: parseInt(endereco.quantidade_deficiente) || 0,
+				quantidadeOutros: parseInt(endereco.quantidade_outros) || 0
 			};
 			
 			console.log('📦 Dados preparados para atualização:', {

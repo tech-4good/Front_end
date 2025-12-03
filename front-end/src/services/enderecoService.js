@@ -286,16 +286,19 @@ export const buscarEnderecoPorId = async (id) => {
 };
 
 /**
- * Atualiza um endereço existente (PATCH - atualização parcial)
+ * Atualiza dados físicos do endereço (número, logradouro, CEP, etc.)
+ * Usa PUT - atualização parcial (apenas campos enviados são atualizados)
+ * Conforme documentação backend: PUT /enderecos/{id}
  * @param {number} id - ID do endereço
  * @param {Object} dadosAtualizados - Campos a atualizar
  * @returns {Promise<Object>} Endereço atualizado
  */
 export const atualizarEndereco = async (id, dadosAtualizados) => {
   try {
-    console.log('✏️ Atualizando endereço ID:', id, 'com dados:', dadosAtualizados);
+    console.log('✏️ Atualizando dados do endereço ID:', id, 'com dados:', dadosAtualizados);
 
-    const response = await api.patch(`/enderecos/${id}`, dadosAtualizados);
+    // PUT para dados físicos (conforme documentação backend)
+    const response = await api.put(`/enderecos/${id}`, dadosAtualizados);
 
     console.log('✅ Endereço atualizado:', response.data);
 
@@ -326,6 +329,54 @@ export const atualizarEndereco = async (id, dadosAtualizados) => {
     return {
       success: false,
       error: error.message || 'Erro ao atualizar endereço.'
+    };
+  }
+};
+
+/**
+ * Atualiza apenas o STATUS do endereço (ATIVO, INATIVO, FILA_ESPERA)
+ * Usa PATCH - apenas para mudança de status
+ * Conforme documentação backend: PATCH /enderecos/{id}
+ * @param {number} id - ID do endereço
+ * @param {string} status - Novo status: 'ATIVO', 'INATIVO' ou 'FILA_ESPERA'
+ * @returns {Promise<Object>} Endereço com status atualizado
+ */
+export const atualizarStatusEndereco = async (id, status) => {
+  try {
+    console.log('🔄 Atualizando status do endereço ID:', id, 'para:', status);
+
+    // PATCH para status (conforme documentação backend)
+    const response = await api.patch(`/enderecos/${id}`, { status });
+
+    console.log('✅ Status atualizado:', response.data);
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+    console.error('❌ Erro ao atualizar status:', error);
+
+    if (error.response) {
+      const status = error.response.status;
+      const mensagem = error.response.data?.message || error.message;
+
+      switch (status) {
+        case 400:
+          throw new Error('Status inválido. Use: ATIVO, INATIVO ou FILA_ESPERA.');
+        case 404:
+          throw new Error('Endereço não encontrado.');
+        case 401:
+          throw new Error('Sessão expirada. Faça login novamente.');
+        default:
+          throw new Error(mensagem || 'Erro ao atualizar status.');
+      }
+    }
+
+    return {
+      success: false,
+      error: error.message || 'Erro ao atualizar status.'
     };
   }
 };
@@ -402,6 +453,7 @@ export const enderecoService = {
   listarEnderecos,
   buscarEnderecoPorId,
   atualizarEndereco,
+  atualizarStatusEndereco, // Novo método para atualizar apenas status
   deletarEndereco,
   validarCep,
   formatarCep

@@ -127,12 +127,15 @@ const cestaService = {
   // Deletar cesta
   async deletarCesta(id) {
     try {
+      console.log("🗑️ [cestaService] Deletando cesta ID:", id);
       await api.delete(`/cestas/${id}`);
+      console.log("✅ [cestaService] Cesta deletada com sucesso!");
       return {
         success: true
       };
     } catch (error) {
-      console.error("Erro ao deletar cesta:", error);
+      console.error("❌ [cestaService] Erro ao deletar cesta:", error);
+      console.error("❌ [cestaService] Response:", error.response?.data);
       return {
         success: false,
         error: error.response?.data?.message || "Erro ao deletar cesta"

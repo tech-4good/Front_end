@@ -66,8 +66,8 @@ export default function HistoricoDoacoes() {
 				console.log("📦 Array de entregas extraído:", dadosEntregas.length, "itens");
 				
 				// Processar entregas
-				const entregasProcessadas = dadosEntregas.map(entrega => ({
-					id: entrega.id,
+				const entregasProcessadas = dadosEntregas.map((entrega, index) => ({
+					id: entrega.idEntrega || entrega.id || `entrega-${index}`,
 					cpf: entrega.beneficiado?.cpf || "CPF não disponível",
 					nome: entrega.beneficiado?.nome || "Nome não disponível",
 					tipo: entrega.cesta?.tipo || "Tipo não especificado",
@@ -303,7 +303,7 @@ export default function HistoricoDoacoes() {
 						
 						{/* Mostrar ... e última página se necessário */}
 						{gerarPaginasVisiveis()[gerarPaginasVisiveis().length - 1] < totalPaginas && (
-							<>
+							<React.Fragment key="ultima-pagina">
 								<span className="historico-doacoes-pontos">...</span>
 								<button
 									className="historico-doacoes-numero-pagina"
@@ -311,7 +311,7 @@ export default function HistoricoDoacoes() {
 								>
 									{totalPaginas}
 								</button>
-							</>
+							</React.Fragment>
 						)}
 						
 						<button 

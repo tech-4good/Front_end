@@ -104,9 +104,17 @@ const entregaService = {
   // Buscar histórico de entregas de um beneficiado
   async buscarHistorico(beneficiadoId) {
     try {
+      console.log('🔍 Verificando histórico de entregas para beneficiado:', beneficiadoId);
       const response = await api.get(`/entregas/historico/${beneficiadoId}`);
       return response.data || [];
     } catch (error) {
+      // ⚠️ WORKAROUND: Ignorar erro 500 do Redis não disponível
+      // Backend está tentando usar cache Redis que não está rodando
+      // TODO: Backend deve desabilitar Redis em dev (spring.cache.type=none)
+      if (error.response?.status === 500) {
+        console.warn('⚠️ Erro ao buscar histórico (Redis indisponível). Continuando sem histórico...');
+        return []; // Retorna vazio para permitir primeira doação
+      }
       console.error("Erro ao buscar histórico:", error);
       return [];
     }
@@ -132,13 +140,16 @@ const entregaService = {
   // Registrar nova entrega
   async registrarEntrega(dadosEntrega) {
     try {
+      console.log("🚀 [entregaService] Chamando POST /entregas com dados:", dadosEntrega);
       const response = await api.post("/entregas", dadosEntrega);
+      console.log("✅ [entregaService] Entrega registrada - Response:", response.data);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error("Erro ao registrar entrega:", error);
+      console.error("❌ [entregaService] Erro ao registrar entrega:", error);
+      console.error("❌ [entregaService] Error response:", error.response?.data);
       return {
         success: false,
         error: error.response?.data?.error?.message || error.response?.data?.message || "Erro ao registrar entrega"

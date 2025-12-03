@@ -33,6 +33,7 @@ export default function DoarCesta() {
   const [cpf, setCpf] = useState("");
   const [tipoCesta, setTipoCesta] = useState("");
   const [resultados, setResultados] = useState([]);
+  const [processando, setProcessando] = useState(false);
   const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
   const [modalErro, setModalErro] = useState(false);
   const [modalSucesso, setModalSucesso] = useState(false);
@@ -138,11 +139,19 @@ export default function DoarCesta() {
   async function handleSubmit(e) {
     e.preventDefault();
     
+    // Prevenir múltiplos cliques
+    if (processando) {
+      console.log("⚠️ Já está processando uma entrega, aguarde...");
+      return;
+    }
+    
     if (!cpf || !tipoCesta) {
       setModalErro(true);
       return;
     }
 
+    setProcessando(true);
+    
     try {
       // Buscar beneficiado por CPF
       const response = await beneficiadoService.buscarPorCpf(cpf);
@@ -157,6 +166,8 @@ export default function DoarCesta() {
     } catch (error) {
       console.error("Erro ao buscar beneficiado:", error);
       setModalErro(true);
+    } finally {
+      setProcessando(false);
     }
   }
 
@@ -184,17 +195,33 @@ export default function DoarCesta() {
       // Verificar histórico de entregas para validar período
       console.log("🔍 Verificando histórico de entregas para beneficiado:", beneficiado.id_beneficiado || beneficiado.id);
       const historico = await entregaService.buscarHistorico(beneficiado.id_beneficiado || beneficiado.id);
-      console.log("📋 Histórico de entregas:", historico);
+      console.log("📋 Histórico de entregas COMPLETO:", JSON.stringify(historico, null, 2));
       
       // Verificar se é um objeto paginado ou array direto
       const entregas = historico?.content || historico || [];
       console.log("📦 Entregas extraídas:", entregas);
+      console.log("📦 Número de entregas:", entregas.length);
       
       if (entregas && entregas.length > 0) {
+        console.log("🔍 Analisando cada entrega:");
+        entregas.forEach((entrega, index) => {
+          console.log(`  Entrega ${index + 1}:`, {
+            id: entrega.id || entrega.idEntrega,
+            tipo: entrega.tipo || entrega.cesta?.tipo,
+            dataRetirada: entrega.dataRetirada || entrega.data_retirada,
+            proximaRetirada: entrega.proximaRetirada || entrega.proxima_retirada
+          });
+        });
+        
         // Encontrar TODAS as entregas do mesmo tipo
-        const entregasMesmoTipo = entregas.filter(entrega => 
-          entrega.tipo === tipoEscolhido || entrega.cesta?.tipo === tipoEscolhido
-        );
+        const entregasMesmoTipo = entregas.filter(entrega => {
+          const tipoEntrega = entrega.tipo || entrega.cesta?.tipo;
+          const match = tipoEntrega === tipoEscolhido;
+          console.log(`  Comparando: ${tipoEntrega} === ${tipoEscolhido} ? ${match}`);
+          return match;
+        });
+        
+        console.log(`📦 Total de entregas do tipo ${tipoEscolhido}:`, entregasMesmoTipo.length);
         
         // Ordenar por data (mais recente primeiro) e pegar a última
         if (entregasMesmoTipo.length > 0) {
@@ -245,6 +272,7 @@ export default function DoarCesta() {
       }
 
       // Buscar cestas disponíveis do tipo permitido
+      console.log("🔍 Buscando cestas disponíveis do tipo:", tipoEscolhido);
       const response = await cestaService.listarCestas();
       
       if (!response.success) {
@@ -252,6 +280,9 @@ export default function DoarCesta() {
         setModalErro(true);
         return;
       }
+      
+      console.log("📦 Total de cestas encontradas:", response.data?.length || 0);
+      console.log("📦 Cestas detalhadas:", response.data);
       
       if (!response.data || response.data.length === 0) {
         console.warn("⚠️ Nenhuma cesta cadastrada no sistema");
@@ -262,6 +293,9 @@ export default function DoarCesta() {
       const cestaDisponivel = response.data.find(c => 
         c.tipo === tipoEscolhido && c.quantidadeCestas > 0
       );
+
+      console.log("🎯 Cesta selecionada para doação:", cestaDisponivel);
+      console.log("📦 Quantidade em estoque ANTES da doação:", cestaDisponivel?.quantidadeCestas);
 
       if (!cestaDisponivel) {
         console.log("❌ Nenhuma cesta do tipo solicitado em estoque");
@@ -301,9 +335,12 @@ export default function DoarCesta() {
       console.log("🎯 Registrando entrega no banco:", dadosEntrega);
       console.log("📅 Data de hoje (local):", dataHojeLocal);
       console.log("📅 Próxima retirada (local):", dataProximaLocal);
+      console.log("🔥 [DoarCesta] PRESTES A CHAMAR registrarEntrega()");
 
       // Registrar entrega no backend
       const resultado = await entregaService.registrarEntrega(dadosEntrega);
+      
+      console.log("🔥 [DoarCesta] RESULTADO de registrarEntrega():", resultado);
       
       if (resultado.success) {
         console.log("✅ Entrega registrada com sucesso no banco!");
@@ -316,33 +353,23 @@ export default function DoarCesta() {
         console.log("📦 Quantidade atual:", quantidadeAtual);
         console.log("📦 Nova quantidade:", quantidadeAtual - 1);
         
-        // Validar se temos a quantidade
-        if (quantidadeAtual === undefined || quantidadeAtual === null) {
-          console.error("❌ Quantidade atual não encontrada, buscando dados completos da cesta...");
+        const novaQuantidade = quantidadeAtual - 1;
+        
+        // Se quantidade ficar 0, DELETAR a cesta (backend não aceita quantidade = 0)
+        if (novaQuantidade === 0) {
+          console.log("🗑️ Última cesta doada, DELETANDO registro do estoque...");
+          const delecao = await cestaService.deletarCesta(cestaId);
           
-          // Buscar dados completos da cesta
-          const dadosCesta = await cestaService.buscarPorId(cestaId);
-          if (dadosCesta.success && dadosCesta.data) {
-            const novaQuantidade = dadosCesta.data.quantidadeCestas - 1;
-            console.log("📦 Quantidade obtida do banco:", dadosCesta.data.quantidadeCestas);
-            console.log("📦 Nova quantidade calculada:", novaQuantidade);
-            
-            const atualizacaoEstoque = await cestaService.atualizarCesta(cestaId, {
-              quantidadeCestas: novaQuantidade
-            });
-            
-            if (atualizacaoEstoque.success) {
-              console.log("✅ Estoque atualizado com sucesso!");
-            } else {
-              console.warn("⚠️ Entrega registrada mas falha ao atualizar estoque:", atualizacaoEstoque.error);
-            }
+          if (delecao.success) {
+            console.log("✅ Cesta deletada do estoque com sucesso!");
           } else {
-            console.error("❌ Não foi possível buscar dados da cesta para atualizar estoque");
+            console.warn("⚠️ Entrega registrada mas falha ao deletar cesta do estoque:", delecao.error);
           }
         } else {
-          // Temos a quantidade, atualizar diretamente
+          // Se ainda tem cestas, apenas ATUALIZAR a quantidade
+          console.log("📦 Atualizando quantidade para:", novaQuantidade);
           const atualizacaoEstoque = await cestaService.atualizarCesta(cestaId, {
-            quantidadeCestas: quantidadeAtual - 1
+            quantidadeCestas: novaQuantidade
           });
           
           if (atualizacaoEstoque.success) {

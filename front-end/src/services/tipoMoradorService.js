@@ -72,15 +72,38 @@ const tipoMoradorService = {
     try {
       console.log('🔍 Buscando tipo de morador para beneficiado:', beneficiadoId);
       
+      // Primeiro, buscar o beneficiado para pegar o CPF
+      const { beneficiadoService } = await import('./beneficiadoService');
+      const beneficiadoResponse = await beneficiadoService.buscarBeneficiadoPorId(beneficiadoId);
+      
+      console.log('📋 DEBUG - Resposta buscarBeneficiadoPorId:', beneficiadoResponse);
+      
+      if (!beneficiadoResponse.success || !beneficiadoResponse.data?.cpf) {
+        console.error('❌ Beneficiado não encontrado ou sem CPF');
+        return { success: false, error: 'Beneficiado não encontrado' };
+      }
+      
+      const cpfBeneficiado = beneficiadoResponse.data.cpf;
+      console.log('✅ CPF do beneficiado:', cpfBeneficiado);
+      
       const response = await apiClient.get('/tipo-moradores');
       
       if (response.status === 204 || !response.data) {
         return { success: false, error: 'Nenhum tipo de morador encontrado' };
       }
       
-      const tipoMorador = response.data.find(tm => 
-        tm.beneficiado?.id === beneficiadoId
-      );
+      console.log('📋 DEBUG - Total de tipos de morador:', response.data.length);
+      
+      // Buscar por CPF do beneficiado, já que o backend não retorna beneficiado.id
+      const tipoMorador = response.data.find(tm => {
+        const match = tm.beneficiado?.cpf === cpfBeneficiado;
+        console.log('🔍 Comparando:', {
+          tm_beneficiado_cpf: tm.beneficiado?.cpf,
+          cpf_procurado: cpfBeneficiado,
+          match
+        });
+        return match;
+      });
       
       if (!tipoMorador) {
         return { success: false, error: 'Tipo de morador não encontrado para este beneficiado' };

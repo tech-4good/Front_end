@@ -624,9 +624,33 @@ export const beneficiadoService = {
       console.log('Dados originais recebidos:', dadosEndereco);
 
       const response = await apiClient.post('/enderecos', payload);
-      return { success: true, data: response.data };
-      return { success: true, data: response.data };
-      return { success: true, data: response.data };
+      
+      console.log('🏠 [cadastrarEndereco] Resposta completa da API:', response.data);
+      console.log('🏠 [cadastrarEndereco] response.data.id:', response.data.id);
+      console.log('🏠 [cadastrarEndereco] response.data.id_endereco:', response.data.id_endereco);
+      console.log('🏠 [cadastrarEndereco] response.data.idEndereco:', response.data.idEndereco);
+      
+      // Garantir que temos o ID correto (pode ser 'id', 'id_endereco' ou 'idEndereco')
+      const enderecoId = response.data.id || response.data.id_endereco || response.data.idEndereco;
+      
+      console.log('🏠 [cadastrarEndereco] 🔑 ID FINAL EXTRAÍDO:', enderecoId);
+      
+      if (!enderecoId) {
+        console.error('🏠 [cadastrarEndereco] ❌ ERRO: Nenhum ID foi retornado pelo backend!');
+        console.error('🏠 [cadastrarEndereco] Estrutura completa da resposta:', JSON.stringify(response.data, null, 2));
+        return { 
+          success: false, 
+          error: 'Erro: Backend não retornou o ID do endereço cadastrado' 
+        };
+      }
+      
+      return { 
+        success: true, 
+        data: { 
+          ...response.data, 
+          id: enderecoId // Garantir que 'id' está presente
+        } 
+      };
     } catch (error) {
       console.error('Erro ao cadastrar endereço:', error);
 
@@ -660,64 +684,85 @@ export const beneficiadoService = {
   // 🏠 BUSCAR DADOS DA TABELA TIPO_MORADOR - ENDPOINTS REAIS DO BACKEND
   buscarTipoMoradorPorCpf: async (cpf) => {
     try {
-      console.log('🏠 Iniciando busca de tipo_morador para CPF:', cpf);
+      console.log('🏠 [buscarTipoMoradorPorCpf] Iniciando busca de tipo_morador para CPF:', cpf);
 
       // PASSO 1: Buscar o beneficiado para obter o ID
+      console.log('🏠 [buscarTipoMoradorPorCpf] PASSO 1: Buscando beneficiado por CPF...');
       const beneficiadoResponse = await apiClient.get(`/beneficiados/cpf/${cpf}`);
+      console.log('🏠 [buscarTipoMoradorPorCpf] Resposta da busca de beneficiado:', beneficiadoResponse.data);
+      
       if (!beneficiadoResponse.data || !beneficiadoResponse.data.id) {
-        console.log('🏠 ❌ Beneficiado não encontrado para CPF:', cpf);
+        console.log('🏠 [buscarTipoMoradorPorCpf] ❌ Beneficiado não encontrado para CPF:', cpf);
         return { success: false, error: 'Beneficiado não encontrado' };
       }
 
       const beneficiadoId = beneficiadoResponse.data.id;
-      console.log('🏠 ✅ Beneficiado encontrado com ID:', beneficiadoId);
+      console.log('🏠 [buscarTipoMoradorPorCpf] ✅ Beneficiado encontrado com ID:', beneficiadoId);
 
       // PASSO 2: Buscar todos os tipos de morador e filtrar por beneficiado (ENDPOINT REAL)
       try {
-        console.log('🏠 Buscando todos os tipos de morador via GET /tipo-moradores');
+        console.log('🏠 [buscarTipoMoradorPorCpf] PASSO 2: Buscando todos os tipos de morador via GET /tipo-moradores');
         const tiposMoradorResponse = await apiClient.get('/tipo-moradores');
+        console.log('🏠 [buscarTipoMoradorPorCpf] Resposta bruta da API:', tiposMoradorResponse.data);
 
         if (tiposMoradorResponse.data && Array.isArray(tiposMoradorResponse.data)) {
           console.log('🏠 📋 Total de tipos de morador encontrados:', tiposMoradorResponse.data.length);
 
-          // Filtrar pelo beneficiado ID
+          // Filtrar pelo beneficiado - agora verificando o objeto beneficiado aninhado
           const tipoMoradorEncontrado = tiposMoradorResponse.data.find(tm => {
             console.log('🏠 🔍 Comparando:', {
+              tm_beneficiado_cpf: tm.beneficiado?.cpf,
               tm_fk_beneficiado: tm.fk_beneficiado,
               tm_beneficiadoId: tm.beneficiadoId,
-              beneficiadoId_procurado: beneficiadoId
+              beneficiadoId_procurado: beneficiadoId,
+              cpf_procurado: cpf
             });
 
-            return tm.fk_beneficiado === beneficiadoId ||
-              tm.beneficiadoId === beneficiadoId ||
-              tm.fk_beneficiado === beneficiadoId.toString() ||
-              tm.beneficiadoId === beneficiadoId.toString();
+            // Verificar múltiplas possibilidades:
+            // 1. Comparar IDs diretos
+            if (tm.fk_beneficiado === beneficiadoId || tm.beneficiadoId === beneficiadoId ||
+                tm.fk_beneficiado === beneficiadoId.toString() || tm.beneficiadoId === beneficiadoId.toString()) {
+              return true;
+            }
+            
+            // 2. Comparar CPF do objeto beneficiado aninhado
+            if (tm.beneficiado?.cpf) {
+              const cpfLimpo = cpf.replace(/\D/g, '');
+              const cpfBeneficiadoLimpo = tm.beneficiado.cpf.replace(/\D/g, '');
+              if (cpfLimpo === cpfBeneficiadoLimpo) {
+                return true;
+              }
+            }
+            
+            return false;
           });
 
           if (tipoMoradorEncontrado) {
             console.log('🏠 ✅ Tipo morador encontrado via filtro:', tipoMoradorEncontrado);
+            console.log('🏠 📊 Quantidades encontradas:', {
+              crianca: tipoMoradorEncontrado.quantidadeCrianca || tipoMoradorEncontrado.quantidade_crianca || 0,
+              adolescente: tipoMoradorEncontrado.quantidadeAdolescente || tipoMoradorEncontrado.quantidade_adolescente || 0,
+              jovem: tipoMoradorEncontrado.quantidadeJovem || tipoMoradorEncontrado.quantidade_jovem || 0,
+              idoso: tipoMoradorEncontrado.quantidadeIdoso || tipoMoradorEncontrado.quantidade_idoso || 0,
+              gestante: tipoMoradorEncontrado.quantidadeGestante || tipoMoradorEncontrado.quantidade_gestante || 0,
+              deficiente: tipoMoradorEncontrado.quantidadeDeficiente || tipoMoradorEncontrado.quantidade_deficiente || 0,
+              outros: tipoMoradorEncontrado.quantidadeOutros || tipoMoradorEncontrado.quantidade_outros || 0
+            });
             return { success: true, data: tipoMoradorEncontrado };
           } else {
             console.log('🏠 ⚠️ Nenhum tipo morador encontrado para beneficiado ID:', beneficiadoId);
-            console.log('🏠 📋 IDs disponíveis na tabela:', tiposMoradorResponse.data.map(tm => ({
+            console.log('🏠 📋 Estrutura COMPLETA dos registros na tabela:', tiposMoradorResponse.data);
+            console.log('🏠 📋 Apenas os IDs disponíveis:', tiposMoradorResponse.data.map(tm => ({
               id: tm.id,
+              idTipoMorador: tm.idTipoMorador,
               fk_beneficiado: tm.fk_beneficiado,
-              beneficiadoId: tm.beneficiadoId
+              beneficiadoId: tm.beneficiadoId,
+              todasAsChaves: Object.keys(tm)
             })));
           }
         }
       } catch (listagemError) {
         console.log('🏠 ⚠️ Erro ao buscar lista de tipos de morador:', listagemError.response?.status || listagemError.message);
-      }
-
-      // PASSO 3: Tentar buscar por ID específico (caso exista registro com ID = beneficiadoId)
-      try {
-        console.log('🏠 Tentando buscar tipo morador por ID:', beneficiadoId);
-        const directResponse = await apiClient.get(`/tipo-moradores/${beneficiadoId}`);
-        console.log('🏠 ✅ Dados encontrados via busca por ID:', directResponse.data);
-        return { success: true, data: directResponse.data };
-      } catch (directError) {
-        console.log('🏠 ⚠️ Busca por ID específico falhou:', directError.response?.status || directError.message);
       }
 
       // Se chegou aqui, não encontrou dados na API
@@ -756,6 +801,73 @@ export const beneficiadoService = {
         console.log('⚠️ Tipo de morador não encontrado para beneficiado ID:', beneficiadoId);
       } else if (error.response?.data?.message) {
         mensagem = error.response.data.message;
+      }
+
+      return { success: false, error: mensagem };
+    }
+  },
+
+  // 🆕 Buscar dados de tipo_morador por ID do endereço
+  buscarTipoMoradorPorEndereco: async (enderecoId) => {
+    try {
+      console.log('🏠 [buscarTipoMoradorPorEndereco] Buscando tipo_morador para endereço ID:', enderecoId);
+      
+      // Buscar todos os tipos de morador
+      const tiposMoradorResponse = await apiClient.get('/tipo-moradores');
+      
+      if (tiposMoradorResponse.data && Array.isArray(tiposMoradorResponse.data)) {
+        console.log('🏠 [buscarTipoMoradorPorEndereco] Total de registros:', tiposMoradorResponse.data.length);
+        
+        // Filtrar pelo endereço
+        const tipoMoradorEncontrado = tiposMoradorResponse.data.find(tm => {
+          console.log('🏠 [buscarTipoMoradorPorEndereco] Comparando endereço:', {
+            tm_endereco_id: tm.endereco?.idEndereco || tm.endereco?.id,
+            enderecoId_procurado: enderecoId
+          });
+          
+          // Verificar no objeto endereco aninhado
+          if (tm.endereco) {
+            const tmEnderecoId = tm.endereco.idEndereco || tm.endereco.id;
+            return tmEnderecoId === enderecoId || tmEnderecoId === enderecoId.toString() ||
+                   tmEnderecoId === parseInt(enderecoId);
+          }
+          
+          return false;
+        });
+        
+        if (tipoMoradorEncontrado) {
+          console.log('🏠 [buscarTipoMoradorPorEndereco] ✅ Encontrado:', tipoMoradorEncontrado);
+          return { success: true, data: tipoMoradorEncontrado };
+        } else {
+          console.log('🏠 [buscarTipoMoradorPorEndereco] ❌ Não encontrado para endereço:', enderecoId);
+          return { success: false, error: 'Dados não encontrados para este endereço' };
+        }
+      }
+      
+      return { success: false, error: 'Nenhum tipo de morador cadastrado' };
+    } catch (error) {
+      console.error('🏠 [buscarTipoMoradorPorEndereco] Erro:', error);
+      return { success: false, error: 'Erro ao buscar tipo_morador por endereço' };
+    }
+  },
+
+  // Buscar dados de tipo_morador por ID do beneficiado (MÉTODO ANTIGO - MANTER COMPATIBILIDADE)
+  buscarTipoMoradorPorBeneficiadoLegacy: async (beneficiadoId) => {
+    try {
+      console.log('🏠 Buscando dados de tipo_morador para beneficiado ID:', beneficiadoId);
+      const response = await apiClient.get(`/tipo-morador/beneficiado/${beneficiadoId}`);
+      console.log('🏠 Dados de tipo_morador recebidos:', response.data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao buscar tipo_morador por beneficiado:', error);
+
+      let mensagem = 'Erro interno do servidor';
+
+      if (error.response?.status === 404) {
+        mensagem = 'Dados de tipo de morador não encontrados para este beneficiado.';
+        console.log('⚠️ Tipo de morador não encontrado para beneficiado ID:', beneficiadoId);
+      } else if (error.response?.data?.message) {
+        mensagem = error.response.data.message;
       } else if (error.message === 'Network Error') {
         mensagem = 'Erro de conexão. Verifique sua internet.';
       }
@@ -769,29 +881,29 @@ export const beneficiadoService = {
     try {
       console.log('🏠 Cadastrando dados de tipo_morador com dados:', dadosTipoMorador);
 
-      // Payload conforme estrutura EXATA fornecida pelo backend
+      // Payload conforme documentação do backend (camelCase)
       const payload = {
-        quantidade_crianca: parseInt(dadosTipoMorador.quantidade_crianca) || 0,
-        quantidade_adolescente: parseInt(dadosTipoMorador.quantidade_adolescente) || 0,
-        quantidade_jovem: parseInt(dadosTipoMorador.quantidade_jovem) || 0,
-        quantidade_idoso: parseInt(dadosTipoMorador.quantidade_idoso) || 0,
-        quantidade_gestante: parseInt(dadosTipoMorador.quantidade_gestante) || 0,
-        quantidade_deficiente: parseInt(dadosTipoMorador.quantidade_deficiente) || 0,
-        quantidade_outros: parseInt(dadosTipoMorador.quantidade_outros) || 0,
-        fk_beneficiado: dadosTipoMorador.fk_beneficiado,
-        fk_endereco: dadosTipoMorador.fk_endereco
+        quantidadeCrianca: parseInt(dadosTipoMorador.quantidade_crianca) || 0,
+        quantidadeAdolescente: parseInt(dadosTipoMorador.quantidade_adolescente) || 0,
+        quantidadeJovem: parseInt(dadosTipoMorador.quantidade_jovem) || 0,
+        quantidadeIdoso: parseInt(dadosTipoMorador.quantidade_idoso) || 0,
+        quantidadeGestante: parseInt(dadosTipoMorador.quantidade_gestante) || 0,
+        quantidadeDeficiente: parseInt(dadosTipoMorador.quantidade_deficiente) || 0,
+        quantidadeOutros: parseInt(dadosTipoMorador.quantidade_outros) || 0,
+        beneficiadoId: dadosTipoMorador.fk_beneficiado,
+        enderecoId: dadosTipoMorador.fk_endereco
       };
 
-      console.log('🏠 Payload preparado para API:', payload);
+      console.log('🏠 Payload preparado para API (camelCase):', payload);
 
       // Validações obrigatórias conforme backend
-      if (!payload.fk_beneficiado) {
-        console.log('🏠 ❌ fk_beneficiado é obrigatório');
+      if (!payload.beneficiadoId) {
+        console.log('🏠 ❌ beneficiadoId é obrigatório');
         return { success: false, error: 'ID do beneficiado é obrigatório' };
       }
 
-      if (!payload.fk_endereco) {
-        console.log('🏠 ❌ fk_endereco é obrigatório');
+      if (!payload.enderecoId) {
+        console.log('🏠 ❌ enderecoId é obrigatório');
         return { success: false, error: 'ID do endereço é obrigatório' };
       }
 

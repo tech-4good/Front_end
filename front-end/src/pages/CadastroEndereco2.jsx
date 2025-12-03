@@ -113,14 +113,25 @@ export default function CadastroEndereco2() {
     try {
       const dadosEndereco = prepararDadosEndereco();
       
+      console.log('📍 [CadastroEndereco2] Cadastrando endereço...', dadosEndereco);
       const response = await beneficiadoService.cadastrarEndereco(dadosEndereco);
+      console.log('📍 [CadastroEndereco2] Resposta do cadastro de endereço:', response);
       
       if (response.success) {
+        console.log('📍 [CadastroEndereco2] ✅ Endereço cadastrado! ID:', response.data.id);
+        console.log('📍 [CadastroEndereco2] Dados completos retornados:', response.data);
+        
         setEnderecoId(response.data.id);
         
         // Cadastrar dados na tabela tipo_morador
         const cpfBeneficiado = sessionStorage.getItem("cpfSelecionado");
         const beneficiadoId = sessionStorage.getItem("beneficiadoId");
+        
+        console.log('📍 [CadastroEndereco2] Recuperado do sessionStorage:', {
+          cpfBeneficiado,
+          beneficiadoId,
+          enderecoId: response.data.id
+        });
         
         if (cpfBeneficiado && response.data.id) {
           const dadosTipoMorador = {
@@ -136,15 +147,21 @@ export default function CadastroEndereco2() {
             fk_endereco: response.data.id
           };
           
-          await beneficiadoService.cadastrarTipoMorador(dadosTipoMorador);
+          console.log('📍 [CadastroEndereco2] Dados preparados para tipo_morador:', dadosTipoMorador);
+          console.log('📍 [CadastroEndereco2] 🔑 IDs sendo enviados: beneficiadoId=' + dadosTipoMorador.fk_beneficiado + ', enderecoId=' + dadosTipoMorador.fk_endereco);
+          
+          const resultadoTipoMorador = await beneficiadoService.cadastrarTipoMorador(dadosTipoMorador);
+          console.log('📍 [CadastroEndereco2] Resultado do cadastro tipo_morador:', resultadoTipoMorador);
         }
         
         return true;
       } else {
+        console.log('📍 [CadastroEndereco2] ❌ Erro ao cadastrar endereço:', response.error);
         mostrarModal(response.error || 'Erro ao cadastrar endereço.');
         return false;
       }
     } catch (error) {
+      console.error('📍 [CadastroEndereco2] ❌ Erro inesperado:', error);
       mostrarModal('Erro inesperado. Tente novamente.');
       return false;
     } finally {
