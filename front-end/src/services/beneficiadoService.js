@@ -1080,33 +1080,42 @@ export const beneficiadoService = {
       let tipoMorador = null;
       try {
         const tipoMoradorResponse = await apiClient.get('/tipo-moradores');
-        const tiposMoradores = tipoMoradorResponse.data;
         
-        // 3. Filtrar pelo CPF ou enderecoId (backend não retorna beneficiado.id no tipo_morador)
-        tipoMorador = tiposMoradores.find(tm => {
-          // Normalizar CPFs para comparação (remover pontos e traços)
-          const tmCpf = tm.beneficiado?.cpf?.replace(/[.\-]/g, '');
-          const beneficiadoCpf = beneficiado.cpf?.replace(/[.\-]/g, '');
-          
-          // Tentar match por CPF ou por endereço ID
-          const matchCpf = tmCpf === beneficiadoCpf;
-          const matchEndereco = tm.endereco?.idEndereco === beneficiado.endereco?.id || 
-                                tm.endereco?.id === beneficiado.endereco?.id;
-          
-          return matchCpf || matchEndereco;
-        });
+        // Garantir que temos um array
+        let tiposMoradores = tipoMoradorResponse.data;
         
-        if (tipoMorador) {
-          console.log('✅ Tipo morador encontrado com quantidades:', {
-            criancas: tipoMorador.quantidadeCrianca,
-            jovens: tipoMorador.quantidadeJovem,
-            adolescentes: tipoMorador.quantidadeAdolescente
-          });
-        } else {
-          console.log('⚠️ Tipo morador não encontrado para este beneficiado');
+        // Se a resposta não for um array, tentar acessar uma propriedade que contenha o array
+        if (!Array.isArray(tiposMoradores)) {
+          if (tiposMoradores.data && Array.isArray(tiposMoradores.data)) {
+            tiposMoradores = tiposMoradores.data;
+          } else if (tiposMoradores.results && Array.isArray(tiposMoradores.results)) {
+            tiposMoradores = tiposMoradores.results;
+          } else if (tiposMoradores.items && Array.isArray(tiposMoradores.items)) {
+            tiposMoradores = tiposMoradores.items;
+          } else {
+            console.warn('⚠️ Resposta da API tipo-moradores não é um array');
+            tiposMoradores = [];
+          }
+        }
+        
+        if (tiposMoradores.length > 0) {
+          // 3. Filtrar pelo enderecoId (tipo_morador está vinculado ao ENDEREÇO)
+          const enderecoId = beneficiado.endereco?.id || beneficiado.endereco?.idEndereco;
+          
+          if (enderecoId) {
+            tipoMorador = tiposMoradores.find(tm => {
+              return tm.endereco?.id === enderecoId || 
+                     tm.endereco?.idEndereco === enderecoId ||
+                     tm.enderecoId === enderecoId;
+            });
+            
+            if (tipoMorador) {
+              console.log('✅ Tipo morador encontrado');
+            }
+          }
         }
       } catch (tipoMoradorError) {
-        console.log('⚠️ Erro ao buscar tipo_morador:', tipoMoradorError.message);
+        console.warn('⚠️ Erro ao buscar tipo_morador:', tipoMoradorError.message);
       }
       
       // 4. Retornar dados combinados

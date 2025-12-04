@@ -83,18 +83,11 @@ export default function ConsultaEndereco() {
 			const response = await beneficiadoService.buscarBeneficiadoCompleto(cpfSelecionado);
 			
 			if (response.success) {
-				console.log('✅ Sucesso ao carregar dados completos:', response.data);
-				console.log('📍 Dados do beneficiado:', {
-					id: response.data.id,
-					nome: response.data.nome,
-					endereco: response.data.endereco,
-					tipoMorador: response.data.tipoMorador
-				});
+				console.log('✅ Dados do beneficiado carregados:', response.data.nome);
 				
 				// Salvar ID do beneficiado na sessão
 				if (response.data.id) {
 					sessionStorage.setItem("beneficiadoId", response.data.id.toString());
-					console.log('💾 ID do beneficiado salvo na sessão:', response.data.id);
 				}
 				
 				setBeneficiado(response.data);
@@ -125,20 +118,6 @@ export default function ConsultaEndereco() {
 			
 			// Tentar acessar dados de endereço em diferentes estruturas possíveis
 			const enderecoBeneficiado = beneficiado.endereco || beneficiado;
-			console.log('🏠 Dados de endereço extraídos:', enderecoBeneficiado);
-
-			// 🏠 LOG ESPECÍFICO - Dados da tabela tipo_morador
-			console.log('🏠 VERIFICANDO DADOS DA TABELA TIPO_MORADOR:', {
-				tipoMorador: beneficiado.tipoMorador,
-				quantidade_crianca: beneficiado.quantidade_crianca,
-				quantidade_adolescente: beneficiado.quantidade_adolescente,
-				quantidade_jovem: beneficiado.quantidade_jovem,
-				quantidade_idoso: beneficiado.quantidade_idoso,
-				quantidade_gestante: beneficiado.quantidade_gestante,
-				quantidade_deficiente: beneficiado.quantidade_deficiente,
-				quantidade_outros: beneficiado.quantidade_outros,
-				estruturaCompleta: beneficiado
-			});
 			
 			// Função auxiliar para formatar data - MELHORADA
 			const formatarData = (data) => {
@@ -222,19 +201,18 @@ export default function ConsultaEndereco() {
 					beneficiado.endereco?.dataSaida   // ← Fallback
 				),
 				
-				// Tipo de moradia - EXPANDIDO
-				moradia: beneficiado.tipoMoradia || 
+				// Moradia (situação da moradia: Quitada, Alugada, etc.) - vem de statusMoradia do backend
+				moradia: beneficiado.statusMoradia || 
 						beneficiado.moradia || 
-						beneficiado.tipoResidencia ||
-						beneficiado.categoriaResidencia ||
 						beneficiado.situacaoMoradia ||
-						enderecoBeneficiado.tipoMoradia ||
+						enderecoBeneficiado.statusMoradia ||
+						enderecoBeneficiado.moradia ||
 						"",
+				
+				// Tipo de moradia (Casa, Apartamento, etc.) - vem de tipoMoradia do backend
 				tipoMoradia: beneficiado.tipoMoradia || 
-							beneficiado.moradia ||
-							beneficiado.tipoResidencia ||
 							beneficiado.categoriaResidencia ||
-							beneficiado.situacaoMoradia ||
+							beneficiado.tipoResidencia ||
 							enderecoBeneficiado.tipoMoradia ||
 							"",
 				
@@ -363,50 +341,6 @@ export default function ConsultaEndereco() {
 				)
 			};
 			
-			console.log('📋 Dados de endereço processados e mapeados:', dadosProcessados);
-			console.log('🔍 Campos com valores preenchidos:', Object.entries(dadosProcessados).filter(([key, value]) => value && value !== "0" && value !== "-").map(([key]) => key));
-			
-			// Logs específicos para datas
-			console.log('📅 Dados de data encontrados:', {
-				dataEntrada: {
-					valor: dadosProcessados.dataEntrada,
-					fontes: {
-						dataEntrada: beneficiado.dataEntrada,
-						dataIngresso: beneficiado.dataIngresso,
-						dataCadastro: beneficiado.dataCadastro,
-						dataInicio: beneficiado.dataInicio,
-						dataInicioAtendimento: beneficiado.dataInicioAtendimento,
-						createdAt: beneficiado.createdAt
-					}
-				},
-				dataSaida: {
-					valor: dadosProcessados.dataSaida,
-					fontes: {
-						dataSaida: beneficiado.dataSaida,
-						dataDesligamento: beneficiado.dataDesligamento,
-						dataFim: beneficiado.dataFim,
-						dataFinalAtendimento: beneficiado.dataFinalAtendimento,
-						updatedAt: beneficiado.updatedAt
-					}
-				}
-			});
-			
-			// Logs para informações de cesta
-			console.log('🥫 Informações de cesta encontradas:', {
-				tipoCesta: dadosProcessados.tipoCesta,
-				tipoCestaAtual: dadosProcessados.tipoCestaAtual,
-				tempoCestaAtual: dadosProcessados.tempoCestaAtual,
-				tempoCestaRestante: dadosProcessados.tempoCestaRestante,
-				tempoASA: dadosProcessados.tempoASA
-			});
-			
-			// Logs para dados de moradia e status
-			console.log('🏠 Informações de moradia e status:', {
-				moradia: dadosProcessados.moradia,
-				tipoMoradia: dadosProcessados.tipoMoradia,
-				status: dadosProcessados.status
-			});
-			
 			return dadosProcessados;
 		}
 
@@ -519,22 +453,6 @@ export default function ConsultaEndereco() {
 			const camposQuantidade = ['criancas', 'jovens', 'adolescentes', 'idosos', 'gestantes', 'deficientes', 'outros'];
 			const quantidadesPreenchidas = camposQuantidade.filter(campo => dadosEndereco[campo] && dadosEndereco[campo] !== "0");
 			
-			if (quantidadesPreenchidas.length > 0) {
-				console.log('👥 Quantidades de pessoas preenchidas:', quantidadesPreenchidas.map(campo => `${campo}: ${dadosEndereco[campo]}`));
-			} else {
-				console.log('ℹ️ Nenhuma quantidade de pessoas foi informada (todas em 0)');
-			}
-			
-			// Validar outros campos importantes
-			const outrosCampos = ['moradia', 'tipoMoradia', 'status'];
-			const outrosVazios = outrosCampos.filter(campo => !dadosEndereco[campo] || dadosEndereco[campo].trim() === '');
-			
-			if (outrosVazios.length > 0) {
-				console.log('⚠️ Outros campos vazios:', outrosVazios);
-			} else {
-				console.log('✅ Todos os outros campos importantes estão preenchidos');
-			}
-			
 			setEndereco(dadosEndereco);
 			setEnderecoOriginal(dadosEndereco);
 		}
@@ -574,16 +492,7 @@ export default function ConsultaEndereco() {
 			setCarregando(true);
 			setErro(null);
 			
-			console.log('💾 Tentando salvar alterações de endereço:', endereco);
-			console.log('📋 Beneficiado completo:', beneficiado);
-			console.log('🔍 Investigando estrutura do beneficiado:', {
-				temEnderecoId: !!beneficiado?.enderecoId,
-				enderecoId: beneficiado?.enderecoId,
-				temEndereco: !!beneficiado?.endereco,
-				endereco: beneficiado?.endereco,
-				todasAsChaves: beneficiado ? Object.keys(beneficiado) : [],
-				chavesEndereco: beneficiado?.endereco ? Object.keys(beneficiado.endereco) : []
-			});
+			console.log('💾 Salvando alterações...');
 			
 			// Preparar dados para atualização
 			let enderecoId = beneficiado?.enderecoId || 
@@ -592,7 +501,6 @@ export default function ConsultaEndereco() {
 			
 			// Se ainda não encontrou, tentar buscar o endereço pelo CPF
 			if (!enderecoId && beneficiado?.cpf) {
-				console.log('🔍 Tentando buscar endereço pelo CPF do beneficiado...');
 				try {
 					const enderecosResponse = await beneficiadoService.buscarEnderecos();
 					if (enderecosResponse.success && enderecosResponse.data) {
@@ -681,7 +589,8 @@ export default function ConsultaEndereco() {
 			}
 			
 			if (endereco.moradia !== enderecoOriginalData?.moradia) {
-				dadosEnderecoParaAtualizar.moradia = endereco.moradia;
+				// Backend espera statusMoradia (situação: Quitada, Alugada, etc)
+				dadosEnderecoParaAtualizar.statusMoradia = endereco.moradia;
 			}
 			if (endereco.tipoMoradia !== enderecoOriginalData?.tipoMoradia) {
 				// Backend espera TipoMoradia em MAIÚSCULO (ex: CASA, APARTAMENTO)
@@ -707,13 +616,13 @@ export default function ConsultaEndereco() {
 			
 			// 📊 Dados de TIPO_MORADOR para atualizar (APENAS quantidades de pessoas)
 			const dadosTipoMoradorParaAtualizar = {
-				quantidadeCrianca: parseInt(endereco.quantidade_crianca) || 0,
-				quantidadeJovem: parseInt(endereco.quantidade_jovem) || 0,
-				quantidadeAdolescente: parseInt(endereco.quantidade_adolescente) || 0,
-				quantidadeIdoso: parseInt(endereco.quantidade_idoso) || 0,
-				quantidadeGestante: parseInt(endereco.quantidade_gestante) || 0,
-				quantidadeDeficiente: parseInt(endereco.quantidade_deficiente) || 0,
-				quantidadeOutros: parseInt(endereco.quantidade_outros) || 0
+				quantidadeCrianca: parseInt(endereco.criancas) || 0,
+				quantidadeJovem: parseInt(endereco.jovens) || 0,
+				quantidadeAdolescente: parseInt(endereco.adolescentes) || 0,
+				quantidadeIdoso: parseInt(endereco.idosos) || 0,
+				quantidadeGestante: parseInt(endereco.gestantes) || 0,
+				quantidadeDeficiente: parseInt(endereco.deficientes) || 0,
+				quantidadeOutros: parseInt(endereco.outros) || 0
 			};
 			
 			console.log('📦 Dados preparados para atualização:', {
@@ -744,11 +653,11 @@ export default function ConsultaEndereco() {
 			}
 			
 			// 📊 Atualizar TIPO_MORADOR (quantidades de pessoas)
-			// Buscar ID do tipo_morador
-			console.log('🔍 Buscando ID do tipo_morador para beneficiado:', beneficiadoId);
+			// IMPORTANTE: tipo_morador está vinculado ao ENDEREÇO, não ao beneficiado
+			console.log('🔍 Buscando ID do tipo_morador para endereço:', enderecoId);
 			
 			const tipoMoradorService = (await import('../services/tipoMoradorService')).default;
-			const tipoMoradorResponse = await tipoMoradorService.buscarPorBeneficiado(beneficiadoId);
+			const tipoMoradorResponse = await tipoMoradorService.buscarPorEndereco(enderecoId);
 			
 			if (tipoMoradorResponse.success && tipoMoradorResponse.data) {
 				const tipoMoradorId = tipoMoradorResponse.data.idTipoMorador;
@@ -765,11 +674,40 @@ export default function ConsultaEndereco() {
 					console.log('✅ Tipo Morador atualizado com sucesso:', resultadoTipoMorador.data);
 				} else {
 					console.warn('⚠️ Erro ao atualizar tipo_morador:', resultadoTipoMorador.error);
-					// Não falha a operação toda se tipo_morador falhar
 				}
 			} else {
-				console.warn('⚠️ Tipo Morador não encontrado para este beneficiado');
-				console.warn('   As quantidades de pessoas não serão atualizadas');
+				// ⚠️ Tipo Morador não existe - CRIAR automaticamente
+				console.warn('⚠️ Tipo Morador não encontrado - criando novo registro...');
+				
+				const dadosParaCriar = {
+					...dadosTipoMoradorParaAtualizar,
+					beneficiadoId: beneficiadoId,
+					enderecoId: enderecoId
+				};
+				
+				console.log('📤 Criando novo tipo_morador:', dadosParaCriar);
+				
+				try {
+					const response = await beneficiadoService.cadastrarTipoMorador({
+						quantidade_crianca: dadosParaCriar.quantidadeCrianca,
+						quantidade_adolescente: dadosParaCriar.quantidadeAdolescente,
+						quantidade_jovem: dadosParaCriar.quantidadeJovem,
+						quantidade_idoso: dadosParaCriar.quantidadeIdoso,
+						quantidade_gestante: dadosParaCriar.quantidadeGestante,
+						quantidade_deficiente: dadosParaCriar.quantidadeDeficiente,
+						quantidade_outros: dadosParaCriar.quantidadeOutros,
+						fk_beneficiado: beneficiadoId,
+						fk_endereco: enderecoId
+					});
+					
+					if (response.success) {
+						console.log('✅ Tipo Morador criado com sucesso:', response.data);
+					} else {
+						console.error('❌ Erro ao criar tipo_morador:', response.error);
+					}
+				} catch (error) {
+					console.error('❌ Erro ao criar tipo_morador:', error);
+				}
 			}
 			
 			// Atualizar dados do beneficiado se necessário (campos básicos)

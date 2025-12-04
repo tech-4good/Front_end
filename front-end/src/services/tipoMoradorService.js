@@ -65,6 +65,52 @@ const tipoMoradorService = {
   },
 
   /**
+   * Busca tipo de morador por endereço ID
+   * O tipo_morador está vinculado ao ENDEREÇO, não ao beneficiado
+   */
+  buscarPorEndereco: async (enderecoId) => {
+    try {
+      console.log('🔍 Buscando tipo de morador para endereço:', enderecoId);
+      
+      const response = await apiClient.get('/tipo-moradores');
+      
+      if (response.status === 204 || !response.data || !Array.isArray(response.data)) {
+        return { success: false, error: 'Nenhum tipo de morador encontrado' };
+      }
+      
+      console.log('📋 Total de tipos de morador:', response.data.length);
+      
+      // Buscar por enderecoId
+      const tipoMorador = response.data.find(tm => {
+        return tm.endereco?.id === enderecoId || 
+               tm.endereco?.idEndereco === enderecoId ||
+               tm.enderecoId === enderecoId;
+      });
+      
+      if (!tipoMorador) {
+        console.warn('⚠️ Tipo de morador não encontrado para endereço:', {
+          enderecoId,
+          totalRegistros: response.data.length,
+          registrosDisponiveis: response.data.map(tm => ({
+            id: tm.idTipoMorador,
+            enderecoId: tm.endereco?.id || tm.endereco?.idEndereco || tm.enderecoId
+          }))
+        });
+        return { success: false, error: 'Tipo de morador não encontrado para este endereço' };
+      }
+      
+      console.log('✅ Tipo de morador encontrado:', tipoMorador);
+      return { success: true, data: tipoMorador };
+    } catch (error) {
+      console.error('❌ Erro ao buscar tipo de morador por endereço:', error);
+      return { 
+        success: false, 
+        error: 'Erro ao buscar tipo de morador' 
+      };
+    }
+  },
+
+  /**
    * Busca tipo de morador por beneficiado ID
    * Lista todos e filtra pelo beneficiado
    */
@@ -94,18 +140,31 @@ const tipoMoradorService = {
       
       console.log('📋 DEBUG - Total de tipos de morador:', response.data.length);
       
-      // Buscar por CPF do beneficiado, já que o backend não retorna beneficiado.id
+      // Buscar por CPF normalizado (sem pontos e traços) ou por beneficiado.id
+      const cpfNormalizado = cpfBeneficiado.replace(/[.\-]/g, '');
+      
       const tipoMorador = response.data.find(tm => {
-        const match = tm.beneficiado?.cpf === cpfBeneficiado;
-        console.log('🔍 Comparando:', {
-          tm_beneficiado_cpf: tm.beneficiado?.cpf,
-          cpf_procurado: cpfBeneficiado,
-          match
-        });
-        return match;
+        // Tentar match por beneficiado.id primeiro
+        if (tm.beneficiado?.id === beneficiadoId) {
+          return true;
+        }
+        
+        // Fallback: match por CPF normalizado
+        const tmCpfNormalizado = tm.beneficiado?.cpf?.replace(/[.\-]/g, '');
+        return tmCpfNormalizado === cpfNormalizado;
       });
       
       if (!tipoMorador) {
+        console.warn('⚠️ Tipo de morador não encontrado para beneficiado:', {
+          beneficiadoId,
+          cpf: cpfBeneficiado,
+          totalRegistros: response.data.length,
+          registrosDisponiveis: response.data.map(tm => ({
+            id: tm.idTipoMorador,
+            beneficiadoId: tm.beneficiado?.id,
+            cpf: tm.beneficiado?.cpf
+          }))
+        });
         return { success: false, error: 'Tipo de morador não encontrado para este beneficiado' };
       }
       

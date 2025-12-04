@@ -20,9 +20,18 @@ export default function CadastroEndereco2() {
   const location = useLocation();
   const initialData = location.state?.formData || {};
 
+  // Função para obter data atual no formato DD/MM/AAAA
+  const getDataAtual = () => {
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  };
+
   const [formData, setFormData] = useState({
     ...initialData,
-    datadeentrada: initialData.datadeentrada || "",
+    datadeentrada: initialData.datadeentrada || getDataAtual(),
     datadesada: initialData.datadesada || "",
     moradia: initialData.moradia || "",
     tipodemoradia: initialData.tipodemoradia || "Apartamento",
@@ -192,6 +201,45 @@ export default function CadastroEndereco2() {
         : `Os seguintes campos são obrigatórios:\n\n• ${camposVazios.join("\n• ")}`;
       mostrarModal(mensagem);
       return false;
+    }
+
+    // Validação da data de entrada
+    const dataEntrada = formData.datadeentrada;
+    if (dataEntrada && dataEntrada.length === 10) {
+      const [diaEntrada, mesEntrada, anoEntrada] = dataEntrada.split('/');
+      const dataEntradaObj = new Date(anoEntrada, mesEntrada - 1, diaEntrada);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      if (dataEntradaObj > hoje) {
+        mostrarModal("A data de entrada não pode ser maior que a data atual.");
+        return false;
+      }
+    }
+
+    // Validação da data de saída
+    const dataSaida = formData.datadesada;
+    if (dataSaida && dataSaida.length === 10) {
+      const [diaSaida, mesSaida, anoSaida] = dataSaida.split('/');
+      const dataSaidaObj = new Date(anoSaida, mesSaida - 1, diaSaida);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      if (dataSaidaObj <= hoje) {
+        mostrarModal("A data de saída deve ser posterior à data atual.");
+        return false;
+      }
+
+      // Validar que a data de saída é posterior à data de entrada
+      if (dataEntrada && dataEntrada.length === 10) {
+        const [diaEntrada, mesEntrada, anoEntrada] = dataEntrada.split('/');
+        const dataEntradaObj = new Date(anoEntrada, mesEntrada - 1, diaEntrada);
+        
+        if (dataSaidaObj <= dataEntradaObj) {
+          mostrarModal("A data de saída deve ser posterior à data de entrada.");
+          return false;
+        }
+      }
     }
 
     return true;
