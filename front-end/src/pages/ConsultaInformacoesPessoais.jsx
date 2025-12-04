@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Modal from "../components/Modal";
+import Select from "../components/Select";
 import { beneficiadoService } from "../services/beneficiadoService";
 import { auxilioService } from "../services/auxilioService";
 import { getFotoBlobUrl } from "../services/fileService";
@@ -360,6 +361,7 @@ export default function ConsultaInformacoesPessoais() {
         enderecoId: beneficiado.enderecoId || beneficiado.endereco?.id,
       };
 
+      console.log("📝 Estado Civil sendo enviado:", dados.estadoCivil);
       console.log(
         "📝 Atualizando beneficiado ID:",
         beneficiadoId,
@@ -569,17 +571,21 @@ export default function ConsultaInformacoesPessoais() {
                 </div>
                 <div className="consulta-info-field">
                   <label className="consulta-info-label">Estado Civil:</label>
-                  <input
-                    type="text"
+                  <Select
                     name="estadoCivil"
                     value={dados.estadoCivil}
                     onChange={(e) => {
-                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
-                      value = value.replace(/\s{2,}/g, ' ');
-                      setDados(prev => ({ ...prev, estadoCivil: value }));
+                      setDados(prev => ({ ...prev, estadoCivil: e.target.value }));
                     }}
+                    placeholder="Selecione o estado civil"
                     className="consulta-info-input"
-                    placeholder="Ex: Solteiro, Casado, etc."
+                    options={[
+                      { value: 'SOLTEIRO', label: 'Solteiro(a)' },
+                      { value: 'CASADO', label: 'Casado(a)' },
+                      { value: 'DIVORCIADO', label: 'Divorciado(a)' },
+                      { value: 'VIUVO', label: 'Viúvo(a)' },
+                      { value: 'SEPARADO', label: 'Separado(a)' }
+                    ]}
                   />
                 </div>
               </div>
