@@ -128,7 +128,7 @@ const dashboardService = {
       let dataFim = amanha;
 
       // Se for período customizado, usar as datas fornecidas
-      if (filtro === "Período Customizado" && dataInicioCustom && dataFimCustom) {
+      if (filtro === "periodo-customizado" && dataInicioCustom && dataFimCustom) {
         dataInicio = new Date(dataInicioCustom);
         dataInicio.setHours(0, 0, 0, 0);
 
@@ -142,16 +142,16 @@ const dashboardService = {
       } else {
         // Usar lógica padrão de filtros
         switch (filtro) {
-          case "Última Semana":
+          case "ultima-semana":
             dataInicio.setDate(hoje.getDate() - 7);
             break;
-          case "Último Mês":
+          case "ultimo-mes":
             dataInicio.setMonth(hoje.getMonth() - 1);
             break;
-          case "Último Ano":
+          case "ultimo-ano":
             dataInicio.setFullYear(hoje.getFullYear() - 1);
             break;
-          case "Todos":
+          case "todos":
             // Pegar desde o início dos tempos (ano 2000)
             dataInicio = new Date(2000, 0, 1);
             break;
@@ -260,6 +260,16 @@ const dashboardService = {
         (e.tipo === "KIT" || e.cesta?.tipo === "KIT")
       ).length;
 
+      // Contar famílias únicas (beneficiados únicos) no período anterior
+      const beneficiadosAnteriores = new Set();
+      entregasPeriodoAnterior.forEach(e => {
+        const idBeneficiado = e.beneficiado?.id || e.beneficiadoId || e.idBeneficiado;
+        if (idBeneficiado) {
+          beneficiadosAnteriores.add(idBeneficiado);
+        }
+      });
+      const familiasAnteriores = beneficiadosAnteriores.size;
+
       // Calcular percentuais reais
       const calcularPercentual = (atual, anterior) => {
         if (anterior === 0) return atual > 0 ? "+100%" : "0%";
@@ -269,7 +279,7 @@ const dashboardService = {
 
       const percentualCestas = calcularPercentual(cestasDistribuidas, cestasAnteriores);
       const percentualKits = calcularPercentual(kitsDistribuidos, kitsAnteriores);
-      const percentualFamilias = beneficiados.length > 0 ? "+8.5%" : "0%";
+      const percentualFamilias = calcularPercentual(beneficiados.length, familiasAnteriores);
 
 
       return {
@@ -286,10 +296,6 @@ const dashboardService = {
           familiasAcompanhadas: {
             valor: beneficiados.length,
             percentual: percentualFamilias
-          },
-          filaEspera: {
-            valor: filaEspera,
-            percentual: percentualFila
           }
         }
       };

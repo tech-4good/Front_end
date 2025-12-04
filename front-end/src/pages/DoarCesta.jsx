@@ -323,6 +323,13 @@ export default function DoarCesta() {
       const dataProximaLocal = `${anoProx}-${mesProx}-${diaProx}`;
 
       // Dados da entrega conforme documentação do backend
+      console.log("🔍 Estrutura do beneficiado ANTES de montar dadosEntrega:", {
+        beneficiado,
+        id: beneficiado.id,
+        id_beneficiado: beneficiado.id_beneficiado,
+        idBeneficiado: beneficiado.idBeneficiado
+      });
+
       const dadosEntrega = {
         dataRetirada: dataHojeLocal,
         proximaRetirada: dataProximaLocal,
@@ -341,6 +348,8 @@ export default function DoarCesta() {
       const resultado = await entregaService.registrarEntrega(dadosEntrega);
       
       console.log("🔥 [DoarCesta] RESULTADO de registrarEntrega():", resultado);
+      console.log("🔍 Beneficiado ID que foi enviado:", dadosEntrega.beneficiadoId);
+      console.log("🔍 Entrega retornada pelo backend:", resultado.entrega || resultado.data || resultado);
       
       if (resultado.success) {
         console.log("✅ Entrega registrada com sucesso no banco!");

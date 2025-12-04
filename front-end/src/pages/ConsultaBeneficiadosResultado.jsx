@@ -50,6 +50,19 @@ export default function ConsultaBeneficiadosResultado() {
     }
   }, [location]);
 
+  // Recarregar dados quando a página fica visível novamente
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && beneficiado) {
+        console.log('🔄 Página ficou visível - recarregando histórico');
+        carregarHistoricoBeneficiado(beneficiado.id);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [beneficiado]);
+
   // Aplicar filtros quando filtroAtivo ou retiradasOriginais mudarem
   useEffect(() => {
     aplicarFiltro();
@@ -158,9 +171,9 @@ export default function ConsultaBeneficiadosResultado() {
     }
   };
 
-  const carregarHistoricoBeneficiado = async (beneficiadoId) => {
+  const carregarHistoricoBeneficiado = async (beneficiadoId, tentativa = 1) => {
     try {
-      console.log('Carregando histórico para beneficiado ID:', beneficiadoId);
+      console.log(`🔄 Carregando histórico para beneficiado ID: ${beneficiadoId} (tentativa ${tentativa})`);
       
       // ✅ Usar endpoint específico de histórico em vez de filtrar manualmente
       const resposta = await entregaService.buscarHistorico(beneficiadoId);
@@ -178,6 +191,68 @@ export default function ConsultaBeneficiadosResultado() {
         console.warn('⚠️ Formato de resposta inesperado:', resposta);
         setRetiradas([]);
         return;
+      }
+      
+      // 🔧 Se vazio e é a primeira tentativa, aguardar e tentar novamente
+      // (backend pode ter delay no processamento/cache)
+      if (entregasDoBeneficiado.length === 0 && tentativa === 1) {
+        console.log('⏳ Endpoint retornou vazio - aguardando 2s e tentando novamente...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return carregarHistoricoBeneficiado(beneficiadoId, 2);
+      }
+      
+      // 🔧 WORKAROUND: Se ainda vazio após retry, buscar todas e filtrar
+      if (entregasDoBeneficiado.length === 0) {
+        console.log('⚠️ Endpoint específico retornou vazio após retry - buscando todas as entregas...');
+        const todasEntregas = await entregaService.listarEntregas();
+        
+        if (todasEntregas.success && todasEntregas.data) {
+          // Extrair array de entregas
+          let arrayEntregas = [];
+          if (Array.isArray(todasEntregas.data)) {
+            arrayEntregas = todasEntregas.data;
+          } else if (todasEntregas.data.content && Array.isArray(todasEntregas.data.content)) {
+            arrayEntregas = todasEntregas.data.content;
+          }
+          
+          console.log(`🔍 ESTRUTURAS DAS ENTREGAS (Total: ${arrayEntregas.length}):`, 
+            arrayEntregas.map(e => ({
+              idEntrega: e.id || e.idEntrega,
+              beneficiado: e.beneficiado,
+              beneficiadoId: e.beneficiadoId,
+              idBeneficiado: e.idBeneficiado,
+              estruturaCompleta: e
+            }))
+          );
+          
+          // Filtrar pelo beneficiado
+          entregasDoBeneficiado = arrayEntregas.filter(entrega => {
+            const idEntrega = entrega.beneficiado?.id || 
+                            entrega.beneficiado?.idBeneficiado ||
+                            entrega.beneficiadoId ||
+                            entrega.idBeneficiado;
+            
+            const match = idEntrega === beneficiadoId;
+            
+            // Log detalhado de cada entrega para debug
+            console.log('🔍 Comparando entrega:', {
+              idNaEntrega: idEntrega,
+              idProcurado: beneficiadoId,
+              match: match,
+              beneficiadoObject: entrega.beneficiado,
+              camposBeneficiado: {
+                'beneficiado?.id': entrega.beneficiado?.id,
+                'beneficiado?.idBeneficiado': entrega.beneficiado?.idBeneficiado,
+                'beneficiadoId': entrega.beneficiadoId,
+                'idBeneficiado': entrega.idBeneficiado
+              }
+            });
+            
+            return match;
+          });
+          
+          console.log(`📊 Filtragem manual: ${entregasDoBeneficiado.length} entregas encontradas de ${arrayEntregas.length} totais`);
+        }
       }
       
       if (entregasDoBeneficiado.length === 0) {
