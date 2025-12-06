@@ -62,8 +62,9 @@ body {
 }
 
 .painelmenu-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 40px;
   width: 100%;
   max-width: 600px;
@@ -80,6 +81,8 @@ body {
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  width: 280px;
+  flex-shrink: 0;
 }
 
 .painelmenu-card-item:hover {
@@ -134,7 +137,6 @@ body {
   }
   
   .painelmenu-grid {
-    grid-template-columns: 1fr;
     gap: 30px;
     max-width: 350px;
   }
