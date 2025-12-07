@@ -15,8 +15,8 @@ import iconeSair from "../assets/icone-sair.png";
 
 export default function CadastroFilhos() {
     const [cpfBeneficiado, setCpfBeneficiado] = useState("");
-    const [isEstudante, setIsEstudante] = useState(null);
-    const [isCreche, setIsCreche] = useState(null);
+    const [isEstudante, setIsEstudante] = useState(false);
+    const [isCreche, setIsCreche] = useState(false);
     const [dataNascimento, setDataNascimento] = useState("");
     const [erros, setErros] = useState({});
     const [modalCampos, setModalCampos] = useState(false);

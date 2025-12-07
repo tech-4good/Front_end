@@ -417,11 +417,10 @@ export default function Dashboard() {
               value={filtroAtivo} 
               onChange={handleFiltroChange}
             >
+              <option value="ultimo-ano">Último Ano</option>
               <option value="ultimo-dia">Último Dia</option>
               <option value="ultima-semana">Última Semana</option>
               <option value="ultimo-mes">Último Mês</option>
-              <option value="ultimo-ano">Último Ano</option>
-              <option value="mais-antigo">Mais antigo primeiro</option>
               <option value="periodo-customizado">Período Customizado</option>
             </select>
           </div>

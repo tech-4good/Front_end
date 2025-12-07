@@ -58,10 +58,11 @@
 
 .dashboard-cards-resumo {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 12px;
   width: 100%;
+  justify-items: center;
 }
 
 .dashboard-card-resumo {
@@ -71,6 +72,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   position: relative;
   min-height: 100px;
+  width: 90%;
 }
 
 .dashboard-card-titulo {

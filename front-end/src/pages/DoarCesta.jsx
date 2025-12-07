@@ -31,7 +31,7 @@ export default function DoarCesta() {
   ];
 
   const [cpf, setCpf] = useState("");
-  const [tipoCesta, setTipoCesta] = useState("");
+  const [tipoCesta, setTipoCesta] = useState("kit");
   const [resultados, setResultados] = useState([]);
   const [processando, setProcessando] = useState(false);
   const [modalNaoEncontrado, setModalNaoEncontrado] = useState(false);
