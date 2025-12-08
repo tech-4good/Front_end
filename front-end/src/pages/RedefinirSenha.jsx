@@ -372,7 +372,7 @@ const RedefinirSenha = () => {
     setCarregando(true);
 
     try {
-      const resultado = await authService.redefinirSenha(email, novaSenha);
+      const resultado = await authService.redefinirSenha(email, novaSenha, confirmarSenha);
       
       if (resultado.sucesso) {
         setModalSucesso(true);
