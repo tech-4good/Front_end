@@ -115,11 +115,11 @@ export const validarTokenRecuperacao = async (token) => {
  * Redefine a senha (REQUER AUTENTICAÇÃO)
  * ⚠️ IMPORTANTE: Backend requer: email + senha atual + nova senha
  * @param {string} email - Email do voluntário
- * @param {string} senhaAtual - Senha atual do usuário
- * @param {string} novaSenha - Nova senha do usuário
+ * @param {string} novaSenha - Senha atual do usuário
+ * @param {string} confirmarSenha - Nova senha do usuário
  * @returns {Promise<Object>} Resultado da operação
  */
-export const redefinirSenha = async (email, senhaAtual, novaSenha) => {
+export const redefinirSenha = async (email, novaSenha, confirmarSenha) => {
   try {
     console.log('🔐 Redefinindo senha para:', email);
     
@@ -127,23 +127,27 @@ export const redefinirSenha = async (email, senhaAtual, novaSenha) => {
       throw new Error('Email é obrigatório');
     }
     
-    if (!senhaAtual || !senhaAtual.trim()) {
-      throw new Error('Senha atual é obrigatória');
-    }
-    
     if (!novaSenha || !novaSenha.trim()) {
       throw new Error('Nova senha é obrigatória');
     }
+    
+    if (!confirmarSenha || !confirmarSenha.trim()) {
+      throw new Error('Confirmação de senha é obrigatória');
+    }
+    
+    // Verifica se as senhas coincidem
+    if (novaSenha !== confirmarSenha) {
+      throw new Error('As senhas não coincidem');
+    }
 
-    // Validações de senha (mínimo 8 caracteres conforme backend)
-    if (novaSenha.length < 8) {
-      throw new Error('A nova senha deve ter no mínimo 8 caracteres');
+    const validacaoSenha = validarSenha(novaSenha);
+    if (!validacaoSenha.valido) {
+      throw new Error(validacaoSenha.erro);
     }
     
     console.log('📤 Enviando requisição PATCH para /voluntarios/redefinir-senha');
     const response = await apiClient.patch('/voluntarios/redefinir-senha', {
       email,
-      senhaAtual,
       novaSenha
     });
     console.log('📥 Resposta recebida:', response);

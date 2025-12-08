@@ -3,7 +3,7 @@ import fileService from './fileService.js';
 
 // Serviços para Beneficiados e Filhos
 export const beneficiadoService = {
-  // Buscar beneficiado por CPF
+  
   buscarPorCpf: async (cpf) => {
     try {
       const response = await apiClient.get(`/beneficiados/cpf/${cpf}`);
@@ -25,7 +25,7 @@ export const beneficiadoService = {
     }
   },
 
-  // Cadastrar filho do beneficiado
+  
   cadastrarFilho: async (dadosFilho) => {
     try {
       console.log('=== DEBUG SERVICE CADASTRAR FILHO ===');
@@ -37,7 +37,6 @@ export const beneficiadoService = {
       console.log('dadosFilho.hasCreche:', dadosFilho.hasCreche);
       console.log('dadosFilho.enderecoId:', dadosFilho.enderecoId);
 
-      // Validar campos obrigatórios conforme documentação do backend
       if (!dadosFilho.dataNascimento) {
         console.error('ERRO: Data de nascimento ausente');
         return { success: false, error: 'Data de nascimento é obrigatória' };
@@ -59,7 +58,6 @@ export const beneficiadoService = {
         return { success: false, error: 'Endereço é obrigatório' };
       }
 
-      // Payload conforme documentação do backend (sem campo 'nome')
       const payload = {
         dataNascimento: dadosFilho.dataNascimento,
         isEstudante: Boolean(dadosFilho.isEstudante),
@@ -72,7 +70,6 @@ export const beneficiadoService = {
       console.log('Payload completo para cadastro de filho:', payload);
       console.log('Payload JSON:', JSON.stringify(payload, null, 2));
 
-      // Fazer a requisição para o endpoint correto
       const response = await apiClient.post('/filhos-beneficiados', payload);
       console.log('✅ Sucesso! Resposta do servidor:', response.data);
       return { success: true, data: response.data };
@@ -101,7 +98,6 @@ export const beneficiadoService = {
     }
   },
 
-  // Buscar filho por ID
   buscarFilhoPorId: async (id) => {
     try {
       const response = await apiClient.get(`/filhos-beneficiados/${id}`);
@@ -112,12 +108,10 @@ export const beneficiadoService = {
     }
   },
 
-  // Listar todos os filhos de um beneficiado
   listarFilhosPorBeneficiado: async (beneficiadoId) => {
     try {
       const response = await apiClient.get(`/filhos-beneficiados?beneficiadoId=${beneficiadoId}`);
 
-      // Verificar se é paginado
       if (response.data?.content) {
         return { success: true, data: response.data.content };
       }
@@ -126,7 +120,6 @@ export const beneficiadoService = {
     } catch (error) {
       console.error('Erro ao listar filhos:', error);
 
-      // Se 404, significa que não tem filhos
       if (error.response?.status === 404) {
         return { success: true, data: [] };
       }
@@ -135,12 +128,10 @@ export const beneficiadoService = {
     }
   },
 
-  // Atualizar filho (PATCH - somente isEstudante e hasCreche)
   atualizarFilho: async (id, dadosFilho) => {
     try {
       const payload = {};
-      
-      // Apenas campos permitidos no PATCH
+
       if (dadosFilho.isEstudante !== undefined) {
         payload.isEstudante = Boolean(dadosFilho.isEstudante);
       }
@@ -165,7 +156,6 @@ export const beneficiadoService = {
     }
   },
 
-  // Remover filho
   removerFilho: async (id) => {
     try {
       await apiClient.delete(`/filhos-beneficiados/${id}`);
@@ -176,18 +166,16 @@ export const beneficiadoService = {
     }
   },
 
-  // Cadastrar beneficiado simples
   cadastrarBeneficiadoSimples: async (dadosBeneficiado) => {
     try {
       console.log('=== INICIANDO CADASTRO NO SERVICE ===');
       console.log('Dados recebidos:', dadosBeneficiado);
 
-      // Payload conforme documentação API para endpoint cadastro-simples
       const payload = {
         nome: dadosBeneficiado.nome,
-        cpf: dadosBeneficiado.cpf.replace(/\D/g, ''), // Remove formatação
-        dataNascimento: dadosBeneficiado.dataNascimento, // LocalDate formato YYYY-MM-DD
-        enderecoId: dadosBeneficiado.enderecoId // Integer - ID do endereço encontrado
+        cpf: dadosBeneficiado.cpf.replace(/\D/g, ''), 
+        dataNascimento: dadosBeneficiado.dataNascimento, 
+        enderecoId: dadosBeneficiado.enderecoId 
       };
 
       console.log('Dados originais:', dadosBeneficiado);
@@ -195,7 +183,6 @@ export const beneficiadoService = {
       console.log('Tipo do enderecoId:', typeof payload.enderecoId);
       console.log('Valor do enderecoId:', payload.enderecoId);
 
-      // Validações antes de enviar
       if (!payload.nome || payload.nome.trim().length === 0) {
         console.error('Validação falhou: Nome vazio');
         return { success: false, error: 'Nome é obrigatório' };
@@ -213,7 +200,6 @@ export const beneficiadoService = {
         return { success: false, error: 'ID do endereço é obrigatório' };
       }
 
-      // Converter enderecoId para número se for string numérica
       if (typeof payload.enderecoId === 'string' && /^\d+$/.test(payload.enderecoId)) {
         payload.enderecoId = parseInt(payload.enderecoId, 10);
         console.log('EnderecoId convertido para número:', payload.enderecoId);
@@ -245,11 +231,9 @@ export const beneficiadoService = {
         console.error('Dados do erro:', error.response.data);
 
         if (error.response.status === 400) {
-          // Tentar extrair mensagem específica do backend
           if (error.response.data?.message) {
             mensagem = error.response.data.message;
           } else if (error.response.data?.errors) {
-            // Se for um objeto de erros de validação
             if (Array.isArray(error.response.data.errors)) {
               mensagem = error.response.data.errors.join(', ');
             } else if (typeof error.response.data.errors === 'object') {
@@ -282,19 +266,16 @@ export const beneficiadoService = {
     }
   },
 
-  // Cadastrar beneficiado completo
   cadastrarBeneficiadoCompleto: async (dadosBeneficiado) => {
     try {
       console.log('=== DEBUG CADASTRO COMPLETO ===');
       console.log('Dados recebidos:', dadosBeneficiado);
       console.log('Estado Civil original:', dadosBeneficiado.estadoCivil);
 
-      // Função para validar e converter estado civil para enum válido
       const validarEstadoCivil = (estadoCivil) => {
         const estadosValidos = ['SOLTEIRO', 'CASADO', 'DIVORCIADO', 'VIUVO', 'SEPARADO'];
         const estadoUpper = (estadoCivil || '').toUpperCase().trim();
 
-        // Mapeamento de valores comuns para enum
         const mapeamento = {
           'SOLTEIRO': 'SOLTEIRO',
           'SOLTEIRA': 'SOLTEIRO',
@@ -319,9 +300,6 @@ export const beneficiadoService = {
         return 'SOLTEIRO';
       };
 
-      // ========================================
-      // PASSO 1: Upload da foto (se existir)
-      // ========================================
       let fotoId = null;
 
       if (dadosBeneficiado.fotoBeneficiado) {
@@ -329,7 +307,6 @@ export const beneficiadoService = {
           console.log('📸 Foto detectada! Iniciando upload separado...');
           console.log('   Tamanho da string Base64:', dadosBeneficiado.fotoBeneficiado.length, 'caracteres');
 
-          // Fazer upload da foto para POST /files
           fotoId = await fileService.uploadFoto(dadosBeneficiado.fotoBeneficiado, 'foto_beneficiado.jpg');
 
           console.log('✅ Foto enviada com sucesso!');
@@ -338,40 +315,30 @@ export const beneficiadoService = {
         } catch (fotoError) {
           console.error('❌ Erro ao fazer upload da foto:', fotoError);
 
-          // Decidir se o erro de foto deve bloquear o cadastro ou não
-          // Por enquanto, vamos continuar sem foto e avisar o usuário
           console.warn('⚠️ Continuando cadastro sem foto...');
           fotoId = null;
-
-          // Você pode descomentar a linha abaixo para bloquear o cadastro se a foto falhar
-          // throw new Error(`Falha no upload da foto: ${fotoError.message}`);
         }
       } else {
         console.log('ℹ️ Nenhuma foto fornecida, continuando cadastro sem foto');
       }
 
-      // ========================================
-      // PASSO 2: Cadastrar beneficiado com fotoId
-      // ========================================
-
-      // Payload conforme BeneficiadoRequestDto para cadastro completo
       const payload = {
         nome: dadosBeneficiado.nome,
-        cpf: dadosBeneficiado.cpf.replace(/\D/g, ''), // Remove formatação
-        rg: dadosBeneficiado.rg.replace(/\D/g, ''), // Remove formatação
-        dataNascimento: dadosBeneficiado.dataNascimento, // LocalDate formato YYYY-MM-DD
+        cpf: dadosBeneficiado.cpf.replace(/\D/g, ''),
+        rg: dadosBeneficiado.rg.replace(/\D/g, ''), 
+        dataNascimento: dadosBeneficiado.dataNascimento, 
         naturalidade: dadosBeneficiado.naturalidade || 'Brasileira',
-        telefone: dadosBeneficiado.telefone.replace(/\D/g, ''), // Remove formatação
-        estadoCivil: validarEstadoCivil(dadosBeneficiado.estadoCivil), // Enum values validado
+        telefone: dadosBeneficiado.telefone.replace(/\D/g, ''), 
+        estadoCivil: validarEstadoCivil(dadosBeneficiado.estadoCivil), 
         escolaridade: dadosBeneficiado.escolaridade,
         profissao: dadosBeneficiado.profissao,
-        rendaMensal: dadosBeneficiado.rendaMensal, // Double
+        rendaMensal: dadosBeneficiado.rendaMensal, 
         empresa: dadosBeneficiado.empresa || '',
         cargo: dadosBeneficiado.cargo || '',
         religiao: dadosBeneficiado.religiao || '',
-        enderecoId: dadosBeneficiado.enderecoId, // Integer - ID do endereço encontrado
+        enderecoId: dadosBeneficiado.enderecoId, 
         quantidadeDependentes: parseInt(dadosBeneficiado.quantidadeDependentes) || 0,
-        fotoId: fotoId // ✅ ID retornado do upload (ou null se não tiver foto)
+        fotoId: fotoId 
       };
 
       console.log('=== PAYLOAD FINAL COMPLETO ===');
@@ -401,7 +368,6 @@ export const beneficiadoService = {
     }
   },
 
-  // Listar todos os beneficiados
   listarBeneficiados: async () => {
     try {
       const response = await apiClient.get('/beneficiados');
@@ -412,14 +378,10 @@ export const beneficiadoService = {
     }
   },
 
-  // Atualizar beneficiado
   atualizarBeneficiado: async (id, dadosBeneficiado) => {
     try {
-      // ⚠️ IMPORTANTE: PATCH NÃO aceita nome, cpf, rg, dataNascimento
-      // Apenas campos editáveis conforme documentação do backend
       const payload = {};
 
-      // Adicionar apenas campos que foram fornecidos e são permitidos no PATCH
       if (dadosBeneficiado.naturalidade !== undefined) {
         payload.naturalidade = dadosBeneficiado.naturalidade;
       }
