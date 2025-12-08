@@ -20,7 +20,7 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
     { texto: "Histórico de Cestas", onClick: () => navigate("/historico-doacoes"), admin: true, comum: true },
     { texto: "Consultar Beneficiados", onClick: () => navigate("/consulta-beneficiados"), admin: true, comum: true },
     { texto: "Cestas", onClick: () => navigate("/controle-cestas"), admin: true, comum: true },
-    { texto: "Relatórios", onClick: () => navigate("/painel-menu"), admin: true, comum: false },
+    { texto: "Painel", onClick: () => navigate("/painel-menu"), admin: true, comum: false },
     { texto: "Voluntários", onClick: () => navigate("/voluntarios-menu"), admin: true, comum: false }
   ];
   
@@ -99,7 +99,7 @@ const Navbar = ({ nomeUsuario = "Usuário", showMenuBar = true, onUsuarioClick, 
                 (isCadastrarBeneficiadosPage && item.texto === "Cadastrar Beneficiados") ||
                 (isConsultaBeneficiadosPage && item.texto === "Consultar Beneficiados") ||
                 (isVoluntariosPage && item.texto === "Voluntários") ||
-                (isRelatoriosPage && item.texto === "Relatórios") ||
+                (isRelatoriosPage && item.texto === "Painel") ||
                 (isHistoricoCestasPage && item.texto === "Histórico de Cestas") ? "navbar-menu-item-active" : ""
               }`}
               onClick={item.onClick}

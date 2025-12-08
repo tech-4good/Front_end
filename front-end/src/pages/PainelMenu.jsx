@@ -7,7 +7,6 @@ import iconeUsuario from "../assets/icone-usuario.png";
 import iconeRelogio from "../assets/icone-relogio.png";
 import iconeSair from "../assets/icone-sair.png";
 import iconeVoltar from "../assets/icone-voltar.png";
-import iconeLupa from "../assets/icone-lupa.png";
 import iconeSetaSubindo from "../assets/icone-seta-subindo.png";
 
 export default function PainelMenu() {
@@ -15,48 +14,7 @@ export default function PainelMenu() {
   const nomeUsuario = sessionStorage.getItem("nomeUsuario") || "Usuário";
   const tipoUsuario = sessionStorage.getItem("tipoUsuario") || "2";
 
-  const handleBaixarPDF = async () => {
-    try {
-      // const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
-      
-      doc.setFontSize(16);
-      doc.text('Relatório', 20, 20);
-      
-      doc.addPage();
-      doc.text('Página 2', 20, 20);
-      
-      doc.addPage();
-      doc.text('Página 3', 20, 20);
-      
-      window.open(doc.output('bloburl'), '_blank');
-  
-      console.log('Relatorio baixado com sucesso');
-    } catch (error) {
-      console.error('Erro ao baixar Relatorio:', error);
-      
-      const conteudoPDF = `Relatório
-      
-Página 1
 
-
-Página 2
-
-
-Página 3
-      `;
-
-      const blob = new Blob([conteudoPDF], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'relatorio.txt';
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-    }
-  };
 
   const botoesNavbar = [
     { texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
@@ -83,12 +41,6 @@ Página 3
             <h3 className="painelmenu-card-title">Painel</h3>
             <div className="painelmenu-card-icon">
               <img src={iconeSetaSubindo} alt="Painel" />
-            </div>
-          </div>
-          <div className="painelmenu-card-item" onClick={handleBaixarPDF}>
-            <h3 className="painelmenu-card-title">Relatório</h3>
-            <div className="painelmenu-card-icon">
-              <img src={iconeLupa} alt="Relatório" />
             </div>
           </div>
         </div>

@@ -77,291 +77,31 @@ export default function ConsultaEndereco() {
 				return;
 			}
 			
-			console.log('🔍 Carregando dados de endereço para CPF:', cpfSelecionado);
-			const response = await beneficiadoService.buscarPorCpf(cpfSelecionado);
+			console.log('🔍 Carregando dados completos para CPF:', cpfSelecionado);
 			
-			// 🏠 BUSCAR DADOS DA TABELA TIPO_MORADOR
-			console.log('🏠 [ConsultaEndereco] Iniciando busca de tipo_morador');
-			let tipoMoradorResponse = null;
-			
-			// Primeiro tentar buscar pelo CPF (método antigo)
-			tipoMoradorResponse = await beneficiadoService.buscarTipoMoradorPorCpf(cpfSelecionado);
-			console.log('🏠 [ConsultaEndereco] Resultado da busca por CPF:', tipoMoradorResponse);
-			
-			// Se não encontrou por CPF e temos um endereço, tentar buscar pelo endereço
-			if (!tipoMoradorResponse.success && response.data?.endereco) {
-				const enderecoId = response.data.endereco.idEndereco || response.data.endereco.id;
-				console.log('🏠 [ConsultaEndereco] Tentando buscar por endereço ID:', enderecoId);
-				tipoMoradorResponse = await beneficiadoService.buscarTipoMoradorPorEndereco(enderecoId);
-				console.log('🏠 [ConsultaEndereco] Resultado da busca por endereço:', tipoMoradorResponse);
-			}
+			// ✅ USAR NOVO MÉTODO que busca beneficiado + tipo_morador de uma vez
+			const response = await beneficiadoService.buscarBeneficiadoCompleto(cpfSelecionado);
 			
 			if (response.success) {
-				console.log('✅ Sucesso ao carregar beneficiado:', response.data);
-				console.log('📍 Estrutura dos dados recebidos:', Object.keys(response.data));
-				console.log('🔍 Dados detalhados do beneficiado:', {
-					id: response.data.id,
-					nome: response.data.nome,
-					cpf: response.data.cpf,
-					enderecoId: response.data.enderecoId,
-					hasEndereco: !!response.data.endereco,
-					enderecoKeys: response.data.endereco ? Object.keys(response.data.endereco) : null,
-					status: response.data.status,
-					dataEntrada: response.data.dataEntrada || response.data.dataIngresso || response.data.dataCadastro,
-					tipoMoradia: response.data.tipoMoradia,
-					quantidades: {
-						criancas: response.data.qtdCriancas || response.data.quantidadeCriancas,
-						jovens: response.data.qtdJovens || response.data.quantidadeJovens,
-						adolescentes: response.data.qtdAdolescentes || response.data.quantidadeAdolescentes,
-						idosos: response.data.qtdIdosos || response.data.quantidadeIdosos,
-						gestantes: response.data.qtdGestantes || response.data.quantidadeGestantes,
-						deficientes: response.data.qtdDeficientes || response.data.quantidadeDeficientes,
-						outros: response.data.qtdOutros || response.data.quantidadeOutros
-					},
-					informacoesCesta: {
-						tipoCesta: response.data.tipoCesta,
-						tipoCestaAtual: response.data.tipoCestaAtual,
-						cesta: response.data.cesta,
-						assistencia: response.data.assistencia,
-						tipoAjuda: response.data.tipoAjuda,
-						tipoAssistencia: response.data.tipoAssistencia
-					}
-				});
+				console.log('✅ Dados do beneficiado carregados:', response.data.nome);
 				
-				// LOG ESPECÍFICO para investigar campos de quantidade
-				console.log('🔍 INVESTIGAÇÃO - Todos os campos relacionados a quantidades:', {
-					todasAsChaves: Object.keys(response.data),
-					camposComQuantidade: Object.keys(response.data).filter(key => 
-						key.toLowerCase().includes('qtd') || 
-						key.toLowerCase().includes('quantidade') || 
-						key.toLowerCase().includes('crianca') ||
-						key.toLowerCase().includes('jovem') ||
-						key.toLowerCase().includes('adolescent') ||
-						key.toLowerCase().includes('idoso') ||
-						key.toLowerCase().includes('gestante') ||
-						key.toLowerCase().includes('deficient') ||
-						key.toLowerCase().includes('pcd') ||
-						key.toLowerCase().includes('outros')
-					),
-					camposComCesta: Object.keys(response.data).filter(key => 
-						key.toLowerCase().includes('cesta') || 
-						key.toLowerCase().includes('assistencia') ||
-						key.toLowerCase().includes('ajuda') ||
-						key.toLowerCase().includes('tipo')
-					)
-				});
-
-				// 🔍 SUPER LOG - Investigação profunda de todos os valores
-				console.log('🔍 SUPER INVESTIGAÇÃO - VALORES ESPECÍFICOS:');
-				const todasAsChaves = Object.keys(response.data);
-				
-				// Investigar quantidades específicas
-				const quantidadesProcuradas = [
-					'qtdCriancas', 'quantidadeCriancas', 'criancas', 'numCriancas', 'totalCriancas',
-					'qtdJovens', 'quantidadeJovens', 'jovens', 'numJovens', 'totalJovens',
-					'qtdAdolescentes', 'quantidadeAdolescentes', 'adolescentes', 'numAdolescentes',
-					'qtdIdosos', 'quantidadeIdosos', 'idosos', 'numIdosos', 'totalIdosos',
-					'qtdGestantes', 'quantidadeGestantes', 'gestantes', 'numGestantes',
-					'qtdDeficientes', 'quantidadeDeficientes', 'deficientes', 'numDeficientes', 'pcd',
-					'qtdOutros', 'quantidadeOutros', 'outros', 'numOutros'
-				];
-				
-				quantidadesProcuradas.forEach(campo => {
-					if (response.data[campo] !== undefined) {
-						console.log(`🎯 ENCONTRADO ${campo}:`, response.data[campo]);
-					}
-				});
-
-				// Investigar tipos de cesta
-				const cestasProcuradas = [
-					'tipoCesta', 'tipo_cesta', 'cesta', 'tipoBasket', 'basket_type',
-					'tipoCestaAtual', 'cestaAtual', 'tipoAssistencia', 'assistencia',
-					'categoria', 'type', 'classificacao'
-				];
-				
-				cestasProcuradas.forEach(campo => {
-					if (response.data[campo] !== undefined) {
-						console.log(`🎯 ENCONTRADO ${campo}:`, response.data[campo]);
-					}
-				});
-
-				// Investigar possível estrutura aninhada
-				if (response.data.familia) {
-					console.log('🔍 Estrutura família encontrada:', response.data.familia);
-				}
-				if (response.data.composicaoFamiliar) {
-					console.log('🔍 Estrutura composição familiar encontrada:', response.data.composicaoFamiliar);
-				}
-				if (response.data.membros) {
-					console.log('🔍 Estrutura membros encontrada:', response.data.membros);
+				// Salvar ID do beneficiado na sessão
+				if (response.data.id) {
+					sessionStorage.setItem("beneficiadoId", response.data.id.toString());
 				}
 				
-				let beneficiadoCompleto = response.data;
-				
-				// Se não há dados de endereço completos e há um enderecoId, buscar endereço separadamente
-				if (!response.data.endereco && response.data.enderecoId) {
-					console.log('🔄 Buscando endereço separadamente com ID:', response.data.enderecoId);
-					try {
-						const enderecoResponse = await beneficiadoService.buscarEnderecoPorId(response.data.enderecoId);
-						if (enderecoResponse.success) {
-							console.log('🏠 Endereço carregado separadamente:', enderecoResponse.data);
-							beneficiadoCompleto = {
-								...response.data,
-								endereco: enderecoResponse.data
-							};
-						}
-					} catch (enderecoError) {
-						console.log('⚠️ Não foi possível carregar endereço separadamente:', enderecoError);
-					}
-				}
-				
-				// Tentar buscar informações complementares se campos críticos estiverem faltando
-				const camposCriticos = [
-					'dataEntrada', 'dataIngresso', 'dataCadastro',
-					'tipoCestaAtual', 'tipoCesta',
-					'tipoMoradia'
-				];
-				
-				const camposFaltando = camposCriticos.filter(campo => !beneficiadoCompleto[campo]);
-				
-				if (camposFaltando.length > 0 && beneficiadoCompleto.id) {
-					console.log('🔄 Campos críticos faltando:', camposFaltando, '- Tentando buscar informações complementares...');
-					try {
-						const beneficiadoDetalhado = await beneficiadoService.buscarBeneficiadoPorId(beneficiadoCompleto.id);
-						if (beneficiadoDetalhado.success) {
-							console.log('📊 Informações complementares carregadas:', beneficiadoDetalhado.data);
-							console.log('🔍 Verificando se campos faltantes foram preenchidos:', 
-								camposFaltando.map(campo => `${campo}: ${beneficiadoDetalhado.data[campo] ? 'ENCONTRADO' : 'AINDA FALTANDO'}`)
-							);
-							beneficiadoCompleto = {
-								...beneficiadoCompleto,
-								...beneficiadoDetalhado.data,
-								// Preservar o endereço se foi carregado separadamente
-								endereco: beneficiadoCompleto.endereco || beneficiadoDetalhado.data.endereco
-							};
-						}
-					} catch (complementarError) {
-						console.log('⚠️ Não foi possível carregar informações complementares:', complementarError);
-					}
-				} else if (camposFaltando.length === 0) {
-					console.log('✅ Todos os campos críticos estão preenchidos');
-				}
-				
-				// Verificar se há dados de endereço
-				if (beneficiadoCompleto.endereco) {
-					console.log('🏠 Dados de endereço disponíveis:', beneficiadoCompleto.endereco);
-				} else {
-					console.log('⚠️ Usando dados de endereço das propriedades diretas do beneficiado');
-				}
-				
-				// 🏠 INTEGRAR DADOS DA TABELA TIPO_MORADOR
-				let beneficiadoFinal = beneficiadoCompleto;
-				
-				if (tipoMoradorResponse.success) {
-					console.log('🏠 ✅ Dados de tipo_morador encontrados via API:', tipoMoradorResponse.data);
-					
-					// Integrar os dados de quantidade da tabela tipo_morador
-					beneficiadoFinal = {
-						...beneficiadoCompleto,
-						// Dados originais da tabela tipo_morador
-						tipoMorador: tipoMoradorResponse.data,
-						// Mapear campos de quantidade (backend usa camelCase)
-						quantidade_crianca: tipoMoradorResponse.data.quantidadeCrianca || 0,
-						quantidade_adolescente: tipoMoradorResponse.data.quantidadeAdolescente || 0,
-						quantidade_jovem: tipoMoradorResponse.data.quantidadeJovem || 0,
-						quantidade_idoso: tipoMoradorResponse.data.quantidadeIdoso || 0,
-						quantidade_gestante: tipoMoradorResponse.data.quantidadeGestante || 0,
-						quantidade_deficiente: tipoMoradorResponse.data.quantidadeDeficiente || 0,
-						quantidade_outros: tipoMoradorResponse.data.quantidadeOutros || 0,
-						// Manter compatibilidade com nomes alternativos
-						qtdCriancas: tipoMoradorResponse.data.quantidadeCrianca || 0,
-						qtdAdolescentes: tipoMoradorResponse.data.quantidadeAdolescente || 0,
-						qtdJovens: tipoMoradorResponse.data.quantidadeJovem || 0,
-						qtdIdosos: tipoMoradorResponse.data.quantidadeIdoso || 0,
-						qtdGestantes: tipoMoradorResponse.data.quantidadeGestante || 0,
-						qtdDeficientes: tipoMoradorResponse.data.quantidadeDeficiente || 0,
-						qtdOutros: tipoMoradorResponse.data.quantidadeOutros || 0
-					};
-					
-					console.log('🏠 ✅ Beneficiado com dados de tipo_morador integrados via API:', {
-						criancas: beneficiadoFinal.quantidade_crianca,
-						adolescentes: beneficiadoFinal.quantidade_adolescente,
-						jovens: beneficiadoFinal.quantidade_jovem,
-						idosos: beneficiadoFinal.quantidade_idoso,
-						gestantes: beneficiadoFinal.quantidade_gestante,
-						deficientes: beneficiadoFinal.quantidade_deficiente,
-						outros: beneficiadoFinal.quantidade_outros
-					});
-				} else {
-					console.log('🏠 ⚠️ API de tipo_morador não disponível:', tipoMoradorResponse.error);
-					
-					// 🏠 FALLBACK: Tentar buscar dados locais salvos
-					console.log('🏠 🔍 Tentando fallback com dados locais...');
-					
-					const cpfLimpo = cpfSelecionado.replace(/\D/g, '');
-					const tiposMoradorLocais = JSON.parse(localStorage.getItem('tiposMoradorLocal') || '[]');
-					const tipoMoradorLocal = tiposMoradorLocais.find(tm => tm.fk_cpf === cpfLimpo);
-					
-					if (tipoMoradorLocal) {
-						console.log('🏠 ✅ Dados de tipo_morador encontrados localmente:', tipoMoradorLocal);
-						
-						beneficiadoFinal = {
-							...beneficiadoCompleto,
-							// Dados originais da tabela tipo_morador
-							tipoMorador: tipoMoradorLocal,
-							// Mapear campos de quantidade com nomes corretos
-							quantidade_crianca: tipoMoradorLocal.quantidade_crianca,
-							quantidade_adolescente: tipoMoradorLocal.quantidade_adolescente,
-							quantidade_jovem: tipoMoradorLocal.quantidade_jovem,
-							quantidade_idoso: tipoMoradorLocal.quantidade_idoso,
-							quantidade_gestante: tipoMoradorLocal.quantidade_gestante,
-							quantidade_deficiente: tipoMoradorLocal.quantidade_deficiente,
-							quantidade_outros: tipoMoradorLocal.quantidade_outros,
-							// Manter compatibilidade com nomes alternativos
-							qtdCriancas: tipoMoradorLocal.quantidade_crianca,
-							qtdAdolescentes: tipoMoradorLocal.quantidade_adolescente,
-							qtdJovens: tipoMoradorLocal.quantidade_jovem,
-							qtdIdosos: tipoMoradorLocal.quantidade_idoso,
-							qtdGestantes: tipoMoradorLocal.quantidade_gestante,
-							qtdDeficientes: tipoMoradorLocal.quantidade_deficiente,
-							qtdOutros: tipoMoradorLocal.quantidade_outros
-						};
-						
-						console.log('🏠 ✅ Beneficiado com dados de tipo_morador integrados via localStorage:', {
-							criancas: beneficiadoFinal.quantidade_crianca,
-							adolescentes: beneficiadoFinal.quantidade_adolescente,
-							jovens: beneficiadoFinal.quantidade_jovem,
-							idosos: beneficiadoFinal.quantidade_idoso,
-							gestantes: beneficiadoFinal.quantidade_gestante,
-							deficientes: beneficiadoFinal.quantidade_deficiente,
-							outros: beneficiadoFinal.quantidade_outros
-						});
-					} else {
-						console.log('🏠 ⚠️ Nenhum dado de tipo_morador encontrado (nem API nem localStorage)');
-						console.log('🏠 💡 Dica: Cadastre um endereço primeiro para gerar os dados de tipo_morador');
-					}
-				}
-				
-				// Salvar ID do beneficiado na sessão para outras páginas
-				if (beneficiadoFinal.id) {
-					sessionStorage.setItem("beneficiadoId", beneficiadoFinal.id.toString());
-					console.log('💾 ID do beneficiado salvo na sessão:', beneficiadoFinal.id);
-				}
-				
-				setBeneficiado(beneficiadoFinal);
+				setBeneficiado(response.data);
 			} else {
 				console.error('❌ Erro ao carregar beneficiado:', response.error);
 				setErro(response.error || "Erro ao carregar dados do beneficiado");
 			}
 		} catch (error) {
-			console.error('💥 Erro inesperado:', error);
-			setErro("Erro inesperado ao carregar dados");
-		} finally {
-			setCarregando(false);
-		}
-	};
-
-	const botoesNavbar = [
+		console.error('💥 Erro inesperado:', error);
+		setErro("Erro inesperado ao carregar dados");
+	} finally {
+		setCarregando(false);
+	}
+};	const botoesNavbar = [
 		{ texto: "Início", onClick: () => navigate("/home"), icone: iconeCasa },
 		{ texto: "Perfil", onClick: () => navigate("/perfil"), icone: iconeUsuario },
 
@@ -378,20 +118,6 @@ export default function ConsultaEndereco() {
 			
 			// Tentar acessar dados de endereço em diferentes estruturas possíveis
 			const enderecoBeneficiado = beneficiado.endereco || beneficiado;
-			console.log('🏠 Dados de endereço extraídos:', enderecoBeneficiado);
-
-			// 🏠 LOG ESPECÍFICO - Dados da tabela tipo_morador
-			console.log('🏠 VERIFICANDO DADOS DA TABELA TIPO_MORADOR:', {
-				tipoMorador: beneficiado.tipoMorador,
-				quantidade_crianca: beneficiado.quantidade_crianca,
-				quantidade_adolescente: beneficiado.quantidade_adolescente,
-				quantidade_jovem: beneficiado.quantidade_jovem,
-				quantidade_idoso: beneficiado.quantidade_idoso,
-				quantidade_gestante: beneficiado.quantidade_gestante,
-				quantidade_deficiente: beneficiado.quantidade_deficiente,
-				quantidade_outros: beneficiado.quantidade_outros,
-				estruturaCompleta: beneficiado
-			});
 			
 			// Função auxiliar para formatar data - MELHORADA
 			const formatarData = (data) => {
@@ -469,32 +195,24 @@ export default function ConsultaEndereco() {
 					enderecoBeneficiado.dataEntrada ||
 					enderecoBeneficiado.dataIngresso
 				),
+				// ✅ CORRIGIDO: dataSaida está em endereco, não em beneficiado
 				dataSaida: formatarData(
-					beneficiado.dataSaida || 
-					beneficiado.dataDesligamento || 
-					beneficiado.dataFim ||
-					beneficiado.dataFinalAtendimento ||
-					beneficiado.dataExclusao ||
-					beneficiado.dataEncerramento ||
-					beneficiado.updatedAt ||
-					beneficiado.updated_at ||
-					enderecoBeneficiado.dataSaida ||
-					enderecoBeneficiado.dataDesligamento
+					enderecoBeneficiado.dataSaida ||  // ← PRINCIPAL: dentro do objeto endereco
+					beneficiado.endereco?.dataSaida   // ← Fallback
 				),
 				
-				// Tipo de moradia - EXPANDIDO
-				moradia: beneficiado.tipoMoradia || 
+				// Moradia (situação da moradia: Quitada, Alugada, etc.) - vem de statusMoradia do backend
+				moradia: beneficiado.statusMoradia || 
 						beneficiado.moradia || 
-						beneficiado.tipoResidencia ||
-						beneficiado.categoriaResidencia ||
 						beneficiado.situacaoMoradia ||
-						enderecoBeneficiado.tipoMoradia ||
+						enderecoBeneficiado.statusMoradia ||
+						enderecoBeneficiado.moradia ||
 						"",
+				
+				// Tipo de moradia (Casa, Apartamento, etc.) - vem de tipoMoradia do backend
 				tipoMoradia: beneficiado.tipoMoradia || 
-							beneficiado.moradia ||
-							beneficiado.tipoResidencia ||
 							beneficiado.categoriaResidencia ||
-							beneficiado.situacaoMoradia ||
+							beneficiado.tipoResidencia ||
 							enderecoBeneficiado.tipoMoradia ||
 							"",
 				
@@ -587,211 +305,41 @@ export default function ConsultaEndereco() {
 				
 				// Quantidades de pessoas - TABELA TIPO_MORADOR COM PRIORIDADE MÁXIMA
 				criancas: garantirString(
-					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador
-					beneficiado.quantidade_crianca ||
-					beneficiado.tipoMorador?.quantidade_crianca ||
-					// Fallbacks tradicionais
-					beneficiado.qtdCriancas || 
-					beneficiado.quantidadeCriancas || 
-					beneficiado.criancas ||
-					beneficiado.numCriancas ||
-					beneficiado.totalCriancas ||
-					beneficiado.nCriancas ||
-					beneficiado.crianca ||
-					beneficiado.child ||
-					beneficiado.children ||
-					beneficiado.qtd_criancas ||
-					beneficiado.quantidade_criancas ||
-					beneficiado.num_criancas ||
-					beneficiado.qtdade_criancas ||
-					enderecoBeneficiado.qtdCriancas ||
-					enderecoBeneficiado.criancas ||
+					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador (camelCase correto)
+					beneficiado.tipoMorador?.quantidadeCrianca ||
 					0
 				),
 				jovens: garantirString(
-					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador
-					beneficiado.quantidade_jovem ||
-					beneficiado.tipoMorador?.quantidade_jovem ||
-					// Fallbacks tradicionais
-					beneficiado.qtdJovens || 
-					beneficiado.quantidadeJovens || 
-					beneficiado.jovens ||
-					beneficiado.numJovens ||
-					beneficiado.totalJovens ||
-					beneficiado.nJovens ||
-					beneficiado.jovem ||
-					beneficiado.youth ||
-					beneficiado.qtd_jovens ||
-					beneficiado.quantidade_jovens ||
-					beneficiado.num_jovens ||
-					beneficiado.qtdade_jovens ||
-					enderecoBeneficiado.qtdJovens ||
-					enderecoBeneficiado.jovens ||
+					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador (camelCase correto)
+					beneficiado.tipoMorador?.quantidadeJovem ||
 					0
 				),
 				adolescentes: garantirString(
-					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador
-					beneficiado.quantidade_adolescente ||
-					beneficiado.tipoMorador?.quantidade_adolescente ||
-					// Fallbacks tradicionais
-					beneficiado.qtdAdolescentes || 
-					beneficiado.quantidadeAdolescentes || 
-					beneficiado.adolescentes ||
-					beneficiado.numAdolescentes ||
-					beneficiado.totalAdolescentes ||
-					beneficiado.nAdolescentes ||
-					beneficiado.adolescente ||
-					beneficiado.teenager ||
-					beneficiado.teens ||
-					beneficiado.qtd_adolescentes ||
-					beneficiado.quantidade_adolescentes ||
-					beneficiado.num_adolescentes ||
-					beneficiado.qtdade_adolescentes ||
-					enderecoBeneficiado.qtdAdolescentes ||
-					enderecoBeneficiado.adolescentes ||
+					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador (camelCase correto)
+					beneficiado.tipoMorador?.quantidadeAdolescente ||
 					0
 				),
 				idosos: garantirString(
-					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador
-					beneficiado.quantidade_idoso ||
-					beneficiado.tipoMorador?.quantidade_idoso ||
-					// Fallbacks tradicionais
-					beneficiado.qtdIdosos || 
-					beneficiado.quantidadeIdosos || 
-					beneficiado.idosos ||
-					beneficiado.numIdosos ||
-					beneficiado.totalIdosos ||
-					beneficiado.nIdosos ||
-					beneficiado.idoso ||
-					beneficiado.elderly ||
-					beneficiado.senior ||
-					beneficiado.terceira_idade ||
-					beneficiado.qtd_idosos ||
-					beneficiado.quantidade_idosos ||
-					beneficiado.num_idosos ||
-					beneficiado.qtdade_idosos ||
-					enderecoBeneficiado.qtdIdosos ||
-					enderecoBeneficiado.idosos ||
+					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador (camelCase correto)
+					beneficiado.tipoMorador?.quantidadeIdoso ||
 					0
 				),
 				gestantes: garantirString(
-					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador
-					beneficiado.quantidade_gestante ||
-					beneficiado.tipoMorador?.quantidade_gestante ||
-					// Fallbacks tradicionais
-					beneficiado.qtdGestantes || 
-					beneficiado.quantidadeGestantes || 
-					beneficiado.gestantes ||
-					beneficiado.numGestantes ||
-					beneficiado.totalGestantes ||
-					beneficiado.nGestantes ||
-					beneficiado.gestante ||
-					beneficiado.pregnant ||
-					beneficiado.gravidas ||
-					beneficiado.gravida ||
-					beneficiado.qtd_gestantes ||
-					beneficiado.quantidade_gestantes ||
-					beneficiado.num_gestantes ||
-					beneficiado.qtdade_gestantes ||
-					enderecoBeneficiado.qtdGestantes ||
-					enderecoBeneficiado.gestantes ||
+					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador (camelCase correto)
+					beneficiado.tipoMorador?.quantidadeGestante ||
 					0
 				),
 				deficientes: garantirString(
-					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador
-					beneficiado.quantidade_deficiente ||
-					beneficiado.tipoMorador?.quantidade_deficiente ||
-					// Fallbacks tradicionais
-					beneficiado.qtdDeficientes || 
-					beneficiado.quantidadeDeficientes || 
-					beneficiado.deficientes ||
-					beneficiado.numDeficientes ||
-					beneficiado.totalDeficientes ||
-					beneficiado.nDeficientes ||
-					beneficiado.deficiente ||
-					beneficiado.pcd ||
-					beneficiado.pne ||
-					beneficiado.disabled ||
-					beneficiado.special_needs ||
-					beneficiado.necessidades_especiais ||
-					beneficiado.qtd_deficientes ||
-					beneficiado.quantidade_deficientes ||
-					beneficiado.num_deficientes ||
-					beneficiado.qtdade_deficientes ||
-					beneficiado.qtd_pcd ||
-					enderecoBeneficiado.qtdDeficientes ||
-					enderecoBeneficiado.deficientes ||
-					enderecoBeneficiado.pcd ||
+					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador (camelCase correto)
+					beneficiado.tipoMorador?.quantidadeDeficiente ||
 					0
 				),
 				outros: garantirString(
-					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador
-					beneficiado.quantidade_outros ||
-					beneficiado.tipoMorador?.quantidade_outros ||
-					// Fallbacks tradicionais
-					beneficiado.qtdOutros || 
-					beneficiado.quantidadeOutros || 
-					beneficiado.outros ||
-					beneficiado.numOutros ||
-					beneficiado.totalOutros ||
-					beneficiado.nOutros ||
-					beneficiado.outro ||
-					beneficiado.other ||
-					beneficiado.others ||
-					beneficiado.demais ||
-					beneficiado.qtd_outros ||
-					beneficiado.quantidade_outros ||
-					beneficiado.num_outros ||
-					beneficiado.qtdade_outros ||
-					enderecoBeneficiado.qtdOutros ||
-					enderecoBeneficiado.outros ||
+					// 🏠 PRIORIDADE MÁXIMA: Dados da tabela tipo_morador (camelCase correto)
+					beneficiado.tipoMorador?.quantidadeOutros ||
 					0
 				)
 			};
-			
-			console.log('📋 Dados de endereço processados e mapeados:', dadosProcessados);
-			console.log('🔍 Campos com valores preenchidos:', Object.entries(dadosProcessados).filter(([key, value]) => value && value !== "0" && value !== "-").map(([key]) => key));
-			
-			// Logs específicos para datas
-			console.log('📅 Dados de data encontrados:', {
-				dataEntrada: {
-					valor: dadosProcessados.dataEntrada,
-					fontes: {
-						dataEntrada: beneficiado.dataEntrada,
-						dataIngresso: beneficiado.dataIngresso,
-						dataCadastro: beneficiado.dataCadastro,
-						dataInicio: beneficiado.dataInicio,
-						dataInicioAtendimento: beneficiado.dataInicioAtendimento,
-						createdAt: beneficiado.createdAt
-					}
-				},
-				dataSaida: {
-					valor: dadosProcessados.dataSaida,
-					fontes: {
-						dataSaida: beneficiado.dataSaida,
-						dataDesligamento: beneficiado.dataDesligamento,
-						dataFim: beneficiado.dataFim,
-						dataFinalAtendimento: beneficiado.dataFinalAtendimento,
-						updatedAt: beneficiado.updatedAt
-					}
-				}
-			});
-			
-			// Logs para informações de cesta
-			console.log('🥫 Informações de cesta encontradas:', {
-				tipoCesta: dadosProcessados.tipoCesta,
-				tipoCestaAtual: dadosProcessados.tipoCestaAtual,
-				tempoCestaAtual: dadosProcessados.tempoCestaAtual,
-				tempoCestaRestante: dadosProcessados.tempoCestaRestante,
-				tempoASA: dadosProcessados.tempoASA
-			});
-			
-			// Logs para dados de moradia e status
-			console.log('🏠 Informações de moradia e status:', {
-				moradia: dadosProcessados.moradia,
-				tipoMoradia: dadosProcessados.tipoMoradia,
-				status: dadosProcessados.status
-			});
 			
 			return dadosProcessados;
 		}
@@ -905,22 +453,6 @@ export default function ConsultaEndereco() {
 			const camposQuantidade = ['criancas', 'jovens', 'adolescentes', 'idosos', 'gestantes', 'deficientes', 'outros'];
 			const quantidadesPreenchidas = camposQuantidade.filter(campo => dadosEndereco[campo] && dadosEndereco[campo] !== "0");
 			
-			if (quantidadesPreenchidas.length > 0) {
-				console.log('👥 Quantidades de pessoas preenchidas:', quantidadesPreenchidas.map(campo => `${campo}: ${dadosEndereco[campo]}`));
-			} else {
-				console.log('ℹ️ Nenhuma quantidade de pessoas foi informada (todas em 0)');
-			}
-			
-			// Validar outros campos importantes
-			const outrosCampos = ['moradia', 'tipoMoradia', 'status'];
-			const outrosVazios = outrosCampos.filter(campo => !dadosEndereco[campo] || dadosEndereco[campo].trim() === '');
-			
-			if (outrosVazios.length > 0) {
-				console.log('⚠️ Outros campos vazios:', outrosVazios);
-			} else {
-				console.log('✅ Todos os outros campos importantes estão preenchidos');
-			}
-			
 			setEndereco(dadosEndereco);
 			setEnderecoOriginal(dadosEndereco);
 		}
@@ -960,16 +492,7 @@ export default function ConsultaEndereco() {
 			setCarregando(true);
 			setErro(null);
 			
-			console.log('💾 Tentando salvar alterações de endereço:', endereco);
-			console.log('📋 Beneficiado completo:', beneficiado);
-			console.log('🔍 Investigando estrutura do beneficiado:', {
-				temEnderecoId: !!beneficiado?.enderecoId,
-				enderecoId: beneficiado?.enderecoId,
-				temEndereco: !!beneficiado?.endereco,
-				endereco: beneficiado?.endereco,
-				todasAsChaves: beneficiado ? Object.keys(beneficiado) : [],
-				chavesEndereco: beneficiado?.endereco ? Object.keys(beneficiado.endereco) : []
-			});
+			console.log('💾 Salvando alterações...');
 			
 			// Preparar dados para atualização
 			let enderecoId = beneficiado?.enderecoId || 
@@ -978,7 +501,6 @@ export default function ConsultaEndereco() {
 			
 			// Se ainda não encontrou, tentar buscar o endereço pelo CPF
 			if (!enderecoId && beneficiado?.cpf) {
-				console.log('🔍 Tentando buscar endereço pelo CPF do beneficiado...');
 				try {
 					const enderecosResponse = await beneficiadoService.buscarEnderecos();
 					if (enderecosResponse.success && enderecosResponse.data) {
@@ -1067,7 +589,8 @@ export default function ConsultaEndereco() {
 			}
 			
 			if (endereco.moradia !== enderecoOriginalData?.moradia) {
-				dadosEnderecoParaAtualizar.moradia = endereco.moradia;
+				// Backend espera statusMoradia (situação: Quitada, Alugada, etc)
+				dadosEnderecoParaAtualizar.statusMoradia = endereco.moradia;
 			}
 			if (endereco.tipoMoradia !== enderecoOriginalData?.tipoMoradia) {
 				// Backend espera TipoMoradia em MAIÚSCULO (ex: CASA, APARTAMENTO)
@@ -1093,13 +616,13 @@ export default function ConsultaEndereco() {
 			
 			// 📊 Dados de TIPO_MORADOR para atualizar (APENAS quantidades de pessoas)
 			const dadosTipoMoradorParaAtualizar = {
-				quantidadeCrianca: parseInt(endereco.quantidade_crianca) || 0,
-				quantidadeJovem: parseInt(endereco.quantidade_jovem) || 0,
-				quantidadeAdolescente: parseInt(endereco.quantidade_adolescente) || 0,
-				quantidadeIdoso: parseInt(endereco.quantidade_idoso) || 0,
-				quantidadeGestante: parseInt(endereco.quantidade_gestante) || 0,
-				quantidadeDeficiente: parseInt(endereco.quantidade_deficiente) || 0,
-				quantidadeOutros: parseInt(endereco.quantidade_outros) || 0
+				quantidadeCrianca: parseInt(endereco.criancas) || 0,
+				quantidadeJovem: parseInt(endereco.jovens) || 0,
+				quantidadeAdolescente: parseInt(endereco.adolescentes) || 0,
+				quantidadeIdoso: parseInt(endereco.idosos) || 0,
+				quantidadeGestante: parseInt(endereco.gestantes) || 0,
+				quantidadeDeficiente: parseInt(endereco.deficientes) || 0,
+				quantidadeOutros: parseInt(endereco.outros) || 0
 			};
 			
 			console.log('📦 Dados preparados para atualização:', {
@@ -1130,11 +653,11 @@ export default function ConsultaEndereco() {
 			}
 			
 			// 📊 Atualizar TIPO_MORADOR (quantidades de pessoas)
-			// Buscar ID do tipo_morador
-			console.log('🔍 Buscando ID do tipo_morador para beneficiado:', beneficiadoId);
+			// IMPORTANTE: tipo_morador está vinculado ao ENDEREÇO, não ao beneficiado
+			console.log('🔍 Buscando ID do tipo_morador para endereço:', enderecoId);
 			
 			const tipoMoradorService = (await import('../services/tipoMoradorService')).default;
-			const tipoMoradorResponse = await tipoMoradorService.buscarPorBeneficiado(beneficiadoId);
+			const tipoMoradorResponse = await tipoMoradorService.buscarPorEndereco(enderecoId);
 			
 			if (tipoMoradorResponse.success && tipoMoradorResponse.data) {
 				const tipoMoradorId = tipoMoradorResponse.data.idTipoMorador;
@@ -1151,11 +674,40 @@ export default function ConsultaEndereco() {
 					console.log('✅ Tipo Morador atualizado com sucesso:', resultadoTipoMorador.data);
 				} else {
 					console.warn('⚠️ Erro ao atualizar tipo_morador:', resultadoTipoMorador.error);
-					// Não falha a operação toda se tipo_morador falhar
 				}
 			} else {
-				console.warn('⚠️ Tipo Morador não encontrado para este beneficiado');
-				console.warn('   As quantidades de pessoas não serão atualizadas');
+				// ⚠️ Tipo Morador não existe - CRIAR automaticamente
+				console.warn('⚠️ Tipo Morador não encontrado - criando novo registro...');
+				
+				const dadosParaCriar = {
+					...dadosTipoMoradorParaAtualizar,
+					beneficiadoId: beneficiadoId,
+					enderecoId: enderecoId
+				};
+				
+				console.log('📤 Criando novo tipo_morador:', dadosParaCriar);
+				
+				try {
+					const response = await beneficiadoService.cadastrarTipoMorador({
+						quantidade_crianca: dadosParaCriar.quantidadeCrianca,
+						quantidade_adolescente: dadosParaCriar.quantidadeAdolescente,
+						quantidade_jovem: dadosParaCriar.quantidadeJovem,
+						quantidade_idoso: dadosParaCriar.quantidadeIdoso,
+						quantidade_gestante: dadosParaCriar.quantidadeGestante,
+						quantidade_deficiente: dadosParaCriar.quantidadeDeficiente,
+						quantidade_outros: dadosParaCriar.quantidadeOutros,
+						fk_beneficiado: beneficiadoId,
+						fk_endereco: enderecoId
+					});
+					
+					if (response.success) {
+						console.log('✅ Tipo Morador criado com sucesso:', response.data);
+					} else {
+						console.error('❌ Erro ao criar tipo_morador:', response.error);
+					}
+				} catch (error) {
+					console.error('❌ Erro ao criar tipo_morador:', error);
+				}
 			}
 			
 			// Atualizar dados do beneficiado se necessário (campos básicos)
@@ -1373,81 +925,85 @@ export default function ConsultaEndereco() {
 
 							<div className="consulta-endereco-divisor"></div>
 
-							{/* Quarta linha - Data de Entrada, Data de Saída, Moradia */}
-							<div className="consulta-endereco-row consulta-endereco-row-triple">
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Data de Entrada:</label>
-									<input
-										type="text"
-										name="dataEntrada"
-										value={endereco.dataEntrada}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="dd/mm/aaaa"
-									/>
-								</div>
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Data de Saída:</label>
-									<input
-										type="text"
-										name="dataSaida"
-										value={endereco.dataSaida}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="dd/mm/aaaa"
-									/>
-								</div>
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Moradia:</label>
-									<input
-										type="text"
-										name="moradia"
-										value={endereco.moradia}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Tipo de moradia"
-									/>
-								</div>
+						{/* Quarta linha - Data de Entrada, Data de Saída, Moradia */}
+						<div className="consulta-endereco-row consulta-endereco-row-triple">
+							<div className="consulta-endereco-field">
+								<label className="consulta-endereco-label">Data de Entrada:</label>
+								<input
+									type="text"
+									name="dataEntrada"
+									value={endereco.dataEntrada}
+									onChange={handleChange}
+									className="consulta-endereco-input"
+									placeholder="dd/mm/aaaa"
+									readOnly
+								/>
 							</div>
-
-							{/* Quinta linha - Tipo de Moradia, Tipo de Cesta, Status */}
-							<div className="consulta-endereco-row consulta-endereco-row-triple">
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Tipo de Moradia:</label>
-									<input
-										type="text"
-										name="tipoMoradia"
-										value={endereco.tipoMoradia}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Ex: Casa, Apartamento"
-									/>
-								</div>
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Tipo de Cesta:</label>
-									<input
-										type="text"
-										name="tipoCesta"
-										value={endereco.tipoCesta}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Tipo de cesta"
-									/>
-								</div>
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Status:</label>
-									<input
-										type="text"
-										name="status"
-										value={endereco.status}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Status"
-									/>
-								</div>
+							<div className="consulta-endereco-field">
+								<label className="consulta-endereco-label">Data de Saída:</label>
+								<input
+									type="text"
+									name="dataSaida"
+									value={endereco.dataSaida}
+									onChange={handleChange}
+									className="consulta-endereco-input"
+									placeholder="dd/mm/aaaa"
+									readOnly
+								/>
 							</div>
+							<div className="consulta-endereco-field">
+								<label className="consulta-endereco-label">Moradia:</label>
+								<input
+									type="text"
+									name="moradia"
+									value={endereco.moradia}
+									onChange={handleChange}
+									className="consulta-endereco-input"
+									placeholder="Tipo de moradia"
+									readOnly
+								/>
+							</div>
+					</div>
 
-							<div className="consulta-endereco-divisor"></div>
+						{/* Quinta linha - Tipo de Moradia, Tipo de Cesta, Status */}
+						<div className="consulta-endereco-row consulta-endereco-row-triple">
+							<div className="consulta-endereco-field">
+								<label className="consulta-endereco-label">Tipo de Moradia:</label>
+								<input
+									type="text"
+									name="tipoMoradia"
+									value={endereco.tipoMoradia}
+									onChange={handleChange}
+									className="consulta-endereco-input"
+									placeholder="Ex: Casa, Apartamento"
+									readOnly
+								/>
+							</div>
+							<div className="consulta-endereco-field">
+								<label className="consulta-endereco-label">Tipo de Cesta:</label>
+								<input
+									type="text"
+									name="tipoCesta"
+									value={endereco.tipoCesta}
+									onChange={handleChange}
+									className="consulta-endereco-input"
+									placeholder="Tipo de cesta"
+									readOnly
+								/>
+							</div>
+							<div className="consulta-endereco-field">
+								<label className="consulta-endereco-label">Status:</label>
+								<input
+									type="text"
+									name="status"
+									value={endereco.status}
+									onChange={handleChange}
+									className="consulta-endereco-input"
+									placeholder="Status"
+									readOnly
+								/>
+							</div>
+						</div>							<div className="consulta-endereco-divisor"></div>
 
 							{/* Sexta linha - Quantidade de Crianças, Jovens, Adolescentes */}
 							<div className="consulta-endereco-row consulta-endereco-row-triple">
@@ -1541,64 +1097,6 @@ export default function ConsultaEndereco() {
 										className="consulta-endereco-input"
 										placeholder="0"
 										maxLength={2}
-									/>
-								</div>
-							</div>
-
-							<div className="consulta-endereco-divisor"></div>
-
-							{/* Nona linha - Tipo de Cesta Atual, Tempo na Cesta Atual */}
-							<div className="consulta-endereco-row consulta-endereco-row-double">
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Tipo de Cesta Atual:</label>
-									<input
-										type="text"
-										name="tipoCestaAtual"
-										value={endereco.tipoCestaAtual}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Tipo de cesta atual"
-										readOnly
-									/>
-								</div>
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Tempo na Cesta Atual:</label>
-									<input
-										type="text"
-										name="tempoCestaAtual"
-										value={endereco.tempoCestaAtual}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Tempo"
-										readOnly
-									/>
-								</div>
-							</div>
-
-							{/* Décima linha - Tempo Restante na Cesta, Tempo Cadastrado na ASA */}
-							<div className="consulta-endereco-row consulta-endereco-row-double">
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Tempo Restante na Cesta:</label>
-									<input
-										type="text"
-										name="tempoCestaRestante"
-										value={endereco.tempoCestaRestante}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Tempo restante"
-										readOnly
-									/>
-								</div>
-								<div className="consulta-endereco-field">
-									<label className="consulta-endereco-label">Tempo Cadastrado na ASA:</label>
-									<input
-										type="text"
-										name="tempoASA"
-										value={endereco.tempoASA}
-										onChange={handleChange}
-										className="consulta-endereco-input"
-										placeholder="Tempo na ASA"
-										readOnly
 									/>
 								</div>
 							</div>

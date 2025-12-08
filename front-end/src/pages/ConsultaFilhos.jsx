@@ -263,8 +263,18 @@ export default function ConsultaFilhos() {
 				{!carregando && !erro && (
 					<>
 						{filhos.length === 0 && (
-							<div style={{ textAlign: 'center', padding: '20px', color: '#264040', fontSize: '18px' }}>
-								<p>Este beneficiado não possui filhos cadastrados.</p>
+							<div style={{ textAlign: 'center', padding: '20px' }}>
+								<p style={{ color: '#264040', fontSize: '18px', marginBottom: '20px' }}>
+									Este beneficiado não possui filhos cadastrados.
+								</p>
+								<button 
+									type="button" 
+									className="consulta-filhos-botao" 
+									onClick={handleCadastrarOutroFilho}
+									style={{ margin: '0 auto' }}
+								>
+									Cadastrar Filho
+								</button>
 							</div>
 						)}
 						

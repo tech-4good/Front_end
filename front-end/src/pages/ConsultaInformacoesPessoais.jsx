@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Modal from "../components/Modal";
+import Select from "../components/Select";
 import { beneficiadoService } from "../services/beneficiadoService";
 import { auxilioService } from "../services/auxilioService";
 import { getFotoBlobUrl } from "../services/fileService";
@@ -18,7 +19,7 @@ export default function ConsultaInformacoesPessoais() {
   const [beneficiado, setBeneficiado] = useState(null);
   const [fotoBlobUrl, setFotoBlobUrl] = useState(null);
   const [carregandoFoto, setCarregandoFoto] = useState(false);
-  const [modalExcluidoSucesso, setModalExcluidoSucesso] = useState(false);
+
 
   const formatRenda = (value) => {
     let v = value.replace(/\D/g, "");
@@ -269,16 +270,7 @@ export default function ConsultaInformacoesPessoais() {
     }
   }, [beneficiado]);
 
-  // Auto-close modal without buttons after 3 seconds
-  useEffect(() => {
-    if (modalExcluidoSucesso) {
-      const timer = setTimeout(() => {
-        setModalExcluidoSucesso(false);
-        navigate("/consulta-beneficiados");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [modalExcluidoSucesso, navigate]);
+
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -320,7 +312,7 @@ export default function ConsultaInformacoesPessoais() {
   const [modalConfirmar, setModalConfirmar] = useState(false);
   const [alteracaoConfirmada, setAlteracaoConfirmada] = useState(false);
 
-  const [modalExcluirBeneficiado, setModalExcluirBeneficiado] = useState(false);
+
 
   function handleAlterarClick() {
     setModalConfirmar(true);
@@ -360,6 +352,7 @@ export default function ConsultaInformacoesPessoais() {
         enderecoId: beneficiado.enderecoId || beneficiado.endereco?.id,
       };
 
+      console.log("📝 Estado Civil sendo enviado:", dados.estadoCivil);
       console.log(
         "📝 Atualizando beneficiado ID:",
         beneficiadoId,
@@ -392,38 +385,7 @@ export default function ConsultaInformacoesPessoais() {
     window.location.reload();
   }
 
-  async function handleExcluirBeneficiado() {
-    setModalExcluirBeneficiado(false);
-    setCarregando(true);
 
-    try {
-      const beneficiadoId = beneficiado.id || beneficiado.idBeneficiado;
-      if (!beneficiadoId) {
-        setErro("ID do beneficiado não encontrado");
-        return;
-      }
-
-      console.log("Excluindo beneficiado ID:", beneficiadoId);
-      const response = await beneficiadoService.removerBeneficiado(
-        beneficiadoId
-      );
-
-      if (response.success) {
-        setModalExcluidoSucesso(true);
-        setTimeout(() => {
-          setModalExcluidoSucesso(false);
-          navigate("/consulta-beneficiados");
-        }, 2000);
-      } else {
-        setErro(response.error || "Erro ao excluir beneficiado");
-      }
-    } catch (error) {
-      console.error("Erro ao excluir beneficiado:", error);
-      setErro("Erro inesperado ao excluir beneficiado");
-    } finally {
-      setCarregando(false);
-    }
-  }
 
   return (
     <div>
@@ -569,17 +531,21 @@ export default function ConsultaInformacoesPessoais() {
                 </div>
                 <div className="consulta-info-field">
                   <label className="consulta-info-label">Estado Civil:</label>
-                  <input
-                    type="text"
+                  <Select
                     name="estadoCivil"
                     value={dados.estadoCivil}
                     onChange={(e) => {
-                      let value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
-                      value = value.replace(/\s{2,}/g, ' ');
-                      setDados(prev => ({ ...prev, estadoCivil: value }));
+                      setDados(prev => ({ ...prev, estadoCivil: e.target.value }));
                     }}
+                    placeholder="Selecione o estado civil"
                     className="consulta-info-input"
-                    placeholder="Ex: Solteiro, Casado, etc."
+                    options={[
+                      { value: 'SOLTEIRO', label: 'Solteiro(a)' },
+                      { value: 'CASADO', label: 'Casado(a)' },
+                      { value: 'DIVORCIADO', label: 'Divorciado(a)' },
+                      { value: 'VIUVO', label: 'Viúvo(a)' },
+                      { value: 'SEPARADO', label: 'Separado(a)' }
+                    ]}
                   />
                 </div>
               </div>
@@ -702,13 +668,6 @@ export default function ConsultaInformacoesPessoais() {
                 <button className="consulta-info-btn" type="submit">
                   Alterar Informações
                 </button>
-                <button
-                  type="button"
-                  className="consulta-info-botao-danger"
-                  onClick={() => setModalExcluirBeneficiado(true)}
-                >
-                  Excluir Beneficiado
-                </button>
               </div>
             </form>
             <div className="consulta-info-divisor"></div>
@@ -760,44 +719,9 @@ export default function ConsultaInformacoesPessoais() {
               ]}
             />
 
-            {/* Modal de confirmação de exclusão de beneficiado */}
-            <Modal
-              isOpen={modalExcluirBeneficiado}
-              onClose={() => setModalExcluirBeneficiado(false)}
-              texto={"Tem certeza que deseja excluir o beneficiado?"}
-              showClose={false}
-              botoes={[
-                {
-                  texto: "Sim",
-                  onClick: handleExcluirBeneficiado,
-                  style: {
-                    background: "#fff",
-                    color: "#111",
-                    border: "2px solid #111",
-                  },
-                },
-                {
-                  texto: "Não",
-                  onClick: () => setModalExcluirBeneficiado(false),
-                  style: {
-                    background: "#111",
-                    color: "#fff",
-                    border: "2px solid #111",
-                  },
-                },
-              ]}
-            />
 
-            {/* Modal de sucesso ao excluir beneficiado */}
-            <Modal
-              isOpen={modalExcluidoSucesso}
-              onClose={() => {
-                setModalExcluidoSucesso(false);
-                navigate("/consulta-beneficiados");
-              }}
-              texto={"Beneficiado excluído com sucesso!"}
-              showClose={false}
-            />
+
+
 
             {/* Modal para escolher qual auxílio excluir */}
             <Modal
